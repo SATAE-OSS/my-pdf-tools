@@ -2,33 +2,91 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- ตั้งค่า Viewport ให้พอดีกับหน้าจอมือถือและป้องกันการซูมเวลาใช้งานแอป -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>PDF Magic Tools</title>
     
-    <!-- ดึง CSS ไฟล์แยกมาใช้ -->
+    <!-- ========================================== -->
+    <!-- ตั้งค่า PWA สำหรับทำเป็นแอปพลิเคชันบนมือถือ -->
+    <!-- ========================================== -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#ffb6c1">
+    
+    <!-- รองรับระบบ iOS (iPhone/iPad) ให้แสดงผลเต็มจอสวยงาม -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="PDF Magic">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    
+    <!-- ========================================== -->
+    <!-- ดึงไฟล์ CSS และไลบรารีต่างๆ มาใช้งาน -->
+    <!-- ========================================== -->
     <link rel="stylesheet" href="style.css">
     
-    <!-- ดึงเครื่องมือ Drag & Drop และเครื่องมือทำ PDF มาใช้ -->
+    <!-- ไลบรารีสำหรับ Drag & Drop, สร้าง PDF, อ่าน PDF และทำไฟล์ ZIP -->
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    </script>
 </head>
 <body>
-    <div class="container">
-        <h2>✨ PDF Magic Tools</h2>
+    <!-- เมนู Tabs สำหรับสลับหน้า -->
+    <div class="tabs">
+        <button class="tab-btn active" onclick="openTab('mergeTab', this)">✨ รวมรูปเป็น PDF</button>
+        <button class="tab-btn" onclick="openTab('extractTab', this)">🔄 แปลง PDF เป็นรูป</button>
+    </div>
+
+    <!-- หน้าที่ 1: รวมรูปเป็น PDF -->
+    <div id="mergeTab" class="container tab-content" style="display: block;">
+        <h2>✨ รวมรูปภาพเป็น PDF</h2>
         <div class="subtitle">อัปโหลดรูป แล้วใช้นิ้วลากสลับตำแหน่งได้เลย</div>
         
         <input type="file" id="fileInput" multiple accept="image/png, image/jpeg, image/jpg">
-        
-        <div id="gallery">
-            <!-- รูปพรีวิวจะมาโผล่ตรงนี้ผ่าน JavaScript -->
-        </div>
-        
+        <div id="gallery" class="gallery-grid"></div>
         <input type="text" id="fileName" value="My_Document" placeholder="ตั้งชื่อไฟล์ PDF">
         
-        <button class="btn" id="downloadBtn">⬇️ แปลงเป็น PDF แล้วดาวน์โหลด</button>
+        <div class="btn-group">
+            <button class="btn btn-outline" id="previewBtn">👁️ พรีวิวไฟล์จริง</button>
+            <button class="btn" id="downloadBtn">⬇️ ดาวน์โหลด PDF</button>
+        </div>
     </div>
 
-    <!-- ดึง JavaScript ไฟล์แยกมาใช้ (ใส่ไว้ล่างสุดเพื่อให้โหลดหน้าเว็บเสร็จก่อน) -->
+    <!-- หน้าที่ 2: แปลง PDF เป็นรูปภาพ -->
+    <div id="extractTab" class="container tab-content" style="display: none;">
+        <h2>🔄 แปลง PDF เป็นรูปภาพ</h2>
+        <div class="subtitle">อัปโหลดไฟล์ PDF เพื่อแยกแต่ละหน้าเป็นรูปภาพ</div>
+        
+        <input type="file" id="pdfInput" accept="application/pdf">
+        <div id="pdfGallery" class="gallery-grid"></div>
+        
+        <!-- ปุ่มโหลดทั้งหมดแบบ ZIP -->
+        <button class="btn btn-zip" id="downloadZipBtn" style="display: none;">📦 ดาวน์โหลดรูปทั้งหมด (.ZIP)</button>
+    </div>
+
+    <!-- กล่อง Pop-up สำหรับพรีวิว PDF -->
+    <div id="previewModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" id="closeModal">&times;</span>
+            <h3 style="margin-top: 0; color: #5d4037; text-align: center;">👁️ พรีวิวเอกสาร PDF</h3>
+            <iframe id="pdfFrame" src="" width="100%" height="500px" style="border: 1px solid #ffe4e8; border-radius: 16px; background: #fffcfd;"></iframe>
+        </div>
+    </div>
+
+    <!-- ดึงไฟล์ JavaScript ของเรามาใช้งาน -->
     <script src="script.js"></script>
+    
+    <!-- โค้ดลงทะเบียน Service Worker (สำคัญสำหรับการทำ PWA) -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(registration => console.log('ServiceWorker ทำงานสำเร็จ!'))
+                    .catch(err => console.log('ServiceWorker ล้มเหลว: ', err));
+            });
+        }
+    </script>
 </body>
 </html>

@@ -1,93 +1,192 @@
+@import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap');
+
 body { 
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+    font-family: 'Prompt', sans-serif; 
     padding: 20px; 
-    max-width: 600px; 
+    max-width: 650px; 
     margin: auto; 
-    background-color: #f0f2f6; 
-}
-.container { 
-    background: white; 
-    padding: 30px; 
-    border-radius: 20px; 
-    box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
-}
-h2 { 
-    text-align: center; 
-    color: #333; 
-    margin-bottom: 5px; 
-}
-.subtitle { 
-    text-align: center; 
-    color: #666; 
-    font-size: 14px; 
-    margin-bottom: 20px; 
+    
+    /* พื้นหลังสไตล์ลายตารางร่างแบบ (Grid) สีชมพูอ่อนๆ ละมุนๆ */
+    background-color: #fff5f7; 
+    background-image: 
+        linear-gradient(#ffe4e8 1.5px, transparent 1.5px), 
+        linear-gradient(90deg, #ffe4e8 1.5px, transparent 1.5px);
+    background-size: 25px 25px;
+    
+    min-height: 100vh; 
+    color: #5d4037; /* ใช้สีตัวอักษรน้ำตาลตุ่นแทนสีดำ เพื่อความซอฟต์ */
 }
 
+/* -------------------------------------- */
+/* ดีไซน์เมนู Tabs                         */
+/* -------------------------------------- */
+.tabs {
+    display: flex; justify-content: center; gap: 12px; margin-bottom: 25px;
+}
+.tab-btn {
+    background: #ffffff; 
+    color: #a1887f; 
+    border: 2px solid #ffe4e8; 
+    padding: 12px 24px;
+    border-radius: 30px; 
+    font-family: 'Prompt', sans-serif; 
+    font-size: 15px; 
+    font-weight: 500;
+    cursor: pointer; 
+    transition: all 0.3s ease; 
+    box-shadow: 0 4px 10px rgba(255, 182, 193, 0.1);
+}
+.tab-btn.active {
+    background: linear-gradient(135deg, #ffb6c1 0%, #ffc0cb 100%); 
+    color: #ffffff;
+    border-color: #ffb6c1;
+    box-shadow: 0 6px 15px rgba(255, 182, 193, 0.4);
+}
+.tab-btn:hover:not(.active) { background: #fff0f3; color: #8d6e63; transform: translateY(-2px); }
+.tab-content { animation: fadeIn 0.4s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+/* -------------------------------------- */
+
+.container { 
+    background: rgba(255, 255, 255, 0.95); /* กล่องขาวโปร่งแสงนิดๆ */
+    backdrop-filter: blur(10px);
+    padding: 35px 30px; 
+    border-radius: 28px; 
+    box-shadow: 0 15px 35px rgba(255, 182, 193, 0.15); /* เงาสีชมพูอ่อน */
+    border: 1px solid #fff0f3;
+}
+h2 { text-align: center; font-weight: 600; color: #5d4037; margin-bottom: 5px; margin-top: 0; }
+.subtitle { text-align: center; color: #a1887f; font-size: 14px; font-weight: 300; margin-bottom: 25px; }
+
+/* -------------------------------------- */
+/* แปลงโฉมปุ่มอัปโหลดไฟล์ (Choose File)       */
+/* -------------------------------------- */
 input[type="file"] { 
     width: 100%; 
-    padding: 10px; 
-    margin-bottom: 10px; 
-    border: 2px dashed #ccc; 
-    border-radius: 10px; 
+    padding: 10px 15px; 
+    margin-bottom: 15px; 
+    border: 2px dashed #ffb6c1; 
+    border-radius: 18px; 
     box-sizing: border-box; 
+    font-family: 'Prompt', sans-serif; 
+    font-size: 14px;
+    color: #8d6e63;
+    transition: all 0.3s ease; 
+    background-color: #fff9fa;
+    cursor: pointer;
+}
+input[type="file"]:hover { border-color: #ff99a8; background-color: #fff0f3; }
+
+/* แต่งปุ่ม Choose File ย่อยข้างใน ให้เป็นปุ่มน่ารักๆ */
+input[type="file"]::file-selector-button {
+    background: linear-gradient(135deg, #ffc0cb 0%, #ffb6c1 100%);
+    border: none;
+    padding: 10px 20px;
+    border-radius: 20px;
+    color: white;
+    font-family: 'Prompt', sans-serif;
+    font-weight: 500;
+    cursor: pointer;
+    margin-right: 15px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 10px rgba(255, 182, 193, 0.4);
+}
+input[type="file"]::file-selector-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(255, 182, 193, 0.6);
+    background: linear-gradient(135deg, #ffb6c1 0%, #ff99a8 100%);
 }
 
-#gallery { 
-    display: grid; 
-    grid-template-columns: repeat(3, 1fr); 
-    gap: 10px; 
-    min-height: 120px; 
-    padding: 15px; 
-    border: 2px dashed #e0e0e0; 
-    border-radius: 15px; 
-    background: #fafafa; 
-    margin-bottom: 20px; 
+input[type="text"] { 
+    width: 100%; padding: 12px 15px; margin-bottom: 15px; 
+    border: 2px solid #ffe4e8; border-radius: 16px; box-sizing: border-box;
+    background-color: #ffffff; font-family: 'Prompt', sans-serif; color: #5d4037;
+    transition: all 0.3s ease;
+}
+input[type="text"]:focus { 
+    outline: none; border-color: #ffb6c1; 
+    box-shadow: 0 0 0 4px rgba(255, 182, 193, 0.2); 
+}
+
+/* -------------------------------------- */
+/* กล่องพรีวิวรูปภาพ                         */
+/* -------------------------------------- */
+.gallery-grid { 
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; min-height: 120px; 
+    padding: 20px; border: 2px dashed #ffe4e8; border-radius: 20px; background: #fffcfd; margin-bottom: 25px; 
 }
 
 .img-card { 
-    position: relative; 
-    width: 100%; 
-    aspect-ratio: 1; 
-    border-radius: 10px; 
-    overflow: hidden; 
-    cursor: grab; 
-    box-shadow: 0 2px 5px rgba(0,0,0,0.15); 
-    transition: transform 0.2s; 
+    position: relative; width: 100%; aspect-ratio: 1 / 1.414; border-radius: 10px; 
+    overflow: hidden; cursor: grab; box-shadow: 0 6px 12px rgba(255, 182, 193, 0.15); 
+    transition: transform 0.2s ease, box-shadow 0.2s ease; background-color: #fff; border: 1px solid #fff0f3;
 }
-.img-card:active { 
-    cursor: grabbing; 
-    transform: scale(1.05); 
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3); 
-}
-.img-card img { 
-    width: 100%; 
-    height: 100%; 
-    object-fit: cover; 
+.img-card:active { cursor: grabbing; transform: scale(1.08) rotate(2deg); box-shadow: 0 15px 25px rgba(255, 182, 193, 0.3); z-index: 10; }
+.img-card img { width: 100%; height: 100%; object-fit: cover; }
+
+.page-badge {
+    position: absolute; top: 8px; left: 8px; background: rgba(255, 255, 255, 0.85); color: #ff6b81;
+    padding: 4px 12px; border-radius: 14px; font-size: 11px; font-weight: 600; z-index: 5;
+    backdrop-filter: blur(4px); pointer-events: none; box-shadow: 0 2px 6px rgba(0,0,0,0.05);
 }
 
-#fileName {
-    width: 100%; 
-    padding: 10px; 
-    margin-bottom: 15px; 
-    border-radius: 10px; 
-    border: 1px solid #ccc; 
-    box-sizing: border-box;
+.delete-btn {
+    position: absolute; top: 6px; right: 6px; background: rgba(255, 107, 129, 0.9); color: white;
+    border: none; border-radius: 50%; width: 26px; height: 26px; font-size: 12px; font-weight: bold;
+    cursor: pointer; z-index: 15; display: flex; align-items: center; justify-content: center;
+    backdrop-filter: blur(4px); transition: all 0.2s ease; box-shadow: 0 2px 6px rgba(255, 107, 129, 0.3);
 }
+.delete-btn:hover { background: rgba(255, 71, 87, 1); transform: scale(1.15) rotate(90deg); }
 
+.dl-img-btn {
+    position: absolute; bottom: 0; width: 100%; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(4px);
+    color: #ff99a8; text-align: center; padding: 10px 0; font-size: 13px; font-weight: 600; 
+    text-decoration: none; cursor: pointer; transition: all 0.3s; border-top: 1px solid #ffe4e8;
+}
+.dl-img-btn:hover { background: #ff99a8; color: white; }
+
+/* -------------------------------------- */
+/* กลุ่มปุ่มกดด้านล่าง                        */
+/* -------------------------------------- */
+.btn-group { display: flex; gap: 12px; }
 .btn { 
-    background: #FF4B4B; 
-    color: white; 
-    border: none; 
-    padding: 15px; 
-    border-radius: 30px; 
-    cursor: pointer; 
-    font-size: 16px; 
-    font-weight: bold; 
-    width: 100%; 
-    box-shadow: 0 4px 6px rgba(255, 75, 75, 0.3); 
-    transition: all 0.3s; 
+    background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%); 
+    color: #5d4037; border: none; padding: 16px; border-radius: 18px; 
+    cursor: pointer; font-size: 16px; font-weight: 600; font-family: 'Prompt', sans-serif; 
+    width: 100%; box-shadow: 0 6px 15px rgba(255, 154, 158, 0.3); transition: all 0.3s ease; 
 }
-.btn:hover { 
-    transform: translateY(-2px); 
-    box-shadow: 0 6px 12px rgba(255, 75, 75, 0.4); 
+.btn:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(255, 154, 158, 0.45); }
+.btn:active { transform: translateY(1px); }
+
+.btn-outline { 
+    background: #ffffff; color: #ff9a9e; border: 2px solid #ff9a9e; box-shadow: none; 
 }
+.btn-outline:hover { 
+    background: #fff9fa; border-color: #ff7e82; color: #ff7e82; box-shadow: 0 6px 15px rgba(255, 154, 158, 0.2); 
+}
+
+/* ปุ่มโหลด ZIP ปรับให้เป็นสีพาสเทลพีช-ส้ม ให้ดูสดใสแต่ไม่หลุดธีม */
+.btn-zip { 
+    background: linear-gradient(135deg, #ffd194 0%, #70e1f5 100%); 
+    color: #5d4037;
+    box-shadow: 0 6px 15px rgba(112, 225, 245, 0.3); 
+}
+.btn-zip:hover { box-shadow: 0 8px 25px rgba(112, 225, 245, 0.4); }
+
+/* -------------------------------------- */
+/* Pop-up Modal                          */
+/* -------------------------------------- */
+.modal {
+    display: none; position: fixed; z-index: 1000; left: 0; top: 0;
+    width: 100%; height: 100%; background-color: rgba(93, 64, 55, 0.4); backdrop-filter: blur(5px);
+}
+.modal-content {
+    background-color: #fffcfd; margin: 3% auto; padding: 25px; border-radius: 24px;
+    width: 90%; max-width: 800px; position: relative; box-shadow: 0 20px 50px rgba(255, 182, 193, 0.3);
+}
+.close-modal {
+    position: absolute; right: 25px; top: 15px; font-size: 32px; font-weight: bold;
+    color: #ffb6c1; cursor: pointer; transition: transform 0.3s, color 0.3s;
+}
+.close-modal:hover { color: #ff6b81; transform: rotate(90deg); }
