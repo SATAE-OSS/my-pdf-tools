@@ -190,3 +190,15 @@ input[type="text"]:focus {
     color: #ffb6c1; cursor: pointer; transition: transform 0.3s, color 0.3s;
 }
 .close-modal:hover { color: #ff6b81; transform: rotate(90deg); }
+/* ใส่เพิ่มต่อท้ายไฟล์ style.css */
+.sortable-ghost {
+    opacity: 0.4;
+    border: 2px dashed #ffb6c1 !important;
+    background: #fff0f3 !important;
+}
+
+.sortable-drag {
+    cursor: grabbing !important;
+    transform: rotate(3deg) scale(1.05);
+    box-shadow: 0 20px 30px rgba(0,0,0,0.15) !important;
+}

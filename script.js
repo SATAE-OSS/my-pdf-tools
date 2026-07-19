@@ -32,8 +32,14 @@ function updatePageNumbers() {
 }
 
 new Sortable(gallery, {
-    animation: 200, ghostClass: 'sortable-ghost',
-    onEnd: function () { updatePageNumbers(); }
+    animation: 300,              // ปรับให้การขยับช้าลงอีกนิด ตาจะตามทันง่ายขึ้น
+    ghostClass: 'sortable-ghost',
+    dragClass: 'sortable-drag',  // เพิ่ม Class ตอนกำลังลาก เพื่อให้เราตกแต่งรูปที่ลากได้
+    delay: 150,                  // ต้องกดค้างนิดนึงก่อนลาก ป้องกันการลากโดยไม่ได้ตั้งใจ
+    touchStartThreshold: 5,      // ช่วยให้เลื่อนหน้าจอได้เนียนขึ้น ไม่เผลอไปลากรูปบ่อยๆ
+    onEnd: function () { 
+        updatePageNumbers(); 
+    }
 });
 
 fileInput.addEventListener('change', function(e) {
@@ -101,13 +107,17 @@ const modal = document.getElementById('previewModal');
 const closeModal = document.getElementById('closeModal');
 const pdfFrame = document.getElementById('pdfFrame');
 
+// ------------------------------------------
+// เปลี่ยนจากเดิมที่เป็น Modal ให้เป็นการเปิดไฟล์ในแท็บใหม่แทน
+// ------------------------------------------
 previewBtn.addEventListener('click', function() {
     const pdf = generatePDF();
     if(!pdf) { alert('กรุณาอัปโหลดรูปภาพก่อนครับ!'); return; }
+    
+    // สร้าง Blob แล้วเปิดในหน้าต่างใหม่ (วิธีนี้มือถือจะไม่บล็อกครับ)
     const blob = pdf.output('blob');
     const blobURL = URL.createObjectURL(blob);
-    pdfFrame.src = blobURL;
-    modal.style.display = 'block';
+    window.open(blobURL, '_blank'); 
 });
 
 closeModal.addEventListener('click', function() {
