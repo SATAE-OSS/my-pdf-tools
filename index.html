@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Magic Tools</title>
+    
+    <!-- ดึง CSS ไฟล์แยกมาใช้ -->
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- ดึงเครื่องมือ Drag & Drop และเครื่องมือทำ PDF มาใช้ -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h2>✨ PDF Magic Tools</h2>
+        <div class="subtitle">อัปโหลดรูป แล้วใช้นิ้วลากสลับตำแหน่งได้เลย</div>
+        
+        <input type="file" id="fileInput" multiple accept="image/png, image/jpeg, image/jpg">
+        
+        <div id="gallery">
+            <!-- รูปพรีวิวจะมาโผล่ตรงนี้ผ่าน JavaScript -->
+        </div>
+        
+        <input type="text" id="fileName" value="My_Document" placeholder="ตั้งชื่อไฟล์ PDF">
+        
+        <button class="btn" id="downloadBtn">⬇️ แปลงเป็น PDF แล้วดาวน์โหลด</button>
+    </div>
+
+    <!-- ดึง JavaScript ไฟล์แยกมาใช้ (ใส่ไว้ล่างสุดเพื่อให้โหลดหน้าเว็บเสร็จก่อน) -->
+    <script src="script.js"></script>
+</body>
+</html>
