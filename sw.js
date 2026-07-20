@@ -1,11 +1,10 @@
-const CACHE_NAME = 'pdf-magic-v12';
+const CACHE_NAME = 'pdf-magic-v16';
 const urlsToCache = [
   './',
   './index.html',
   './style.css',
   './script.js',
   './cloud-drawings.js',
-  './local-drafts.js',
   './pwa-ui.js',
   './supabase-config.js',
   './manifest.json',

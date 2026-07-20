@@ -188,18 +188,20 @@ body.dark-mode .pdf-options select { background: #2a2133; color: #f6eaf5; border
 }
 
 .dl-img-btn {
-    position: absolute; bottom: 0; width: 100%; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(4px);
-    color: #ff99a8; text-align: center; padding: 10px 0; font-size: 13px; font-weight: 600; 
-    text-decoration: none; cursor: pointer; transition: all 0.3s; border-top: 1px solid #ffe4e8;
+    position: absolute; z-index: 8; top: 8px; right: 8px; width: auto;
+    background: rgba(255,255,255,.94); backdrop-filter: blur(4px);
+    color: #e86691; text-align: center; padding: 7px 11px; border: 1px solid #ffe4e8;
+    border-radius: 13px; font-size: 11px; font-weight: 600; text-decoration: none;
+    cursor: pointer; transition: transform .2s, background .2s, color .2s;
 }
-.dl-img-btn:hover { background: #ff99a8; color: white; }
+.dl-img-btn:hover { background: #ff99a8; color: white; transform: translateY(-1px); }
 .extract-status {
     margin: -4px 0 12px; padding: 10px 13px; border-radius: 12px;
     background: #fff3f6; color: #8d6e63; font-size: 11px; text-align: center;
 }
 .pdf-page-card { cursor: default; touch-action: auto; background: #fff; }
 .pdf-page-card:active { transform: none; box-shadow: 0 6px 12px rgba(255,182,193,.15); }
-.pdf-page-card img { object-fit: contain; padding-bottom: 42px; box-sizing: border-box; }
+.pdf-page-card img { object-fit: contain; box-sizing: border-box; }
 body.dark-mode .extract-status { background: #251d2e; color: #cbbbd2; }
 
 /* -------------------------------------- */
@@ -315,7 +317,11 @@ body.dark-mode .dark-mode-btn { background: #342740; color: #ffe4f0; box-shadow:
     overflow-x: auto;
     white-space: nowrap;
     padding-bottom: 8px;
+    cursor: grab;
+    overscroll-behavior-inline: contain;
 }
+.tabs.dragging { cursor: grabbing; user-select: none; scroll-behavior: auto; }
+.tabs:focus-visible { outline: 2px solid rgba(255,143,188,.65); outline-offset: 3px; border-radius: 18px; }
 .tabs::-webkit-scrollbar { display: none; }
 
 /* ========================================= */
@@ -353,28 +359,31 @@ body.dark-mode .dark-mode-btn { background: #342740; color: #ffe4f0; box-shadow:
 
 /* ของเล่นสกุชชี่คนละหน้ากับบับเบิ้ล */
 .squishy-stage {
-    position: relative; display: flex; align-items: center; justify-content: space-around; gap: 18px;
+    position: relative; display: flex; align-items: center; justify-content: center;
     min-height: 430px; padding: 24px; box-sizing: border-box;
     overflow: hidden; border-radius: 28px; touch-action: none;
-    background: radial-gradient(circle at 50% 42%,#fffafc 0,#f6eaf0 58%,#e7dbe3 100%);
+    isolation: isolate;
+    background: radial-gradient(circle at 50% 38%,#fffafd 0,#f5e5f0 52%,#dfcfdd 100%);
     border: 1px solid #f3dce8;
 }
 .squishy-toy {
     --move-x: 0px; --move-y: 0px; --stretch-x: 1; --stretch-y: 1; --tilt: 0deg;
     --press-x: 50%; --press-y: 50%;
-    position: relative; z-index: 2; flex: 0 0 auto; width: clamp(105px,25%,150px); aspect-ratio: .92;
+    position: relative; z-index: 2; display: none; flex: 0 0 auto; width: min(42vw,240px); aspect-ratio: .92;
     padding: 0; border: 0; border-radius: 38% 38% 44% 44%; cursor: grab;
-    background: radial-gradient(circle at 30% 24%,rgba(255,255,255,.3),transparent 28%), linear-gradient(150deg,#ffd1e2,#f497bb 72%,#dd6f9c);
-    box-shadow: inset 10px 12px 18px rgba(255,255,255,.28), inset -9px -11px 17px rgba(151,65,105,.15), 0 22px 32px rgba(133,73,105,.2);
+    background: radial-gradient(circle at 28% 20%,rgba(255,255,255,.86) 0 6%,rgba(255,255,255,.28) 7% 24%,transparent 25%),linear-gradient(145deg,rgba(255,214,232,.94),rgba(244,137,184,.88) 70%,rgba(214,89,145,.92));
+    box-shadow: inset 18px 20px 25px rgba(255,255,255,.4),inset -15px -18px 24px rgba(135,45,91,.2),0 28px 38px rgba(123,55,92,.3),0 0 28px rgba(255,145,194,.18);
     transform: translate(var(--move-x),var(--move-y)) rotate(var(--tilt)) scale(var(--stretch-x),var(--stretch-y));
     transform-origin: center; touch-action: none; -webkit-tap-highlight-color: transparent;
     will-change: transform; contain: layout style;
-    transition: transform .58s cubic-bezier(.16,.9,.28,1.18), background .25s;
+    transition: transform .72s cubic-bezier(.16,1.3,.28,1.18),background .25s,filter .2s;
 }
-.squishy-toy.grabbing { z-index: 5; cursor: grabbing; transition: background .2s; }
-.squishy-toy.rebounding { animation: foam-recover .48s ease-out; }
-.squishy-toy[data-color="purple"] { border-radius: 48% 48% 40% 40%; background: radial-gradient(circle at 30% 24%,rgba(255,255,255,.25),transparent 28%),linear-gradient(150deg,#dfd0f7,#a986d9 72%,#8460b8); }
-.squishy-toy[data-color="mint"] { border-radius: 52% 48% 44% 56% / 38% 42% 58% 62%; background: radial-gradient(circle at 30% 24%,rgba(255,255,255,.25),transparent 28%),linear-gradient(150deg,#d1f3e5,#7bcaaa 72%,#4daa89); }
+.squishy-toy.active { display: block; }
+.squishy-toy.active:not(.grabbing):not(.rebounding) { animation: jelly-idle 2.4s ease-in-out infinite; }
+.squishy-toy.grabbing { z-index: 5; cursor: grabbing; transition: background .12s; filter: saturate(1.12) brightness(1.04); }
+.squishy-toy.rebounding { animation: foam-recover .7s ease-out; }
+.squishy-toy[data-color="purple"] { border-radius: 48% 48% 40% 40%; background: radial-gradient(circle at 28% 20%,rgba(255,255,255,.8) 0 6%,rgba(255,255,255,.25) 7% 24%,transparent 25%),linear-gradient(145deg,rgba(231,215,255,.95),rgba(165,125,222,.9) 72%,rgba(124,82,183,.94)); }
+.squishy-toy[data-color="mint"] { border-radius: 52% 48% 44% 56% / 38% 42% 58% 62%; background: radial-gradient(circle at 28% 20%,rgba(255,255,255,.8) 0 6%,rgba(255,255,255,.25) 7% 24%,transparent 25%),linear-gradient(145deg,rgba(211,255,239,.95),rgba(103,205,164,.9) 72%,rgba(54,161,123,.94)); }
 .squishy-accessory { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
 .squishy-accessory::before, .squishy-accessory::after { content: ''; position: absolute; }
 .squishy-toy[data-color="pink"] .squishy-accessory::before,
@@ -395,37 +404,49 @@ body.dark-mode .dark-mode-btn { background: #342740; color: #ffe4f0; box-shadow:
 }
 .squishy-shine {
     position: absolute; left: var(--press-x); top: var(--press-y); width: 58px; height: 34px;
-    border-radius: 50%; opacity: 0; pointer-events: none; transform: translate(-50%,-50%);
-    background: rgba(111,55,83,.1); box-shadow: inset 0 9px 13px rgba(107,49,79,.16),0 2px 5px rgba(255,255,255,.16);
+    border-radius: 50%; opacity: .42; pointer-events: none; transform: translate(-50%,-50%);
+    background: rgba(255,255,255,.48); box-shadow: inset 0 9px 13px rgba(107,49,79,.12),0 2px 8px rgba(255,255,255,.4);
     transition: opacity .12s;
 }
-.squishy-toy.grabbing .squishy-shine { opacity: 1; }
+.squishy-toy.grabbing .squishy-shine { opacity: .9; transform: translate(-50%,-50%) scale(1.18,.72); }
 .squishy-toy.multi-touch .squishy-face b { height: 7px; border-radius: 50%; border-width: 3px; }
+.squishy-toy.grabbing .squishy-face { transform: translate(-50%,-50%) scale(1.08,.9); }
 .squishy-face { position: absolute; left: 50%; top: 52%; display: flex; align-items: center; gap: 18px; transform: translate(-50%,-50%); }
 .squishy-face i { width: 10px; height: 15px; border-radius: 50%; background: #60404f; }
 .squishy-face b { width: 23px; height: 12px; border: 4px solid #60404f; border-top: 0; border-radius: 0 0 20px 20px; }
 .squishy-hint { margin: 12px 0; color: #8d6e63; font-size: 12px; text-align: center; }
-.squishy-controls { display: flex; justify-content: center; gap: 9px; }
+.squishy-controls { display: flex; flex-wrap: wrap; justify-content: center; gap: 9px; }
 .squishy-controls button { min-width: 46px; min-height: 44px; padding: 8px 12px; border: 1px solid #f0d5e1; border-radius: 14px; background: #fff9fc; color: #795548; font: 12px 'Prompt',sans-serif; cursor: pointer; }
 .squishy-controls button.active { border-color: #e887b5; box-shadow: 0 0 0 3px rgba(232,135,181,.15); }
 body.dark-mode .squishy-stage { background: radial-gradient(circle at 50% 42%,#2b2134,#17121d 72%); border-color: #4b3b59; }
 body.dark-mode .squishy-hint { color: #cbbbd2; }
 body.dark-mode .squishy-controls button { background: #251d2e; color: #ffe4f0; border-color: #594466; }
-@keyframes foam-recover { 0%{transform:scale(.95,.9)} 55%{transform:scale(1.035,.98)} 100%{transform:scale(1)} }
+@keyframes foam-recover {
+    0%{transform:scale(.66,1.3) rotate(-3deg)} 22%{transform:scale(1.24,.72) rotate(3deg)}
+    43%{transform:scale(.82,1.16) rotate(-2deg)} 62%{transform:scale(1.11,.9) rotate(1deg)}
+    80%{transform:scale(.96,1.05)} 100%{transform:scale(1)}
+}
+@keyframes jelly-idle { 0%,100%{transform:translateY(0) scale(1)} 45%{transform:translateY(-5px) scale(1.025,.975)} 70%{transform:translateY(1px) scale(.99,1.01)} }
+.squishy-spark {
+    position: absolute; z-index: 9; color: var(--spark-color); font-size: 19px; font-weight: 700;
+    pointer-events: none; text-shadow: 0 2px 6px rgba(255,255,255,.8);
+    animation: squishy-spark-fly .72s ease-out forwards;
+}
+@keyframes squishy-spark-fly { from{opacity:1;transform:translate(-50%,-50%) scale(.4) rotate(0)} to{opacity:0;transform:translate(calc(-50% + var(--spark-x)),calc(-50% + var(--spark-y))) scale(1.3) rotate(130deg)} }
 @media (max-width:520px) {
-    .squishy-stage { min-height: 390px; gap: 7px; padding: 16px 8px; background: #f3e8ef; }
+    .squishy-stage { min-height: 390px; gap: 7px; padding: 16px 8px; background: radial-gradient(circle at 50% 35%,#fff6fc,#ead8e6); }
     .squishy-toy {
-        width: clamp(88px,29%,112px); transition: background .18s;
-        box-shadow: inset 4px 5px 8px rgba(255,255,255,.2),inset -4px -5px 8px rgba(90,45,70,.1),0 7px 12px rgba(80,46,67,.14);
+        width: min(56vw,215px); transition: background .18s;
+        box-shadow: inset 13px 15px 20px rgba(255,255,255,.35),inset -10px -12px 18px rgba(90,45,70,.16),0 20px 28px rgba(80,46,67,.26),0 0 22px rgba(255,145,194,.16);
     }
-    .squishy-toy.rebounding { animation-duration: .34s; }
-    .squishy-shine { box-shadow: none; }
+    .squishy-toy.rebounding { animation-duration: .52s; }
+    .squishy-shine { box-shadow: 0 2px 8px rgba(255,255,255,.35); }
     .squishy-face { gap: 11px; }
     .squishy-face i { width: 7px; height: 11px; }
     .squishy-face b { width: 17px; height: 9px; border-width: 3px; }
-    body.dark-mode .squishy-stage { background: #19141f; }
+    body.dark-mode .squishy-stage { background: radial-gradient(circle at 50% 35%,#2b2134,#151019); }
 }
-@media (prefers-reduced-motion:reduce) { .squishy-toy{transition:none}.squishy-toy.rebounding{animation:none} }
+@media (prefers-reduced-motion:reduce) { .squishy-toy{transition:none}.squishy-toy.rebounding,.squishy-toy.active{animation:none} }
 
 /* ========================================= */
 /* ลูกเล่นที่ 3: กระดานสเก็ตช์ */
@@ -532,16 +553,6 @@ body.dark-mode .canvas-settings select { background: #251d2e; color: #f6eaf5; bo
 body.dark-mode .canvas-viewport { background: #15111b; border-color: #594466; }
 body.dark-mode #sketchCanvas:not(.transparent-canvas) { background: #fff; }
 
-.local-drafts-panel {
-    margin-top: 18px; padding: 0 18px; border-radius: 18px;
-    background: #fff9fa; border: 1px solid #ffe4e8;
-}
-.local-drafts-panel h3 { margin: 0; color: #5d4037; font-size: 15px; }
-.local-drafts-panel p { margin: 2px 0 0; color: #a1887f; font-size: 10px; }
-body.dark-mode .local-drafts-panel { background: rgba(24,18,31,.7); border-color: #4b3b59; }
-body.dark-mode .local-drafts-panel h3 { color: #ffe4f0; }
-body.dark-mode .local-drafts-panel p { color: #ad9db5; }
-
 @media (max-width: 520px) {
     .sketch-controls { margin-inline: -12px; padding: 12px; border-radius: 16px; }
     .tool-btn { padding-inline: 7px; font-size: 12px; }
@@ -573,10 +584,8 @@ body.dark-mode .local-drafts-panel p { color: #ad9db5; }
 .summary-meta i { display: inline-block; font-style: normal; font-size: 18px; transition: transform .2s ease; }
 .collapsible-panel[open] .summary-meta i { transform: rotate(180deg); }
 .collapsible-panel-body { padding: 0 0 20px; border-top: 1px solid #f2dce3; }
-.compact-heading { margin-top: 12px; color: #795548; font-size: 12px; }
 body.dark-mode .summary-meta { color: #ad9db5; }
 body.dark-mode .collapsible-panel-body { border-color: #4b3b59; }
-body.dark-mode .compact-heading { color: #d6c1d4; }
 .cloud-user-row, .saved-drawings-header {
     display: flex; align-items: center; justify-content: space-between; gap: 12px;
 }
@@ -647,7 +656,7 @@ body.dark-mode .account-tools > summary { color: #ad9db5; }
 body.dark-mode .account-tools span { color: #ad9db5; }
 
 @media (max-width: 520px) {
-    .cloud-save-panel, .local-drafts-panel { padding-inline: 15px; }
+    .cloud-save-panel { padding-inline: 15px; }
     .cloud-panel-heading { align-items: flex-start; }
     .panel-summary { min-height: 68px; }
     .panel-summary p { max-width: 210px; }
@@ -677,20 +686,6 @@ body.dark-mode .account-tools span { color: #ad9db5; }
 body.dark-mode .app-dialog { background: #251d2e; color: #ffe4f0; border-color: #594466; }
 body.dark-mode .app-dialog p { color: #c1b0c8; }
 body.dark-mode .dialog-icon { background: #37283f; }
-.save-draft-dialog { text-align: left; }
-.save-draft-dialog .dialog-icon, .save-draft-dialog h3, .save-draft-dialog p { text-align: center; }
-.save-draft-dialog .save-icon { background: linear-gradient(135deg,#f0d7ff,#ffd1e5); }
-.dialog-field { display: grid; gap: 7px; margin-bottom: 20px; color: #795548; font-size: 12px; font-weight: 700; }
-.dialog-field input {
-    width: 100%; min-height: 48px; box-sizing: border-box; padding: 11px 13px;
-    border: 2px solid #f2cfda; border-radius: 13px; outline: none;
-    background: #fff; color: #4f3944; font: 14px 'Prompt', sans-serif;
-    transition: border-color .2s, box-shadow .2s;
-}
-.dialog-field input:focus { border-color: #e184c2; box-shadow: 0 0 0 4px rgba(225,132,194,.15); }
-body.dark-mode .dialog-field { color: #d6c1d4; }
-body.dark-mode .dialog-field input { background: #17121d; color: #fff1f8; border-color: #624a70; }
-body.dark-mode .dialog-field input:focus { border-color: #d58ae5; box-shadow: 0 0 0 4px rgba(213,138,229,.14); }
 .share-dialog input {
     width: 100%; box-sizing: border-box; margin-bottom: 16px; padding: 12px;
     border: 1px solid #ffe4e8; border-radius: 12px; background: #fff; color: #5d4037;

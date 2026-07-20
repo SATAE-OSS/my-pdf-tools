@@ -141,6 +141,53 @@ function generatePDF() {
     return pdf;
 }
 
+// ทำให้แถบเมนูเลื่อนด้วยล้อเมาส์ ลากเมาส์ และคีย์บอร์ดบนคอมได้
+const tabsBar = document.querySelector('.tabs');
+let tabsDragStartX = null;
+let tabsScrollStart = 0;
+let tabsWasDragged = false;
+
+tabsBar.addEventListener('wheel', event => {
+    if (tabsBar.scrollWidth <= tabsBar.clientWidth) return;
+    event.preventDefault();
+    tabsBar.scrollLeft += Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
+}, { passive: false });
+
+tabsBar.addEventListener('pointerdown', event => {
+    if (event.pointerType !== 'mouse' || event.button !== 0) return;
+    tabsDragStartX = event.clientX;
+    tabsScrollStart = tabsBar.scrollLeft;
+    tabsWasDragged = false;
+    tabsBar.classList.add('dragging');
+    tabsBar.setPointerCapture(event.pointerId);
+});
+
+tabsBar.addEventListener('pointermove', event => {
+    if (tabsDragStartX === null) return;
+    const distance = event.clientX - tabsDragStartX;
+    if (Math.abs(distance) > 5) tabsWasDragged = true;
+    tabsBar.scrollLeft = tabsScrollStart - distance;
+});
+
+function stopTabsDrag() {
+    tabsDragStartX = null;
+    tabsBar.classList.remove('dragging');
+    window.setTimeout(() => { tabsWasDragged = false; }, 0);
+}
+tabsBar.addEventListener('pointerup', stopTabsDrag);
+tabsBar.addEventListener('pointercancel', stopTabsDrag);
+tabsBar.addEventListener('click', event => {
+    if (tabsWasDragged) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+}, true);
+tabsBar.addEventListener('keydown', event => {
+    if (!['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
+    event.preventDefault();
+    tabsBar.scrollBy({ left: event.key === 'ArrowRight' ? 160 : -160, behavior: 'smooth' });
+});
+
 function prepareImageForPdf(image, rotation, quality) {
     const rotated = rotation === 90 || rotation === 270;
     const output = document.createElement('canvas');
@@ -234,7 +281,7 @@ pdfInput.addEventListener('change', function(e) {
             const dlBtn = document.createElement('a');
             dlBtn.href = imgUrl;
             dlBtn.download = `${sourceName}-หน้า-${i}.jpg`;
-            dlBtn.innerHTML = '⬇️ บันทึกภาพหน้านี้';
+            dlBtn.innerHTML = '⬇️ บันทึก';
             dlBtn.className = 'dl-img-btn';
             dlBtn.setAttribute('aria-label', `บันทึกภาพหน้า ${i}`);
 
@@ -342,6 +389,7 @@ const squishyStage = document.getElementById('squishyStage');
 const squishyToys = Array.from(document.querySelectorAll('.squishy-toy'));
 const squishyHint = document.getElementById('squishyHint');
 const resetSquishyBtn = document.getElementById('resetSquishyBtn');
+const squishySelectorButtons = document.querySelectorAll('[data-select-squishy]');
 const squishyStates = new WeakMap();
 
 function clampSquishy(value, min, max) {
@@ -377,23 +425,57 @@ function renderSquishy(toy, state) {
     state.moveX = clampSquishy(state.baseX + deltaX * .88, state.minX, state.maxX);
     state.moveY = clampSquishy(state.baseY + deltaY * .84, state.minY, state.maxY);
 
-    let scaleX = 1.02;
-    let scaleY = .9;
+    let scaleX = 1;
+    let scaleY = 1;
     let rotation = state.moveX * .018;
+    let originX = 50;
+    let originY = 50;
     if (points.length > 1) {
-        const ratio = clampSquishy(gesture.spread / state.startSpread, .7, 1.45);
+        const ratio = clampSquishy(gesture.spread / state.startSpread, .45, 1.95);
         scaleX = ratio;
-        scaleY = clampSquishy(1.02 - (ratio - 1) * .48, .78, 1.17);
+        scaleY = clampSquishy(1.03 - (ratio - 1) * .52, .55, 1.46);
         rotation += (gesture.angle - state.startAngle) * 180 / Math.PI;
+    } else {
+        const dragDistance = Math.hypot(deltaX, deltaY);
+        const stretch = Math.min(.68, dragDistance / 190);
+        scaleX = 1 + stretch;
+        scaleY = 1 - stretch * .42;
+        if (dragDistance > 3) {
+            rotation = Math.atan2(deltaY, deltaX) * 180 / Math.PI;
+            originX = 50 - deltaX / dragDistance * 42;
+            originY = 50 - deltaY / dragDistance * 42;
+        }
     }
 
     // รวมทุกการขยับเป็น transform เดียว เพื่อให้มือถือส่งงานไปที่ GPU ได้ลื่นกว่า
+    toy.style.transformOrigin = `${originX}% ${originY}%`;
     toy.style.transform = `translate3d(${state.moveX}px,${state.moveY}px,0) rotate(${rotation}deg) scale(${scaleX},${scaleY})`;
     toy.classList.toggle('multi-touch', points.length > 1);
 }
 
 function scheduleSquishyRender(toy, state) {
     if (!state.frame) state.frame = requestAnimationFrame(() => renderSquishy(toy, state));
+}
+
+function burstSquishySparkles(toy) {
+    const stageRect = squishyStage.getBoundingClientRect();
+    const toyRect = toy.getBoundingClientRect();
+    const centerX = toyRect.left - stageRect.left + toyRect.width / 2;
+    const centerY = toyRect.top - stageRect.top + toyRect.height / 2;
+    for (let index = 0; index < 7; index++) {
+        const sparkle = document.createElement('span');
+        sparkle.className = 'squishy-spark';
+        sparkle.textContent = index % 3 === 0 ? '♡' : '✦';
+        const angle = index / 7 * Math.PI * 2 + Math.random() * .35;
+        const distance = 55 + Math.random() * 65;
+        sparkle.style.left = `${centerX}px`;
+        sparkle.style.top = `${centerY}px`;
+        sparkle.style.setProperty('--spark-x', `${Math.cos(angle) * distance}px`);
+        sparkle.style.setProperty('--spark-y', `${Math.sin(angle) * distance}px`);
+        sparkle.style.setProperty('--spark-color', toy.dataset.color === 'purple' ? '#c4a1ff' : toy.dataset.color === 'mint' ? '#72dfb8' : '#ff91bd');
+        squishyStage.appendChild(sparkle);
+        sparkle.addEventListener('animationend', () => sparkle.remove());
+    }
 }
 
 async function playSquishSound(action, color) {
@@ -425,6 +507,7 @@ function resetSquishyToy(toy, state) {
     state.moveY = 0;
     toy.classList.remove('grabbing', 'multi-touch');
     toy.style.removeProperty('transform');
+    toy.style.removeProperty('transform-origin');
     ['--press-x','--press-y'].forEach(property => toy.style.removeProperty(property));
 }
 
@@ -474,6 +557,7 @@ squishyToys.forEach(toy => {
         toy.classList.add('rebounding');
         resetSquishyToy(toy, state);
         playSquishSound('release', toy.dataset.color);
+        burstSquishySparkles(toy);
         squishyHint.textContent = 'คืนรูปแล้ว ลองใช้สองหรือสามนิ้วบีบอีกที ☁️';
         window.setTimeout(() => toy.classList.remove('rebounding'), 480);
     };
@@ -488,8 +572,21 @@ resetSquishyBtn.addEventListener('click', () => {
         resetSquishyToy(toy, state);
         window.setTimeout(() => toy.classList.remove('rebounding'), 480);
     });
-    squishyHint.textContent = 'คืนรูปทั้งสามตัวแล้ว พร้อมเล่นต่อ ✨';
+    squishyHint.textContent = 'คืนรูปแล้ว พร้อมดึงเล่นต่อ ✨';
 });
+
+squishySelectorButtons.forEach(button => button.addEventListener('click', () => {
+    const selectedColor = button.dataset.selectSquishy;
+    squishyToys.forEach(toy => {
+        const state = squishyStates.get(toy);
+        resetSquishyToy(toy, state);
+        toy.classList.toggle('active', toy.dataset.color === selectedColor);
+    });
+    squishySelectorButtons.forEach(item => item.classList.toggle('active', item === button));
+    const names = { pink: 'น้องหมี', purple: 'น้องกระต่าย', mint: 'น้องลูกแพร์' };
+    squishyHint.textContent = `${names[selectedColor]}พร้อมให้บีบแล้ว ลองลากให้ยืดดูสิ`;
+    playSquishSound('release', selectedColor);
+}));
 
 // ==========================================
 // 4. ระบบกระดานสเก็ตช์ภาพมินิ

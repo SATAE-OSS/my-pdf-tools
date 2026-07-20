@@ -33,7 +33,7 @@
     </script>
 </head>
 <body>
-    <span class="app-version" title="PDF Magic version 1.2.0">v1.2.0</span>
+    <span class="app-version" title="PDF Magic version 1.4.0">v1.4.0</span>
     <!-- ปุ่มโหมดกลางคืน (เพิ่มใหม่) -->
     <button id="darkModeBtn" class="dark-mode-btn" type="button" aria-label="เปิดโหมดกลางคืน" aria-pressed="false">🌙</button>
     <div class="app-connectivity" aria-live="polite">
@@ -42,7 +42,7 @@
     </div>
 
     <!-- เมนูหลัก -->
-    <div class="tabs">
+    <div class="tabs" tabindex="0" aria-label="เมนูเครื่องมือ เลื่อนซ้ายขวาได้">
         <button class="tab-btn active" onclick="openTab('mergeTab', this)">✨ รวมรูป PDF</button>
         <button class="tab-btn" onclick="openTab('extractTab', this)">🔄 แยกรูป</button>
         <button class="tab-btn" onclick="openTab('bubbleTab', this)">🫧 บีบบับเบิ้ล</button>
@@ -114,10 +114,10 @@
 
     <!-- ของเล่นสกุชชี่ แยกจากบับเบิ้ล -->
     <div id="squishyTab" class="container tab-content" style="display: none;">
-        <h2>🫠 สกุชชี่โฟมนุ่ม</h2>
-        <div class="subtitle">กดให้น้องบุ๋ม หรือลากไปรอบ ๆ แล้วปล่อยให้คืนรูป</div>
+        <h2>🫠 เยลลี่สกุชชี่</h2>
+        <div class="subtitle">ดึงให้ยืด บีบให้แบน แล้วปล่อยดูน้องเด้งดึ๋ง</div>
         <div class="squishy-stage" id="squishyStage">
-            <button class="squishy-toy" data-color="pink" type="button" aria-label="สกุชชี่สีชมพู กดและลากหลายนิ้วได้">
+            <button class="squishy-toy active" data-color="pink" type="button" aria-label="สกุชชี่หมีสีชมพู กดและลากหลายนิ้วได้">
                 <span class="squishy-accessory" aria-hidden="true"></span>
                 <span class="squishy-shine" aria-hidden="true"></span>
                 <span class="squishy-face" aria-hidden="true"><i></i><b></b><i></i></span>
@@ -133,8 +133,11 @@
                 <span class="squishy-face" aria-hidden="true"><i></i><b></b><i></i></span>
             </button>
         </div>
-        <p class="squishy-hint" id="squishyHint" aria-live="polite">ใช้สองนิ้วดึงหรือบีบตัวเดียว หรือเล่นสามตัวพร้อมกันได้เลย</p>
-        <div class="squishy-controls" aria-label="เลือกสีสกุชชี่">
+        <p class="squishy-hint" id="squishyHint" aria-live="polite">ลากหนึ่งนิ้วให้ยืด หรือใช้สองนิ้วบีบและดึงได้เลย</p>
+        <div class="squishy-controls" aria-label="เลือกตัวสกุชชี่">
+            <button type="button" class="active" data-select-squishy="pink">🐻 หมี</button>
+            <button type="button" data-select-squishy="purple">🐰 กระต่าย</button>
+            <button type="button" data-select-squishy="mint">🍐 ลูกแพร์</button>
             <button type="button" id="resetSquishyBtn">↺ คืนรูปทั้งหมด</button>
         </div>
     </div>
@@ -188,7 +191,7 @@
             <div class="canvas-actions tool-row" role="group" aria-label="จัดการภาพ">
                 <button class="tool-btn icon-btn" id="undoCanvasBtn" type="button" disabled>↶ <span>ย้อนกลับ</span></button>
                 <button class="tool-btn icon-btn" id="redoCanvasBtn" type="button" disabled>↷ <span>ทำซ้ำ</span></button>
-                <button class="tool-btn icon-btn" id="saveLocalDraftBtn" type="button">💾 <span>บันทึกภาพ</span></button>
+                <button class="tool-btn icon-btn" id="saveCloudShortcutBtn" type="button">☁️ <span>บันทึกบนคลาวด์</span></button>
                 <button class="tool-btn icon-btn" id="downloadCanvasBtn" type="button">⬇️ <span>ดาวน์โหลด</span></button>
                 <button class="tool-btn icon-btn danger" id="clearCanvasBtn" type="button">🗑️ <span>ล้างภาพ</span></button>
             </div>
@@ -225,23 +228,6 @@
                 <div id="brushCursor" class="brush-cursor" aria-hidden="true"></div>
             </div>
         </div>
-
-        <details class="local-drafts-panel collapsible-panel" id="localDraftsPanel">
-            <summary class="panel-summary">
-                <div>
-                    <h3 id="localDraftsTitle">📱 ภาพที่บันทึกไว้</h3>
-                    <p>เปิดวาดต่อได้โดยไม่ต้องล็อกอิน ภาพจะอยู่เฉพาะในอุปกรณ์นี้</p>
-                </div>
-                <span class="summary-meta"><span id="localDraftCount">0 ภาพ</span><i aria-hidden="true">⌄</i></span>
-            </summary>
-            <div class="collapsible-panel-body">
-                <div class="saved-drawings-header compact-heading">
-                    <strong>ภาพในอุปกรณ์นี้</strong>
-                    <button class="text-btn" id="clearLocalDraftsBtn" type="button">ล้างทั้งหมด</button>
-                </div>
-                <div id="localDrafts" class="saved-drawings"></div>
-            </div>
-        </details>
 
         <details class="cloud-save-panel collapsible-panel" id="cloudSavePanel">
             <summary class="panel-summary cloud-panel-heading">
@@ -319,22 +305,6 @@
         </div>
     </dialog>
 
-    <dialog id="saveDraftDialog" class="app-dialog save-draft-dialog" aria-labelledby="saveDraftDialogTitle">
-        <form id="saveDraftForm" method="dialog">
-            <div class="dialog-icon save-icon">💾</div>
-            <h3 id="saveDraftDialogTitle">บันทึกภาพนี้</h3>
-            <p>ตั้งชื่อไว้สักหน่อย จะได้กลับมาเปิดวาดต่อได้ง่าย</p>
-            <label class="dialog-field" for="localDraftTitle">
-                <span>ชื่อภาพ</span>
-                <input id="localDraftTitle" type="text" maxlength="80" autocomplete="off" required>
-            </label>
-            <div class="dialog-actions">
-                <button class="btn btn-outline" id="cancelSaveDraftBtn" type="button">ยกเลิก</button>
-                <button class="btn" type="submit">บันทึกภาพ</button>
-            </div>
-        </form>
-    </dialog>
-
     <dialog id="shareDialog" class="app-dialog share-dialog" aria-labelledby="shareDialogTitle">
         <div class="dialog-icon">🔗</div>
         <h3 id="shareDialogTitle">แชร์ภาพ</h3>
@@ -364,7 +334,6 @@
     <script src="vendor/supabase.js"></script>
     <script src="supabase-config.js"></script>
     <script src="script.js"></script>
-    <script src="local-drafts.js"></script>
     <script src="cloud-drawings.js"></script>
     <script src="pwa-ui.js"></script>
     

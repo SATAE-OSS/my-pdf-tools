@@ -32,6 +32,7 @@ const sharedViewImage = document.getElementById('sharedViewImage');
 const downloadSharedViewBtn = document.getElementById('downloadSharedViewBtn');
 const closeSharedViewBtn = document.getElementById('closeSharedViewBtn');
 const cloudSavePanel = document.getElementById('cloudSavePanel');
+const saveCloudShortcutBtn = document.getElementById('saveCloudShortcutBtn');
 
 let cloudUser = null;
 let pendingLoginEmail = sessionStorage.getItem('pdf-magic-login-email') || '';
@@ -183,6 +184,17 @@ saveDrawingBtn.addEventListener('click', async () => {
     } finally {
         setButtonBusy(saveDrawingBtn, false);
     }
+});
+
+saveCloudShortcutBtn.addEventListener('click', () => {
+    cloudSavePanel.open = true;
+    cloudSavePanel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (!cloudUser) {
+        setCloudMessage('เข้าสู่ระบบก่อนครั้งเดียว แล้วภาพจะเปิดได้จากทุกอุปกรณ์', 'error');
+        window.setTimeout(() => authEmail.focus(), 350);
+        return;
+    }
+    saveDrawingBtn.click();
 });
 
 function friendlyCloudError(error) {
