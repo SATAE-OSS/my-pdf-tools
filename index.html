@@ -33,7 +33,7 @@
     </script>
 </head>
 <body>
-    <span class="app-version" title="PDF Magic version 1.5.6">v1.5.6</span>
+    <span class="app-version" title="PDF Magic version 1.6.1">v1.6.1</span>
     <!-- ปุ่มโหมดกลางคืน (เพิ่มใหม่) -->
     <button id="darkModeBtn" class="dark-mode-btn" type="button" aria-label="เปิดโหมดกลางคืน" aria-pressed="false">🌙</button>
     <div class="app-connectivity" aria-live="polite">
@@ -48,6 +48,7 @@
         <button class="tab-btn" onclick="openTab('bubbleTab', this)">🫧 บีบบับเบิ้ล</button>
         <button class="tab-btn" onclick="openTab('squishyTab', this)">🫠 สไลม์</button>
         <button class="tab-btn" onclick="openTab('sketchTab', this)">🎨 สเก็ตช์ภาพ</button>
+        <button class="tab-btn" onclick="openTab('scaleTab', this)">📐 สเกลและหน่วย</button>
     </div>
 
     <!-- หน้าที่ 1: รวมรูปเป็น PDF -->
@@ -129,6 +130,213 @@
             <button type="button" data-slime-color="mint" aria-label="สีเขียว">💚</button>
             <button type="button" id="resetSquishyBtn">คืนรูป</button>
         </div>
+    </div>
+
+    <!-- เครื่องคำนวณสเกลและหน่วยสำหรับงานออกแบบภายใน -->
+    <div id="scaleTab" class="container tab-content scale-tool-page" style="display: none;">
+        <h2>📐 สเกลและหน่วย</h2>
+        <div class="subtitle">คำนวณงานเขียนแบบได้โดยไม่ต้องจำสูตร ลองใส่ตัวเลขแล้วดูคำตอบทันที</div>
+
+        <div class="scale-section-nav" role="tablist" aria-label="เลือกเครื่องมือคำนวณ">
+            <button class="active" type="button" data-scale-panel="scaleCalculator" role="tab" aria-selected="true">📏 คำนวณสเกล</button>
+            <button type="button" data-scale-panel="unitConverter" role="tab" aria-selected="false">🔄 แปลงหน่วย</button>
+            <button type="button" data-scale-panel="paperChecker" role="tab" aria-selected="false">📄 เช็กกระดาษ</button>
+        </div>
+
+        <section id="scaleCalculator" class="scale-panel active" aria-labelledby="scaleCalculatorTitle">
+            <div class="scale-panel-heading">
+                <div class="scale-panel-icon">📏</div>
+                <div>
+                    <h3 id="scaleCalculatorTitle">คำนวณจากไม้สเกล</h3>
+                    <p>แปลงระหว่างขนาดของจริงกับขนาดที่ต้องวาดบนกระดาษ</p>
+                </div>
+            </div>
+
+            <div class="scale-mode-switch" role="group" aria-label="ทิศทางการคำนวณ">
+                <button class="active" type="button" data-scale-mode="realToPaper">ของจริง → บนกระดาษ</button>
+                <button type="button" data-scale-mode="paperToReal">บนกระดาษ → ของจริง</button>
+            </div>
+
+            <div class="calculator-grid">
+                <label class="calculator-field">
+                    <span id="scaleInputLabel">ระยะของจริง</span>
+                    <div class="field-with-unit">
+                        <input id="scaleInputValue" type="number" inputmode="decimal" min="0" step="any" value="3">
+                        <select id="scaleInputUnit" aria-label="หน่วยระยะต้นทาง"></select>
+                    </div>
+                </label>
+                <label class="calculator-field">
+                    <span>สเกลที่ใช้</span>
+                    <select id="drawingScaleRatio">
+                        <option value="1">1:1 · ขนาดจริง</option>
+                        <option value="2">1:2 · รายละเอียดใหญ่</option>
+                        <option value="5">1:5 · รายละเอียดวัสดุ</option>
+                        <option value="10">1:10 · รายละเอียด</option>
+                        <option value="15">1:15</option>
+                        <option value="20">1:20 · เฟอร์นิเจอร์</option>
+                        <option value="25">1:25 · รายละเอียดห้อง</option>
+                        <option value="30">1:30</option>
+                        <option value="40">1:40</option>
+                        <option value="50" selected>1:50 · แปลนห้อง</option>
+                        <option value="75">1:75</option>
+                        <option value="100">1:100 · แปลนรวม</option>
+                        <option value="125">1:125</option>
+                        <option value="150">1:150</option>
+                        <option value="200">1:200 · ภาพรวม</option>
+                        <option value="250">1:250</option>
+                        <option value="500">1:500 · พื้นที่ใหญ่</option>
+                        <option value="custom">กำหนดสเกลเอง…</option>
+                    </select>
+                    <div class="custom-scale-input" id="drawingCustomScaleWrap" hidden>
+                        <span>1 :</span><input id="drawingCustomScale" type="number" inputmode="decimal" min="0.01" step="any" value="30" aria-label="ตัวเลขสเกลกำหนดเอง">
+                    </div>
+                </label>
+                <label class="calculator-field">
+                    <span>แสดงคำตอบเป็น</span>
+                    <select id="scaleOutputUnit" aria-label="หน่วยคำตอบ"></select>
+                </label>
+            </div>
+
+            <div class="scale-presets" aria-label="สเกลที่ใช้บ่อย">
+                <span>เลือกเร็ว</span>
+                <button type="button" data-scale-ratio="5">1:5</button>
+                <button type="button" data-scale-ratio="10">1:10</button>
+                <button type="button" data-scale-ratio="20">1:20</button>
+                <button type="button" data-scale-ratio="25">1:25</button>
+                <button class="active" type="button" data-scale-ratio="50">1:50</button>
+                <button type="button" data-scale-ratio="100">1:100</button>
+                <button type="button" data-scale-ratio="200">1:200</button>
+            </div>
+
+            <div class="calculator-result" id="scaleResult" aria-live="polite">
+                <span class="result-kicker">คำตอบ</span>
+                <strong id="scaleResultValue">6 เซนติเมตร</strong>
+                <p id="scaleResultExplanation">ของจริง 3 เมตร ที่สเกล 1:50 ให้วาดบนกระดาษยาว 6 เซนติเมตร</p>
+            </div>
+        </section>
+
+        <section id="unitConverter" class="scale-panel" hidden aria-labelledby="unitConverterTitle">
+            <div class="scale-panel-heading">
+                <div class="scale-panel-icon">🔄</div>
+                <div>
+                    <h3 id="unitConverterTitle">แปลงหน่วยทั่วไป</h3>
+                    <p>รวมหน่วยที่เจอในแบบ ขนาดสินค้า และพื้นที่ห้อง</p>
+                </div>
+            </div>
+
+            <label class="calculator-field unit-category-field">
+                <span>ประเภทหน่วย</span>
+                <select id="unitCategory">
+                    <option value="length">ความยาว</option>
+                    <option value="area">พื้นที่</option>
+                    <option value="volume">ปริมาตร</option>
+                    <option value="weight">น้ำหนัก</option>
+                    <option value="temperature">อุณหภูมิ</option>
+                </select>
+            </label>
+
+            <div class="unit-converter-row">
+                <label class="calculator-field">
+                    <span>จาก</span>
+                    <input id="unitInputValue" type="number" inputmode="decimal" step="any" value="2400">
+                    <select id="unitFrom"></select>
+                </label>
+                <button class="swap-units-btn" id="swapUnitsBtn" type="button" aria-label="สลับหน่วย">⇄</button>
+                <label class="calculator-field">
+                    <span>เป็น</span>
+                    <output id="unitOutputValue" class="unit-output">2.4</output>
+                    <select id="unitTo"></select>
+                </label>
+            </div>
+            <p class="unit-equation" id="unitEquation" aria-live="polite">2,400 มิลลิเมตร = 2.4 เมตร</p>
+        </section>
+
+        <section id="paperChecker" class="scale-panel" hidden aria-labelledby="paperCheckerTitle">
+            <div class="scale-panel-heading">
+                <div class="scale-panel-icon">📄</div>
+                <div>
+                    <h3 id="paperCheckerTitle">เช็กว่าลงกระดาษพอดีไหม</h3>
+                    <p>กรอกขนาดพื้นที่จริง แล้วดูว่าควรใช้สเกลเท่าไร</p>
+                </div>
+            </div>
+
+            <div class="paper-check-layout">
+                <div class="calculator-grid paper-fields">
+                    <label class="calculator-field">
+                        <span>ความกว้างจริง</span>
+                        <div class="field-with-unit"><input id="roomWidth" type="number" inputmode="decimal" min="0" step="any" value="6"><span>เมตร</span></div>
+                    </label>
+                    <label class="calculator-field">
+                        <span>ความยาวจริง</span>
+                        <div class="field-with-unit"><input id="roomHeight" type="number" inputmode="decimal" min="0" step="any" value="8"><span>เมตร</span></div>
+                    </label>
+                    <label class="calculator-field">
+                        <span>สเกล</span>
+                        <select id="paperScaleRatio">
+                            <option value="1">1:1</option>
+                            <option value="2">1:2</option>
+                            <option value="5">1:5</option>
+                            <option value="10">1:10</option>
+                            <option value="15">1:15</option>
+                            <option value="20">1:20</option>
+                            <option value="25">1:25</option>
+                            <option value="30">1:30</option>
+                            <option value="40">1:40</option>
+                            <option value="50" selected>1:50</option>
+                            <option value="75">1:75</option>
+                            <option value="100">1:100</option>
+                            <option value="125">1:125</option>
+                            <option value="150">1:150</option>
+                            <option value="200">1:200</option>
+                            <option value="250">1:250</option>
+                            <option value="500">1:500</option>
+                            <option value="custom">กำหนดเอง…</option>
+                        </select>
+                        <div class="custom-scale-input" id="paperCustomScaleWrap" hidden>
+                            <span>1 :</span><input id="paperCustomScale" type="number" inputmode="decimal" min="0.01" step="any" value="75" aria-label="ตัวเลขสเกลกระดาษกำหนดเอง">
+                        </div>
+                    </label>
+                    <label class="calculator-field">
+                        <span>กระดาษ</span>
+                        <select id="paperSize">
+                            <optgroup label="กระดาษตระกูล A">
+                            <option value="a0">A0 · 841 × 1189 มม.</option>
+                            <option value="a1">A1 · 594 × 841 มม.</option>
+                            <option value="a2">A2 · 420 × 594 มม.</option>
+                            <option value="a3">A3 · 297 × 420 มม.</option>
+                            <option value="a4" selected>A4 · 210 × 297 มม.</option>
+                            <option value="a5">A5 · 148 × 210 มม.</option>
+                            </optgroup>
+                            <optgroup label="กระดาษสากลอื่น ๆ">
+                            <option value="letter">Letter · 8.5 × 11 นิ้ว</option>
+                            <option value="legal">Legal · 8.5 × 14 นิ้ว</option>
+                            <option value="tabloid">Tabloid · 11 × 17 นิ้ว</option>
+                            </optgroup>
+                        </select>
+                    </label>
+                    <label class="calculator-field">
+                        <span>แนวกระดาษ</span>
+                        <select id="paperOrientation">
+                            <option value="landscape" selected>แนวนอน</option>
+                            <option value="portrait">แนวตั้ง</option>
+                        </select>
+                    </label>
+                </div>
+
+                <div class="paper-preview-wrap">
+                    <div class="paper-preview landscape" id="paperPreview" aria-hidden="true">
+                        <div class="paper-safe-area">
+                            <div class="drawing-preview" id="drawingPreview"><span>แบบ</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="paper-result fits" id="paperResult" aria-live="polite">
+                <strong id="paperResultTitle">✓ วางบน A4 ได้</strong>
+                <p id="paperResultDetail">แบบจะมีขนาด 12 × 16 ซม. บนกระดาษ</p>
+            </div>
+        </section>
     </div>
 
     <!-- หน้ากระดานสเก็ตช์มินิ -->
@@ -324,6 +532,7 @@
     <script src="vendor/supabase.js"></script>
     <script src="supabase-config.js"></script>
     <script src="script.js"></script>
+    <script src="scale-tools.js"></script>
     <script src="cloud-drawings.js"></script>
     <script src="pwa-ui.js"></script>
     
