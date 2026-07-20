@@ -700,12 +700,39 @@ function floodFill(startX, startY, hexColor) {
     const fillColor = hexToRgba(hexColor);
     const startIndex = (startY * canvas.width + startX) * 4;
     const targetColor = Array.from(pixels.slice(startIndex, startIndex + 4));
+    const visited = new Uint8Array(canvas.width * canvas.height);
 
     if (targetColor.every((value, index) => value === fillColor[index])) return;
 
-    const matchesTarget = index =>
-        pixels[index] === targetColor[0] && pixels[index + 1] === targetColor[1] &&
-        pixels[index + 2] === targetColor[2] && pixels[index + 3] === targetColor[3];
+    // Canvas ทำขอบเส้นแบบ anti-alias จึงมีพิกเซลกึ่งโปร่งใสรอบเส้น
+    // ยอมรับสีใกล้เคียงและวางสีไว้ "ใต้" ขอบโปร่งใส เพื่อไม่ให้เกิดขอบหยัก
+    const matchesTarget = index => {
+        const pixelNumber = index / 4;
+        if (visited[pixelNumber]) return false;
+        const alpha = pixels[index + 3];
+        if (targetColor[3] < 16) return alpha < 245;
+        const red = pixels[index] - targetColor[0];
+        const green = pixels[index + 1] - targetColor[1];
+        const blue = pixels[index + 2] - targetColor[2];
+        const alphaDifference = alpha - targetColor[3];
+        return red * red + green * green + blue * blue < 110 * 110 &&
+            alphaDifference * alphaDifference < 80 * 80;
+    };
+
+    const paintPixel = index => {
+        visited[index / 4] = 1;
+        const originalAlpha = pixels[index + 3] / 255;
+        if (targetColor[3] < 16 && originalAlpha > 0) {
+            pixels[index] = Math.round(pixels[index] * originalAlpha + fillColor[0] * (1 - originalAlpha));
+            pixels[index + 1] = Math.round(pixels[index + 1] * originalAlpha + fillColor[1] * (1 - originalAlpha));
+            pixels[index + 2] = Math.round(pixels[index + 2] * originalAlpha + fillColor[2] * (1 - originalAlpha));
+        } else {
+            pixels[index] = fillColor[0];
+            pixels[index + 1] = fillColor[1];
+            pixels[index + 2] = fillColor[2];
+        }
+        pixels[index + 3] = 255;
+    };
     const stack = [[startX, startY]];
 
     while (stack.length) {
@@ -725,10 +752,7 @@ function floodFill(startX, startY, hexColor) {
             index = (currentY * canvas.width + x) * 4;
             if (!matchesTarget(index)) break;
 
-            pixels[index] = fillColor[0];
-            pixels[index + 1] = fillColor[1];
-            pixels[index + 2] = fillColor[2];
-            pixels[index + 3] = fillColor[3];
+            paintPixel(index);
 
             if (x > 0) {
                 const leftIndex = index - 4;
