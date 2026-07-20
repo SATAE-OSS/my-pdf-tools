@@ -13,6 +13,9 @@ function openTab(tabId, btnElement) {
     // โชว์หน้าที่เลือก และใส่สี active ให้ปุ่มที่โดนกด
     document.getElementById(tabId).style.display = 'block';
     btnElement.classList.add('active');
+
+    // Canvas ที่ซ่อนอยู่จะวัดความกว้างไม่ได้ จึงปรับขนาดหลังเปิดแท็บ
+    if (tabId === 'sketchTab') requestAnimationFrame(resizeCanvas);
 }
 
 // ==========================================
@@ -103,33 +106,26 @@ function generatePDF() {
     return pdf;
 }
 
-const modal = document.getElementById('previewModal');
-const closeModal = document.getElementById('closeModal');
-const pdfFrame = document.getElementById('pdfFrame');
-
-// ------------------------------------------
-// เปลี่ยนจากเดิมที่เป็น Modal ให้เป็นการเปิดไฟล์ในแท็บใหม่แทน
-// ------------------------------------------
 previewBtn.addEventListener('click', function() {
+    // เปิดหน้าต่างทันทีจากการคลิก เพื่อไม่ให้เบราว์เซอร์มือถือมองว่าเป็นป๊อปอัป
+    const previewWindow = window.open('', '_blank');
     const pdf = generatePDF();
-    if(!pdf) { alert('กรุณาอัปโหลดรูปภาพก่อนครับ!'); return; }
+    if(!pdf) {
+        if (previewWindow) previewWindow.close();
+        alert('กรุณาอัปโหลดรูปภาพก่อนครับ!');
+        return;
+    }
     
     // สร้าง Blob แล้วเปิดในหน้าต่างใหม่ (วิธีนี้มือถือจะไม่บล็อกครับ)
     const blob = pdf.output('blob');
     const blobURL = URL.createObjectURL(blob);
-    window.open(blobURL, '_blank'); 
-});
-
-closeModal.addEventListener('click', function() {
-    modal.style.display = 'none';
-    pdfFrame.src = ''; 
-});
-
-window.addEventListener('click', function(event) {
-    if (event.target == modal) {
-        modal.style.display = 'none';
-        pdfFrame.src = '';
+    if (previewWindow) {
+        previewWindow.location.href = blobURL;
+    } else {
+        alert('เบราว์เซอร์บล็อกหน้าพรีวิว กรุณาอนุญาตป๊อปอัปสำหรับเว็บไซต์นี้');
     }
+    // ให้แท็บใหม่มีเวลาอ่าน Blob ก่อนคืนหน่วยความจำ
+    window.setTimeout(() => URL.revokeObjectURL(blobURL), 60000);
 });
 
 downloadBtn.addEventListener('click', function() {
@@ -160,13 +156,14 @@ pdfInput.addEventListener('change', function(e) {
 
     const fileReader = new FileReader();
     fileReader.onload = async function() {
-        const typedarray = new Uint8Array(this.result);
-        const pdf = await pdfjsLib.getDocument(typedarray).promise;
-        pdfGallery.innerHTML = '';
+        try {
+            const typedarray = new Uint8Array(this.result);
+            const pdf = await pdfjsLib.getDocument(typedarray).promise;
+            pdfGallery.innerHTML = '';
 
-        for (let i = 1; i <= pdf.numPages; i++) {
-            const page = await pdf.getPage(i);
-            const viewport = page.getViewport({ scale: 2.0 });
+            for (let i = 1; i <= pdf.numPages; i++) {
+                const page = await pdf.getPage(i);
+                const viewport = page.getViewport({ scale: 2.0 });
 
             const canvas = document.createElement('canvas');
             const context = canvas.getContext('2d');
@@ -202,13 +199,22 @@ pdfInput.addEventListener('change', function(e) {
             div.appendChild(badge);
             div.appendChild(img);
             div.appendChild(dlBtn);
-            pdfGallery.appendChild(div);
-        }
+                pdfGallery.appendChild(div);
+            }
         
-        // เมื่อดึงภาพครบทุกหน้าแล้ว ให้แสดงปุ่มดาวน์โหลด ZIP
-        if(extractedImages.length > 0) {
-            downloadZipBtn.style.display = 'block';
+            // เมื่อดึงภาพครบทุกหน้าแล้ว ให้แสดงปุ่มดาวน์โหลด ZIP
+            if(extractedImages.length > 0) {
+                downloadZipBtn.style.display = 'block';
+            }
+        } catch (error) {
+            console.error('ไม่สามารถอ่าน PDF ได้:', error);
+            extractedImages = [];
+            downloadZipBtn.style.display = 'none';
+            pdfGallery.innerHTML = '<p class="error-message" style="grid-column: 1 / -1; text-align: center;">❌ ไม่สามารถอ่าน PDF ได้ ไฟล์อาจเสีย มีรหัสผ่าน หรือไม่ใช่ PDF ที่รองรับ</p>';
         }
+    };
+    fileReader.onerror = function() {
+        pdfGallery.innerHTML = '<p class="error-message" style="grid-column: 1 / -1; text-align: center;">❌ เบราว์เซอร์ไม่สามารถอ่านไฟล์นี้ได้ กรุณาลองใหม่</p>';
     };
     fileReader.readAsArrayBuffer(file);
 });
@@ -228,9 +234,13 @@ downloadZipBtn.addEventListener('click', function() {
     // สั่งดาวน์โหลด
     zip.generateAsync({type:"blob"}).then(function(content) {
         const link = document.createElement('a');
-        link.href = URL.createObjectURL(content);
+        const zipURL = URL.createObjectURL(content);
+        link.href = zipURL;
         link.download = "extracted_images.zip";
+        document.body.appendChild(link);
         link.click();
+        link.remove();
+        window.setTimeout(() => URL.revokeObjectURL(zipURL), 1000);
         
         downloadZipBtn.innerText = "📦 ดาวน์โหลดรูปทั้งหมด (.ZIP)";
     });
@@ -304,8 +314,19 @@ let lastY = 0;
 
 // ปรับขนาด Canvas ให้พอดีมือถือ
 function resizeCanvas() {
-    canvas.width = canvas.parentElement.clientWidth;
-    canvas.height = 400; // ความสูงกระดาน
+    const newWidth = canvas.parentElement.clientWidth;
+    if (!newWidth || (canvas.width === newWidth && canvas.height === 400)) return;
+
+    // เก็บภาพเดิมไว้ เพราะการเปลี่ยน width/height จะล้าง Canvas อัตโนมัติ
+    const snapshot = document.createElement('canvas');
+    snapshot.width = canvas.width;
+    snapshot.height = canvas.height;
+    snapshot.getContext('2d').drawImage(canvas, 0, 0);
+
+    canvas.width = newWidth;
+    canvas.height = 400;
+    ctx.drawImage(snapshot, 0, 0, snapshot.width, snapshot.height,
+        0, 0, canvas.width, canvas.height);
 }
 window.addEventListener('load', resizeCanvas);
 window.addEventListener('resize', resizeCanvas);

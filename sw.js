@@ -1,9 +1,17 @@
-const CACHE_NAME = 'pdf-magic-v1';
+const CACHE_NAME = 'pdf-magic-v2';
 const urlsToCache = [
   './',
   './index.html',
   './style.css',
-  './script.js'
+  './script.js',
+  './manifest.json',
+  './icon-192.png',
+  './icon-512.png',
+  './vendor/Sortable.min.js',
+  './vendor/jspdf.umd.min.js',
+  './vendor/pdf.min.js',
+  './vendor/pdf.worker.min.js',
+  './vendor/jszip.min.js'
 ];
 
 // บันทึกไฟล์ลง Cache เมื่อติดตั้งแอป
@@ -19,5 +27,13 @@ self.addEventListener('fetch', event => {
   event.respondWith(
     caches.match(event.request)
       .then(response => response || fetch(event.request))
+  );
+});
+
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys().then(names => Promise.all(
+      names.filter(name => name !== CACHE_NAME).map(name => caches.delete(name))
+    )).then(() => self.clients.claim())
   );
 });
