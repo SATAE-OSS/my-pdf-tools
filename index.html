@@ -33,6 +33,7 @@
     </script>
 </head>
 <body>
+    <span class="app-version" title="PDF Magic version 1.1.0">v1.1.0</span>
     <!-- ปุ่มโหมดกลางคืน (เพิ่มใหม่) -->
     <button id="darkModeBtn" class="dark-mode-btn" type="button" aria-label="เปิดโหมดกลางคืน" aria-pressed="false">🌙</button>
     <div class="app-connectivity" aria-live="polite">
@@ -40,11 +41,12 @@
         <button id="installAppBtn" class="mini-app-btn" type="button" hidden>ติดตั้งแอป</button>
     </div>
 
-    <!-- เมนู Tabs (แก้ไขให้มี 4 ปุ่ม) -->
+    <!-- เมนูหลัก -->
     <div class="tabs">
         <button class="tab-btn active" onclick="openTab('mergeTab', this)">✨ รวมรูป PDF</button>
         <button class="tab-btn" onclick="openTab('extractTab', this)">🔄 แยกรูป</button>
         <button class="tab-btn" onclick="openTab('bubbleTab', this)">🫧 บีบบับเบิ้ล</button>
+        <button class="tab-btn" onclick="openTab('squishyTab', this)">🫠 สกุชชี่</button>
         <button class="tab-btn" onclick="openTab('sketchTab', this)">🎨 สเก็ตช์ภาพ</button>
     </div>
 
@@ -95,13 +97,11 @@
     <!-- หน้าที่ 2: แปลง PDF เป็นรูปภาพ -->
     <div id="extractTab" class="container tab-content" style="display: none;">
         <h2>🔄 แปลง PDF เป็นรูปภาพ</h2>
-        <div class="subtitle">อัปโหลดไฟล์ PDF เพื่อแยกแต่ละหน้าเป็นรูปภาพ</div>
+        <div class="subtitle">แยกแต่ละหน้าแล้วเลือกบันทึกเฉพาะภาพที่ต้องการได้เลย</div>
         
         <input type="file" id="pdfInput" accept="application/pdf">
+        <p id="extractStatus" class="extract-status" role="status">เลือกไฟล์ PDF แล้วภาพแต่ละหน้าจะแสดงด้านล่าง</p>
         <div id="pdfGallery" class="gallery-grid"></div>
-        
-        <!-- ปุ่มโหลดทั้งหมดแบบ ZIP -->
-        <button class="btn btn-zip" id="downloadZipBtn" style="display: none;">📦 ดาวน์โหลดรูปทั้งหมด (.ZIP)</button>
     </div>
 
     <!-- หน้าที่ 3: บีบบับเบิ้ล (เพิ่มใหม่) -->
@@ -109,10 +109,30 @@
         <h2>🫧 บับเบิ้ลกันกระแทก</h2>
         <div class="subtitle">จิ้มเล่นระบายความเครียดตอนคิดงานไม่ออกนะ!</div>
         <div id="bubbleGrid" class="bubble-grid"></div>
-        <button class="btn btn-outline" onclick="createBubbles()" style="margin-top:20px;">🔄 รีเซ็ตบับเบิ้ล</button>
+        <button class="btn btn-outline" id="resetBubblesBtn" type="button" style="margin-top:20px;">🔄 รีเซ็ตบับเบิ้ล</button>
     </div>
 
-    <!-- หน้าที่ 4: กระดานสเก็ตช์มินิ (เพิ่มใหม่) -->
+    <!-- ของเล่นสกุชชี่ แยกจากบับเบิ้ล -->
+    <div id="squishyTab" class="container tab-content" style="display: none;">
+        <h2>🫠 สกุชชี่นุ่มนิ่ม</h2>
+        <div class="subtitle">กด บีบ หรือลากน้อง แล้วปล่อยให้เด้งกลับ</div>
+        <div class="squishy-stage" id="squishyStage">
+            <div class="squishy-shadow" aria-hidden="true"></div>
+            <button class="squishy-toy" id="squishyToy" type="button" aria-label="ของเล่นสกุชชี่ กดและลากเล่นได้">
+                <span class="squishy-shine" aria-hidden="true"></span>
+                <span class="squishy-face" aria-hidden="true"><i></i><b></b><i></i></span>
+            </button>
+        </div>
+        <p class="squishy-hint" id="squishyHint" aria-live="polite">ลองลากแก้มไปด้านข้างดูสิ</p>
+        <div class="squishy-controls" aria-label="เลือกสีสกุชชี่">
+            <button type="button" data-squishy-color="pink" class="active" aria-label="สีชมพู">🩷</button>
+            <button type="button" data-squishy-color="purple" aria-label="สีม่วง">💜</button>
+            <button type="button" data-squishy-color="mint" aria-label="สีมิ้นต์">💚</button>
+            <button type="button" id="resetSquishyBtn">คืนรูป</button>
+        </div>
+    </div>
+
+    <!-- หน้ากระดานสเก็ตช์มินิ -->
     <div id="sketchTab" class="container tab-content" style="display: none;">
         <h2>🎨 มินิสเก็ตช์แพด</h2>
         <div class="subtitle">จดไอเดียหรือวาดแปลนห้องคร่าวๆ ได้เลย</div>

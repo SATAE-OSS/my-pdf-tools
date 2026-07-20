@@ -185,22 +185,19 @@ downloadBtn.addEventListener('click', function() {
 });
 
 // ==========================================
-// ส่วนที่ 2: ระบบแปลง PDF เป็นรูปภาพ (แบบมีปุ่ม ZIP)
+// ส่วนที่ 2: ระบบแปลง PDF เป็นรูปภาพและเลือกบันทึกทีละหน้า
 // ==========================================
 const pdfInput = document.getElementById('pdfInput');
 const pdfGallery = document.getElementById('pdfGallery');
-const downloadZipBtn = document.getElementById('downloadZipBtn');
-
-// สร้างตัวแปรเก็บข้อมูลภาพไว้สำหรับทำ ZIP
-let extractedImages = []; 
+const extractStatus = document.getElementById('extractStatus');
 
 pdfInput.addEventListener('change', function(e) {
     const file = e.target.files[0];
     if (!file) return;
 
-    pdfGallery.innerHTML = '<p style="grid-column: 1 / -1; text-align: center;">⏳ กำลังประมวลผล แยกหน้า PDF...</p>';
-    downloadZipBtn.style.display = 'none'; // ซ่อนปุ่ม ZIP ระหว่างโหลด
-    extractedImages = []; // เคลียร์ภาพเก่า
+    pdfGallery.innerHTML = '<p class="drawing-placeholder">⏳ กำลังแยกหน้า PDF...</p>';
+    extractStatus.textContent = 'กำลังประมวลผล กรุณารอสักครู่';
+    const sourceName = file.name.replace(/\.pdf$/i, '').replace(/[\\/:*?"<>|]/g, '_') || 'PDF';
 
     const fileReader = new FileReader();
     fileReader.onload = async function() {
@@ -221,14 +218,8 @@ pdfInput.addEventListener('change', function(e) {
             await page.render({ canvasContext: context, viewport: viewport }).promise;
             const imgUrl = canvas.toDataURL('image/jpeg');
 
-            // เก็บภาพลง Array ไว้เตรียมทำ ZIP
-            extractedImages.push({
-                name: `page_${i}.jpg`,
-                data: imgUrl.split(',')[1] // เก็บเฉพาะข้อมูล base64 ไม่เอาส่วน header
-            });
-
             const div = document.createElement('div');
-            div.className = 'img-card';
+            div.className = 'img-card pdf-page-card';
             
             // ใส่เลขหน้าให้พรีวิวด้วย
             const badge = document.createElement('div');
@@ -237,12 +228,14 @@ pdfInput.addEventListener('change', function(e) {
 
             const img = document.createElement('img');
             img.src = imgUrl;
+            img.alt = `${sourceName} หน้า ${i}`;
 
             const dlBtn = document.createElement('a');
             dlBtn.href = imgUrl;
-            dlBtn.download = `page_${i}.jpg`;
-            dlBtn.innerHTML = `⬇️ โหลดหน้าที่ ${i}`;
+            dlBtn.download = `${sourceName}-หน้า-${i}.jpg`;
+            dlBtn.innerHTML = '⬇️ บันทึกภาพหน้านี้';
             dlBtn.className = 'dl-img-btn';
+            dlBtn.setAttribute('aria-label', `บันทึกภาพหน้า ${i}`);
 
             div.appendChild(badge);
             div.appendChild(img);
@@ -250,48 +243,18 @@ pdfInput.addEventListener('change', function(e) {
                 pdfGallery.appendChild(div);
             }
         
-            // เมื่อดึงภาพครบทุกหน้าแล้ว ให้แสดงปุ่มดาวน์โหลด ZIP
-            if(extractedImages.length > 0) {
-                downloadZipBtn.style.display = 'block';
-            }
+            extractStatus.textContent = `แยกเสร็จแล้ว ${pdf.numPages} หน้า · เลือกกดบันทึกใต้ภาพที่ต้องการ`;
         } catch (error) {
             console.error('ไม่สามารถอ่าน PDF ได้:', error);
-            extractedImages = [];
-            downloadZipBtn.style.display = 'none';
+            extractStatus.textContent = 'แยกไฟล์ไม่สำเร็จ';
             pdfGallery.innerHTML = '<p class="error-message" style="grid-column: 1 / -1; text-align: center;">❌ ไม่สามารถอ่าน PDF ได้ ไฟล์อาจเสีย มีรหัสผ่าน หรือไม่ใช่ PDF ที่รองรับ</p>';
         }
     };
     fileReader.onerror = function() {
+        extractStatus.textContent = 'อ่านไฟล์ไม่สำเร็จ';
         pdfGallery.innerHTML = '<p class="error-message" style="grid-column: 1 / -1; text-align: center;">❌ เบราว์เซอร์ไม่สามารถอ่านไฟล์นี้ได้ กรุณาลองใหม่</p>';
     };
     fileReader.readAsArrayBuffer(file);
-});
-
-// ฟังก์ชันเมื่อกดปุ่มดาวน์โหลด ZIP
-downloadZipBtn.addEventListener('click', function() {
-    if(extractedImages.length === 0) return;
-    
-    downloadZipBtn.innerText = "⏳ กำลังสร้างไฟล์ ZIP...";
-    const zip = new JSZip();
-    
-    // เอาภาพทั้งหมดที่เก็บไว้ ยัดลงไฟล์ ZIP
-    extractedImages.forEach(img => {
-        zip.file(img.name, img.data, {base64: true});
-    });
-    
-    // สั่งดาวน์โหลด
-    zip.generateAsync({type:"blob"}).then(function(content) {
-        const link = document.createElement('a');
-        const zipURL = URL.createObjectURL(content);
-        link.href = zipURL;
-        link.download = "extracted_images.zip";
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-        window.setTimeout(() => URL.revokeObjectURL(zipURL), 1000);
-        
-        downloadZipBtn.innerText = "📦 ดาวน์โหลดรูปทั้งหมด (.ZIP)";
-    });
 });
 // ==========================================
 // 1. ระบบโหมดทำงานกลางคืน (Dark Mode)
@@ -317,20 +280,24 @@ darkModeBtn.addEventListener('click', () => {
 // ==========================================
 // 2. ระบบบับเบิ้ลกันกระแทก พร้อมเสียง ASMR
 // ==========================================
+const bubbleGrid = document.getElementById('bubbleGrid');
+const resetBubblesBtn = document.getElementById('resetBubblesBtn');
+
 function createBubbles() {
-    const grid = document.getElementById('bubbleGrid');
-    grid.innerHTML = '';
-    // สร้างบับเบิ้ล 20 ลูก
+    bubbleGrid.innerHTML = '';
     for (let i = 0; i < 20; i++) {
-        let bubble = document.createElement('div');
+        const bubble = document.createElement('button');
+        bubble.type = 'button';
         bubble.className = 'bubble';
-        bubble.onclick = function() {
-            if (!this.classList.contains('popped')) {
-                this.classList.add('popped');
-                playPopSound(); // เรียกเสียงตอนกด
-            }
-        };
-        grid.appendChild(bubble);
+        bubble.setAttribute('aria-label', `บับเบิ้ลลูกที่ ${i + 1}`);
+        bubble.setAttribute('aria-pressed', 'false');
+        bubble.addEventListener('click', () => {
+            if (bubble.classList.contains('popped')) return;
+            bubble.classList.add('popped');
+            bubble.setAttribute('aria-pressed', 'true');
+            playPopSound();
+        });
+        bubbleGrid.appendChild(bubble);
     }
 }
 
@@ -363,11 +330,81 @@ async function playPopSound() {
         gain.disconnect();
     });
 }
+resetBubblesBtn.addEventListener('click', createBubbles);
 // เรียกสร้างบับเบิ้ลครั้งแรกตอนเปิดเว็บ
 window.addEventListener('load', createBubbles);
 
 // ==========================================
-// 3. ระบบกระดานสเก็ตช์ภาพมินิ
+// 3. ของเล่นสกุชชี่
+// ==========================================
+const squishyToy = document.getElementById('squishyToy');
+const squishyHint = document.getElementById('squishyHint');
+const resetSquishyBtn = document.getElementById('resetSquishyBtn');
+const squishyColorButtons = document.querySelectorAll('[data-squishy-color]');
+let squishyPointerId = null;
+let squishyStartX = 0;
+let squishyStartY = 0;
+let squishyMoved = false;
+
+function resetSquishy() {
+    squishyPointerId = null;
+    squishyToy.classList.remove('grabbing');
+    squishyToy.style.removeProperty('--move-x');
+    squishyToy.style.removeProperty('--move-y');
+    squishyToy.style.removeProperty('--stretch-x');
+    squishyToy.style.removeProperty('--stretch-y');
+    squishyToy.style.removeProperty('--tilt');
+    squishyToy.style.removeProperty('border-radius');
+}
+
+squishyToy.addEventListener('pointerdown', event => {
+    if (squishyPointerId !== null) return;
+    event.preventDefault();
+    squishyPointerId = event.pointerId;
+    squishyStartX = event.clientX;
+    squishyStartY = event.clientY;
+    squishyMoved = false;
+    squishyToy.classList.add('grabbing');
+    squishyToy.setPointerCapture(event.pointerId);
+    if (navigator.vibrate) navigator.vibrate(6);
+});
+
+squishyToy.addEventListener('pointermove', event => {
+    if (event.pointerId !== squishyPointerId) return;
+    const deltaX = Math.max(-85, Math.min(85, event.clientX - squishyStartX));
+    const deltaY = Math.max(-65, Math.min(65, event.clientY - squishyStartY));
+    const distance = Math.hypot(deltaX, deltaY);
+    squishyMoved ||= distance > 6;
+    const stretch = Math.min(.34, distance / 260);
+    squishyToy.style.setProperty('--move-x', `${deltaX * .38}px`);
+    squishyToy.style.setProperty('--move-y', `${deltaY * .3}px`);
+    squishyToy.style.setProperty('--stretch-x', String(1 + stretch));
+    squishyToy.style.setProperty('--stretch-y', String(1 - stretch * .55));
+    squishyToy.style.setProperty('--tilt', `${deltaX * .06}deg`);
+    squishyToy.style.borderRadius = `${48 + deltaY * .08}% ${52 - deltaX * .05}% ${48 - deltaY * .08}% ${52 + deltaX * .05}%`;
+});
+
+function releaseSquishy(event) {
+    if (event.pointerId !== squishyPointerId) return;
+    squishyToy.classList.add('rebounding');
+    resetSquishy();
+    squishyHint.textContent = squishyMoved ? 'เด้งกลับแล้ว นุ่มนิ่มมาก ☁️' : 'ลองลากให้ยืดกว่านี้อีกนิด';
+    window.setTimeout(() => squishyToy.classList.remove('rebounding'), 480);
+}
+
+squishyToy.addEventListener('pointerup', releaseSquishy);
+squishyToy.addEventListener('pointercancel', releaseSquishy);
+resetSquishyBtn.addEventListener('click', () => {
+    resetSquishy();
+    squishyHint.textContent = 'คืนรูปเรียบร้อย พร้อมบีบต่อ ✨';
+});
+squishyColorButtons.forEach(button => button.addEventListener('click', () => {
+    squishyToy.dataset.color = button.dataset.squishyColor;
+    squishyColorButtons.forEach(item => item.classList.toggle('active', item === button));
+}));
+
+// ==========================================
+// 4. ระบบกระดานสเก็ตช์ภาพมินิ
 // ==========================================
 const canvas = document.getElementById('sketchCanvas');
 const ctx = canvas.getContext('2d');
