@@ -7,6 +7,8 @@ const saveDraftDialog = document.getElementById('saveDraftDialog');
 const saveDraftForm = document.getElementById('saveDraftForm');
 const localDraftTitle = document.getElementById('localDraftTitle');
 const cancelSaveDraftBtn = document.getElementById('cancelSaveDraftBtn');
+const localDraftsPanel = document.getElementById('localDraftsPanel');
+const localDraftCount = document.getElementById('localDraftCount');
 
 function openLocalDraftDatabase() {
     return new Promise((resolve, reject) => {
@@ -53,6 +55,7 @@ function clearLocalDraftDatabase() {
 async function renderLocalDrafts() {
     try {
         const drafts = (await getAllLocalDrafts()).sort((a, b) => b.updatedAt - a.updatedAt);
+        localDraftCount.textContent = `${drafts.length} ภาพ`;
         localDraftsContainer.innerHTML = '';
         if (!drafts.length) {
             localDraftsContainer.innerHTML = '<p class="drawing-placeholder">ยังไม่มีภาพที่บันทึกไว้</p>';
@@ -158,6 +161,7 @@ saveLocalDraftBtn.addEventListener('click', async () => {
             updatedAt: Date.now()
         });
         await renderLocalDrafts();
+        localDraftsPanel.open = true;
     } finally {
         saveLocalDraftBtn.disabled = false;
     }

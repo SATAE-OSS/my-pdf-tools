@@ -31,6 +31,7 @@ const sharedViewTitle = document.getElementById('sharedViewTitle');
 const sharedViewImage = document.getElementById('sharedViewImage');
 const downloadSharedViewBtn = document.getElementById('downloadSharedViewBtn');
 const closeSharedViewBtn = document.getElementById('closeSharedViewBtn');
+const cloudSavePanel = document.getElementById('cloudSavePanel');
 
 let cloudUser = null;
 let pendingLoginEmail = sessionStorage.getItem('pdf-magic-login-email') || '';
@@ -320,6 +321,9 @@ async function deleteDrawing(drawing) {
 }
 
 refreshDrawingsBtn.addEventListener('click', loadSavedDrawings);
+cloudSavePanel.addEventListener('toggle', () => {
+    if (cloudSavePanel.open && cloudUser) loadSavedDrawings();
+});
 
 function updateAccountUsage(drawings) {
     const bytes = drawings.reduce((total, drawing) => total + Number(drawing.file_size || 0), 0);

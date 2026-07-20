@@ -445,7 +445,7 @@ body.dark-mode .canvas-viewport { background: #15111b; border-color: #594466; }
 body.dark-mode #sketchCanvas:not(.transparent-canvas) { background: #fff; }
 
 .local-drafts-panel {
-    margin-top: 18px; padding: 18px; border-radius: 18px;
+    margin-top: 18px; padding: 0 18px; border-radius: 18px;
     background: #fff9fa; border: 1px solid #ffe4e8;
 }
 .local-drafts-panel h3 { margin: 0; color: #5d4037; font-size: 15px; }
@@ -471,14 +471,29 @@ body.dark-mode .local-drafts-panel p { color: #ad9db5; }
 /* บันทึกภาพบน Supabase */
 /* ========================================= */
 .cloud-save-panel {
-    margin-top: 24px; padding: 22px; border-radius: 20px;
+    margin-top: 14px; padding: 0 22px; border-radius: 20px;
     background: #fff9fa; border: 1px solid #ffe4e8;
 }
-.cloud-panel-heading, .cloud-user-row, .saved-drawings-header {
+.collapsible-panel { overflow: hidden; }
+.panel-summary {
+    display: flex; align-items: center; justify-content: space-between; gap: 14px;
+    min-height: 72px; cursor: pointer; list-style: none; user-select: none;
+}
+.panel-summary::-webkit-details-marker { display: none; }
+.panel-summary:focus-visible { outline: 2px solid #e184c2; outline-offset: 4px; border-radius: 10px; }
+.summary-meta { display: flex; align-items: center; gap: 9px; flex: 0 0 auto; color: #a1887f; font-size: 11px; }
+.summary-meta i { display: inline-block; font-style: normal; font-size: 18px; transition: transform .2s ease; }
+.collapsible-panel[open] .summary-meta i { transform: rotate(180deg); }
+.collapsible-panel-body { padding: 0 0 20px; border-top: 1px solid #f2dce3; }
+.compact-heading { margin-top: 12px; color: #795548; font-size: 12px; }
+body.dark-mode .summary-meta { color: #ad9db5; }
+body.dark-mode .collapsible-panel-body { border-color: #4b3b59; }
+body.dark-mode .compact-heading { color: #d6c1d4; }
+.cloud-user-row, .saved-drawings-header {
     display: flex; align-items: center; justify-content: space-between; gap: 12px;
 }
 .cloud-panel-heading h3 { margin: 0; color: #5d4037; font-size: 18px; }
-.cloud-panel-heading p { margin: 3px 0 16px; color: #a1887f; font-size: 12px; }
+.cloud-panel-heading p { margin: 3px 0 0; color: #a1887f; font-size: 12px; }
 .cloud-status {
     flex: 0 0 auto; padding: 5px 10px; border-radius: 20px;
     background: #f0e8ea; color: #8d6e63; font-size: 11px; font-weight: 600;
@@ -532,18 +547,23 @@ body.dark-mode .saved-drawing-card > img { background: #17131f; }
 body.dark-mode .cloud-message.success { color: #83dbae; }
 body.dark-mode .cloud-message.error { color: #ff92a7; }
 .account-tools {
-    display: grid; gap: 10px; margin-top: 16px; padding-top: 14px;
+    margin-top: 16px; padding-top: 14px;
     border-top: 1px solid #ffe4e8;
 }
-.account-tools > div:first-child { display: flex; justify-content: space-between; gap: 10px; font-size: 12px; }
+.account-tools > summary { cursor: pointer; color: #a1887f; font-size: 11px; text-align: right; }
+.account-usage-row { display: flex; justify-content: space-between; gap: 10px; margin-top: 12px; font-size: 12px; }
 .account-tools span { color: #a1887f; }
 .account-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 3px; }
 body.dark-mode .account-tools { border-color: #4b3b59; }
+body.dark-mode .account-tools > summary { color: #ad9db5; }
 body.dark-mode .account-tools span { color: #ad9db5; }
 
 @media (max-width: 520px) {
-    .cloud-save-panel { padding: 17px; }
+    .cloud-save-panel, .local-drafts-panel { padding-inline: 15px; }
     .cloud-panel-heading { align-items: flex-start; }
+    .panel-summary { min-height: 68px; }
+    .panel-summary p { max-width: 210px; }
+    .summary-meta { gap: 5px; }
     .cloud-inline-form { flex-direction: column; }
     .cloud-inline-form .btn { width: 100%; }
     .saved-drawings { grid-template-columns: 1fr; }
