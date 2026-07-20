@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pdf-magic-v4';
+const CACHE_NAME = 'pdf-magic-v5';
 const urlsToCache = [
   './',
   './index.html',
@@ -22,6 +22,7 @@ self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => cache.addAll(urlsToCache))
+      .then(() => self.skipWaiting())
   );
 });
 
