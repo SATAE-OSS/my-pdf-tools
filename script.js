@@ -403,14 +403,20 @@ function renderSquishy(toy, state) {
 
     let scaleX = 1;
     let scaleY = 1;
-    let rotation = 0;
+    let directionalMatrix = '';
     let originX = 50;
     let originY = 50;
     if (points.length > 1) {
         const ratio = clampSquishy(gesture.spread / state.startSpread, .45, 1.95);
         scaleX = ratio;
         scaleY = clampSquishy(1.03 - (ratio - 1) * .52, .55, 1.46);
-        rotation += (gesture.angle - state.startAngle) * 180 / Math.PI;
+        const cosine = Math.cos(gesture.angle);
+        const sine = Math.sin(gesture.angle);
+        const matrixA = cosine * cosine * scaleX + sine * sine * scaleY;
+        const matrixB = sine * cosine * (scaleX - scaleY);
+        const matrixC = matrixB;
+        const matrixD = sine * sine * scaleX + cosine * cosine * scaleY;
+        directionalMatrix = `matrix(${matrixA},${matrixB},${matrixC},${matrixD},0,0)`;
     } else {
         const horizontalStretch = Math.min(.72, Math.abs(deltaX) / 175);
         const verticalStretch = Math.min(.72, Math.abs(deltaY) / 175);
@@ -427,7 +433,9 @@ function renderSquishy(toy, state) {
 
     // รวมทุกการขยับเป็น transform เดียว เพื่อให้มือถือส่งงานไปที่ GPU ได้ลื่นกว่า
     toy.style.transformOrigin = `${originX}% ${originY}%`;
-    toy.style.transform = `translate3d(${state.moveX}px,${state.moveY}px,0) rotate(${rotation}deg) scale(${scaleX},${scaleY})`;
+    toy.style.transform = points.length > 1
+        ? `translate3d(${state.moveX}px,${state.moveY}px,0) ${directionalMatrix}`
+        : `translate3d(${state.moveX}px,${state.moveY}px,0) scale(${scaleX},${scaleY})`;
     toy.classList.toggle('multi-touch', points.length > 1);
 }
 
@@ -495,6 +503,7 @@ squishyToys.forEach(toy => {
 
     toy.addEventListener('pointerdown', event => {
         event.preventDefault();
+        if (state.pointers.size >= 2) return;
         const toyRect = toy.getBoundingClientRect();
         const stageRect = squishyStage.getBoundingClientRect();
         state.minX = -(toy.offsetLeft + toy.offsetWidth / 2 - 10);
