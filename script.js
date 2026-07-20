@@ -235,3 +235,129 @@ downloadZipBtn.addEventListener('click', function() {
         downloadZipBtn.innerText = "📦 ดาวน์โหลดรูปทั้งหมด (.ZIP)";
     });
 });
+// ==========================================
+// 1. ระบบโหมดทำงานกลางคืน (Dark Mode)
+// ==========================================
+const darkModeBtn = document.getElementById('darkModeBtn');
+darkModeBtn.addEventListener('click', () => {
+    document.body.classList.toggle('dark-mode');
+    if (document.body.classList.contains('dark-mode')) {
+        darkModeBtn.innerText = '☀️';
+    } else {
+        darkModeBtn.innerText = '🌙';
+    }
+});
+
+// ==========================================
+// 2. ระบบบับเบิ้ลกันกระแทก พร้อมเสียง ASMR
+// ==========================================
+function createBubbles() {
+    const grid = document.getElementById('bubbleGrid');
+    grid.innerHTML = '';
+    // สร้างบับเบิ้ล 20 ลูก
+    for (let i = 0; i < 20; i++) {
+        let bubble = document.createElement('div');
+        bubble.className = 'bubble';
+        bubble.onclick = function() {
+            if (!this.classList.contains('popped')) {
+                this.classList.add('popped');
+                playPopSound(); // เรียกเสียงตอนกด
+            }
+        };
+        grid.appendChild(bubble);
+    }
+}
+
+// สร้างเสียง "ป๊อป" ด้วย Web Audio API (ไม่ต้องโหลดไฟล์เสียงเพิ่ม)
+function playPopSound() {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(800, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(300, ctx.currentTime + 0.1);
+    
+    gain.gain.setValueAtTime(1, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+    
+    osc.start();
+    osc.stop(ctx.currentTime + 0.1);
+}
+// เรียกสร้างบับเบิ้ลครั้งแรกตอนเปิดเว็บ
+window.addEventListener('load', createBubbles);
+
+// ==========================================
+// 3. ระบบกระดานสเก็ตช์ภาพมินิ
+// ==========================================
+const canvas = document.getElementById('sketchCanvas');
+const ctx = canvas.getContext('2d');
+const colorPicker = document.getElementById('colorPicker');
+const brushSize = document.getElementById('brushSize');
+const clearBtn = document.getElementById('clearCanvasBtn');
+
+let isDrawing = false;
+let lastX = 0;
+let lastY = 0;
+
+// ปรับขนาด Canvas ให้พอดีมือถือ
+function resizeCanvas() {
+    canvas.width = canvas.parentElement.clientWidth;
+    canvas.height = 400; // ความสูงกระดาน
+}
+window.addEventListener('load', resizeCanvas);
+window.addEventListener('resize', resizeCanvas);
+
+function startDrawing(e) {
+    isDrawing = true;
+    const pos = getPos(e);
+    lastX = pos.x;
+    lastY = pos.y;
+}
+
+function draw(e) {
+    if (!isDrawing) return;
+    e.preventDefault(); // ป้องกันการเลื่อนจอตอนวาด
+    const pos = getPos(e);
+    
+    ctx.beginPath();
+    ctx.moveTo(lastX, lastY);
+    ctx.lineTo(pos.x, pos.y);
+    ctx.strokeStyle = colorPicker.value;
+    ctx.lineWidth = brushSize.value;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.stroke();
+    
+    lastX = pos.x;
+    lastY = pos.y;
+}
+
+function stopDrawing() { isDrawing = false; }
+
+// ดึงตำแหน่งเมาส์ หรือ นิ้วสัมผัส
+function getPos(e) {
+    const rect = canvas.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    return {
+        x: clientX - rect.left,
+        y: clientY - rect.top
+    };
+}
+
+// รองรับทั้งเมาส์และนิ้วทัชสกรีน
+canvas.addEventListener('mousedown', startDrawing);
+canvas.addEventListener('mousemove', draw);
+canvas.addEventListener('mouseup', stopDrawing);
+canvas.addEventListener('mouseout', stopDrawing);
+
+canvas.addEventListener('touchstart', startDrawing, {passive: false});
+canvas.addEventListener('touchmove', draw, {passive: false});
+canvas.addEventListener('touchend', stopDrawing);
+
+clearBtn.addEventListener('click', () => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+});

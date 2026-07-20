@@ -33,6 +33,17 @@
     </script>
 </head>
 <body>
+    <!-- ปุ่มโหมดกลางคืน (เพิ่มใหม่) -->
+    <button id="darkModeBtn" class="dark-mode-btn">🌙</button>
+
+    <!-- เมนู Tabs (แก้ไขให้มี 4 ปุ่ม) -->
+    <div class="tabs">
+        <button class="tab-btn active" onclick="openTab('mergeTab', this)">✨ รวมรูป PDF</button>
+        <button class="tab-btn" onclick="openTab('extractTab', this)">🔄 แยกรูป</button>
+        <button class="tab-btn" onclick="openTab('bubbleTab', this)">🫧 บีบบับเบิ้ล</button>
+        <button class="tab-btn" onclick="openTab('sketchTab', this)">🎨 สเก็ตช์ภาพ</button>
+    </div>
+
     <!-- เมนู Tabs สำหรับสลับหน้า -->
     <div class="tabs">
         <button class="tab-btn active" onclick="openTab('mergeTab', this)">✨ รวมรูปเป็น PDF</button>
@@ -73,6 +84,27 @@
             <h3 style="margin-top: 0; color: #5d4037; text-align: center;">👁️ พรีวิวเอกสาร PDF</h3>
             <iframe id="pdfFrame" src="" width="100%" height="500px" style="border: 1px solid #ffe4e8; border-radius: 16px; background: #fffcfd;"></iframe>
         </div>
+    </div>
+
+    <!-- หน้าที่ 3: บีบบับเบิ้ล (เพิ่มใหม่) -->
+    <div id="bubbleTab" class="container tab-content" style="display: none;">
+        <h2>🫧 บับเบิ้ลกันกระแทก</h2>
+        <div class="subtitle">จิ้มเล่นระบายความเครียดตอนคิดงานไม่ออกนะ!</div>
+        <div id="bubbleGrid" class="bubble-grid"></div>
+        <button class="btn btn-outline" onclick="createBubbles()" style="margin-top:20px;">🔄 รีเซ็ตบับเบิ้ล</button>
+    </div>
+
+    <!-- หน้าที่ 4: กระดานสเก็ตช์มินิ (เพิ่มใหม่) -->
+    <div id="sketchTab" class="container tab-content" style="display: none;">
+        <h2>🎨 มินิสเก็ตช์แพด</h2>
+        <div class="subtitle">จดไอเดียหรือวาดแปลนห้องคร่าวๆ ได้เลย</div>
+        
+        <div class="sketch-controls">
+            <input type="color" id="colorPicker" value="#5d4037">
+            <input type="range" id="brushSize" min="1" max="10" value="3">
+            <button class="btn btn-outline" id="clearCanvasBtn" style="padding: 5px 15px; font-size: 14px;">🗑️ ลบทั้งหมด</button>
+        </div>
+        <canvas id="sketchCanvas" width="300" height="400"></canvas>
     </div>
 
     <!-- ดึงไฟล์ JavaScript ของเรามาใช้งาน -->

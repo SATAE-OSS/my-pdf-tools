@@ -215,3 +215,92 @@ input[type="text"]:focus {
     transform: rotate(3deg) scale(1.05);
     box-shadow: 0 20px 30px rgba(0,0,0,0.15) !important;
 }
+/* ========================================= */
+/* ลูกเล่นที่ 1: โหมดกลางคืน (Dark Mode) */
+/* ========================================= */
+.dark-mode-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 45px;
+    height: 45px;
+    font-size: 20px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    cursor: pointer;
+    z-index: 100;
+    transition: 0.3s;
+}
+
+body.dark-mode {
+    background: #2a2426; /* สีเทาอมน้ำตาลเข้มถนอมสายตา */
+    color: #ffd1dc;
+}
+body.dark-mode .container {
+    background: #3b3235;
+    border-color: #52454a;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+}
+body.dark-mode .tab-btn { background: #2a2426; color: #ffd1dc; }
+body.dark-mode .tab-btn.active { background: #5d4037; color: #ffd1dc; }
+body.dark-mode h2, body.dark-mode .subtitle { color: #ffb6c1; }
+body.dark-mode .gallery-grid { background: #2a2426; border-color: #52454a; }
+
+/* ทำให้ Tabs เลื่อนซ้ายขวาได้บนมือถือ */
+.tabs {
+    display: flex;
+    overflow-x: auto;
+    white-space: nowrap;
+    padding-bottom: 5px;
+}
+.tabs::-webkit-scrollbar { display: none; }
+
+/* ========================================= */
+/* ลูกเล่นที่ 2: บับเบิ้ลกันกระแทก */
+/* ========================================= */
+.bubble-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 15px;
+    padding: 20px;
+    background: rgba(255, 182, 193, 0.2);
+    border-radius: 15px;
+}
+.bubble {
+    width: 100%;
+    aspect-ratio: 1/1;
+    background: radial-gradient(circle at 30% 30%, #fff, #ffb6c1);
+    border-radius: 50%;
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.1), inset -2px -2px 5px rgba(255,105,180,0.2);
+    cursor: pointer;
+    transition: transform 0.1s;
+}
+.bubble:active { transform: scale(0.9); }
+.bubble.popped {
+    background: transparent;
+    border: 1px solid #ffb6c1;
+    box-shadow: inset 1px 1px 3px rgba(0,0,0,0.05);
+    opacity: 0.5;
+    cursor: default;
+}
+
+/* ========================================= */
+/* ลูกเล่นที่ 3: กระดานสเก็ตช์ */
+/* ========================================= */
+.sketch-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+#sketchCanvas {
+    background: #fff;
+    border: 2px dashed #ffb6c1;
+    border-radius: 10px;
+    width: 100%;
+    touch-action: none; /* ห้ามเลื่อนจอตอนวาดรูป */
+    cursor: crosshair;
+}
+body.dark-mode #sketchCanvas { background: #2a2426; border-color: #52454a; }
