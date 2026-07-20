@@ -22,7 +22,8 @@ body {
 /* ดีไซน์เมนู Tabs                         */
 /* -------------------------------------- */
 .tabs {
-    display: flex; justify-content: center; gap: 12px; margin-bottom: 25px;
+    display: flex; justify-content: flex-start; gap: 12px; margin: max(12px, env(safe-area-inset-top)) 0 25px;
+    padding: 8px 4px 6px; box-sizing: border-box; scroll-padding-inline: 4px;
 }
 .tab-btn {
     background: #ffffff; 
@@ -313,7 +314,7 @@ body.dark-mode .dark-mode-btn { background: #342740; color: #ffe4f0; box-shadow:
     display: flex;
     overflow-x: auto;
     white-space: nowrap;
-    padding-bottom: 5px;
+    padding-bottom: 8px;
 }
 .tabs::-webkit-scrollbar { display: none; }
 
@@ -352,30 +353,57 @@ body.dark-mode .dark-mode-btn { background: #342740; color: #ffe4f0; box-shadow:
 
 /* ของเล่นสกุชชี่คนละหน้ากับบับเบิ้ล */
 .squishy-stage {
-    position: relative; display: grid; place-items: center; min-height: 360px;
+    position: relative; display: flex; align-items: center; justify-content: space-around; gap: 18px;
+    min-height: 430px; padding: 24px; box-sizing: border-box;
     overflow: hidden; border-radius: 28px; touch-action: none;
-    background: radial-gradient(circle at 50% 42%,#fff8fc 0,#f9e8f2 55%,#ead9e8 100%);
+    background: radial-gradient(circle at 50% 42%,#fffafc 0,#f6eaf0 58%,#e7dbe3 100%);
     border: 1px solid #f3dce8;
 }
 .squishy-toy {
     --move-x: 0px; --move-y: 0px; --stretch-x: 1; --stretch-y: 1; --tilt: 0deg;
-    position: relative; z-index: 2; width: min(52vw,220px); aspect-ratio: 1;
-    padding: 0; border: 0; border-radius: 48% 52% 46% 54%; cursor: grab;
-    background: linear-gradient(145deg,#ffd9e8 5%,#ff9fc4 72%,#ee78a8);
-    box-shadow: inset 18px 20px 25px rgba(255,255,255,.55), inset -15px -18px 25px rgba(191,72,126,.18), 0 26px 38px rgba(160,73,124,.22);
+    --press-x: 50%; --press-y: 50%;
+    position: relative; z-index: 2; flex: 0 0 auto; width: clamp(105px,25%,150px); aspect-ratio: .92;
+    padding: 0; border: 0; border-radius: 38% 38% 44% 44%; cursor: grab;
+    background: radial-gradient(circle at 30% 24%,rgba(255,255,255,.3),transparent 28%), linear-gradient(150deg,#ffd1e2,#f497bb 72%,#dd6f9c);
+    box-shadow: inset 10px 12px 18px rgba(255,255,255,.28), inset -9px -11px 17px rgba(151,65,105,.15), 0 22px 32px rgba(133,73,105,.2);
     transform: translate(var(--move-x),var(--move-y)) rotate(var(--tilt)) scale(var(--stretch-x),var(--stretch-y));
     transform-origin: center; touch-action: none; -webkit-tap-highlight-color: transparent;
-    transition: transform .42s cubic-bezier(.2,1.5,.35,1), border-radius .35s, background .25s;
+    will-change: transform; contain: layout style;
+    transition: transform .58s cubic-bezier(.16,.9,.28,1.18), background .25s;
 }
-.squishy-toy.grabbing { cursor: grabbing; transition-duration: .06s; }
-.squishy-toy.rebounding { animation: squishy-wobble .48s ease-out; }
-.squishy-toy[data-color="purple"] { background: linear-gradient(145deg,#eadcff,#b994ef 72%,#9369d0); }
-.squishy-toy[data-color="mint"] { background: linear-gradient(145deg,#ddfff2,#89dfbd 72%,#55bd98); }
-.squishy-shine { position: absolute; width: 36%; height: 19%; left: 18%; top: 16%; border-radius: 50%; background: rgba(255,255,255,.42); transform: rotate(-25deg); filter: blur(2px); }
+.squishy-toy.grabbing { z-index: 5; cursor: grabbing; transition: background .2s; }
+.squishy-toy.rebounding { animation: foam-recover .48s ease-out; }
+.squishy-toy[data-color="purple"] { border-radius: 48% 48% 40% 40%; background: radial-gradient(circle at 30% 24%,rgba(255,255,255,.25),transparent 28%),linear-gradient(150deg,#dfd0f7,#a986d9 72%,#8460b8); }
+.squishy-toy[data-color="mint"] { border-radius: 52% 48% 44% 56% / 38% 42% 58% 62%; background: radial-gradient(circle at 30% 24%,rgba(255,255,255,.25),transparent 28%),linear-gradient(150deg,#d1f3e5,#7bcaaa 72%,#4daa89); }
+.squishy-accessory { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+.squishy-accessory::before, .squishy-accessory::after { content: ''; position: absolute; }
+.squishy-toy[data-color="pink"] .squishy-accessory::before,
+.squishy-toy[data-color="pink"] .squishy-accessory::after {
+    width: 38%; height: 38%; top: -10%; border-radius: 50%; background: #ee91b5;
+}
+.squishy-toy[data-color="pink"] .squishy-accessory::before { left: 2%; }
+.squishy-toy[data-color="pink"] .squishy-accessory::after { right: 2%; }
+.squishy-toy[data-color="purple"] .squishy-accessory::before,
+.squishy-toy[data-color="purple"] .squishy-accessory::after {
+    width: 28%; height: 58%; top: -38%; border-radius: 55% 55% 42% 42%; background: #ad8adb;
+}
+.squishy-toy[data-color="purple"] .squishy-accessory::before { left: 18%; transform: rotate(-8deg); }
+.squishy-toy[data-color="purple"] .squishy-accessory::after { right: 18%; transform: rotate(8deg); }
+.squishy-toy[data-color="mint"] .squishy-accessory::before {
+    width: 34%; height: 18%; left: 43%; top: -7%; border-radius: 90% 10% 90% 10%;
+    background: #4ca67e; transform: rotate(-24deg);
+}
+.squishy-shine {
+    position: absolute; left: var(--press-x); top: var(--press-y); width: 58px; height: 34px;
+    border-radius: 50%; opacity: 0; pointer-events: none; transform: translate(-50%,-50%);
+    background: rgba(111,55,83,.1); box-shadow: inset 0 9px 13px rgba(107,49,79,.16),0 2px 5px rgba(255,255,255,.16);
+    transition: opacity .12s;
+}
+.squishy-toy.grabbing .squishy-shine { opacity: 1; }
+.squishy-toy.multi-touch .squishy-face b { height: 7px; border-radius: 50%; border-width: 3px; }
 .squishy-face { position: absolute; left: 50%; top: 52%; display: flex; align-items: center; gap: 18px; transform: translate(-50%,-50%); }
 .squishy-face i { width: 10px; height: 15px; border-radius: 50%; background: #60404f; }
 .squishy-face b { width: 23px; height: 12px; border: 4px solid #60404f; border-top: 0; border-radius: 0 0 20px 20px; }
-.squishy-shadow { position: absolute; z-index: 1; width: 190px; height: 34px; bottom: 55px; border-radius: 50%; background: rgba(85,47,72,.15); filter: blur(8px); }
 .squishy-hint { margin: 12px 0; color: #8d6e63; font-size: 12px; text-align: center; }
 .squishy-controls { display: flex; justify-content: center; gap: 9px; }
 .squishy-controls button { min-width: 46px; min-height: 44px; padding: 8px 12px; border: 1px solid #f0d5e1; border-radius: 14px; background: #fff9fc; color: #795548; font: 12px 'Prompt',sans-serif; cursor: pointer; }
@@ -383,8 +411,20 @@ body.dark-mode .dark-mode-btn { background: #342740; color: #ffe4f0; box-shadow:
 body.dark-mode .squishy-stage { background: radial-gradient(circle at 50% 42%,#2b2134,#17121d 72%); border-color: #4b3b59; }
 body.dark-mode .squishy-hint { color: #cbbbd2; }
 body.dark-mode .squishy-controls button { background: #251d2e; color: #ffe4f0; border-color: #594466; }
-@keyframes squishy-wobble { 0%,100%{transform:scale(1)} 28%{transform:scale(1.13,.86)} 55%{transform:scale(.91,1.09)} 78%{transform:scale(1.04,.97)} }
-@media (max-width:520px) { .squishy-stage{min-height:310px}.squishy-toy{width:min(58vw,205px)} }
+@keyframes foam-recover { 0%{transform:scale(.95,.9)} 55%{transform:scale(1.035,.98)} 100%{transform:scale(1)} }
+@media (max-width:520px) {
+    .squishy-stage { min-height: 390px; gap: 7px; padding: 16px 8px; background: #f3e8ef; }
+    .squishy-toy {
+        width: clamp(88px,29%,112px); transition: background .18s;
+        box-shadow: inset 4px 5px 8px rgba(255,255,255,.2),inset -4px -5px 8px rgba(90,45,70,.1),0 7px 12px rgba(80,46,67,.14);
+    }
+    .squishy-toy.rebounding { animation-duration: .34s; }
+    .squishy-shine { box-shadow: none; }
+    .squishy-face { gap: 11px; }
+    .squishy-face i { width: 7px; height: 11px; }
+    .squishy-face b { width: 17px; height: 9px; border-width: 3px; }
+    body.dark-mode .squishy-stage { background: #19141f; }
+}
 @media (prefers-reduced-motion:reduce) { .squishy-toy{transition:none}.squishy-toy.rebounding{animation:none} }
 
 /* ========================================= */

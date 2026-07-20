@@ -13,6 +13,7 @@ function openTab(tabId, btnElement) {
     // โชว์หน้าที่เลือก และใส่สี active ให้ปุ่มที่โดนกด
     document.getElementById(tabId).style.display = 'block';
     btnElement.classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 
     // Canvas ที่ซ่อนอยู่จะวัดความกว้างไม่ได้ จึงปรับขนาดหลังเปิดแท็บ
     if (tabId === 'sketchTab') {
@@ -337,71 +338,158 @@ window.addEventListener('load', createBubbles);
 // ==========================================
 // 3. ของเล่นสกุชชี่
 // ==========================================
-const squishyToy = document.getElementById('squishyToy');
+const squishyStage = document.getElementById('squishyStage');
+const squishyToys = Array.from(document.querySelectorAll('.squishy-toy'));
 const squishyHint = document.getElementById('squishyHint');
 const resetSquishyBtn = document.getElementById('resetSquishyBtn');
-const squishyColorButtons = document.querySelectorAll('[data-squishy-color]');
-let squishyPointerId = null;
-let squishyStartX = 0;
-let squishyStartY = 0;
-let squishyMoved = false;
+const squishyStates = new WeakMap();
 
-function resetSquishy() {
-    squishyPointerId = null;
-    squishyToy.classList.remove('grabbing');
-    squishyToy.style.removeProperty('--move-x');
-    squishyToy.style.removeProperty('--move-y');
-    squishyToy.style.removeProperty('--stretch-x');
-    squishyToy.style.removeProperty('--stretch-y');
-    squishyToy.style.removeProperty('--tilt');
-    squishyToy.style.removeProperty('border-radius');
+function clampSquishy(value, min, max) {
+    return Math.max(min, Math.min(max, value));
 }
 
-squishyToy.addEventListener('pointerdown', event => {
-    if (squishyPointerId !== null) return;
-    event.preventDefault();
-    squishyPointerId = event.pointerId;
-    squishyStartX = event.clientX;
-    squishyStartY = event.clientY;
-    squishyMoved = false;
-    squishyToy.classList.add('grabbing');
-    squishyToy.setPointerCapture(event.pointerId);
-    if (navigator.vibrate) navigator.vibrate(6);
-});
-
-squishyToy.addEventListener('pointermove', event => {
-    if (event.pointerId !== squishyPointerId) return;
-    const deltaX = Math.max(-85, Math.min(85, event.clientX - squishyStartX));
-    const deltaY = Math.max(-65, Math.min(65, event.clientY - squishyStartY));
-    const distance = Math.hypot(deltaX, deltaY);
-    squishyMoved ||= distance > 6;
-    const stretch = Math.min(.34, distance / 260);
-    squishyToy.style.setProperty('--move-x', `${deltaX * .38}px`);
-    squishyToy.style.setProperty('--move-y', `${deltaY * .3}px`);
-    squishyToy.style.setProperty('--stretch-x', String(1 + stretch));
-    squishyToy.style.setProperty('--stretch-y', String(1 - stretch * .55));
-    squishyToy.style.setProperty('--tilt', `${deltaX * .06}deg`);
-    squishyToy.style.borderRadius = `${48 + deltaY * .08}% ${52 - deltaX * .05}% ${48 - deltaY * .08}% ${52 + deltaX * .05}%`;
-});
-
-function releaseSquishy(event) {
-    if (event.pointerId !== squishyPointerId) return;
-    squishyToy.classList.add('rebounding');
-    resetSquishy();
-    squishyHint.textContent = squishyMoved ? 'เด้งกลับแล้ว นุ่มนิ่มมาก ☁️' : 'ลองลากให้ยืดกว่านี้อีกนิด';
-    window.setTimeout(() => squishyToy.classList.remove('rebounding'), 480);
+function getSquishyGesture(points) {
+    const center = points.reduce((result, point) => ({ x: result.x + point.x, y: result.y + point.y }), { x: 0, y: 0 });
+    center.x /= points.length;
+    center.y /= points.length;
+    const spread = points.reduce((total, point) => total + Math.hypot(point.x - center.x, point.y - center.y), 0) / points.length;
+    const angle = points.length > 1 ? Math.atan2(points[1].y - points[0].y, points[1].x - points[0].x) : 0;
+    return { center, spread, angle };
 }
 
-squishyToy.addEventListener('pointerup', releaseSquishy);
-squishyToy.addEventListener('pointercancel', releaseSquishy);
+function rebaseSquishyGesture(state) {
+    state.pointers.forEach(pointer => { pointer.startX = pointer.x; pointer.startY = pointer.y; });
+    const gesture = getSquishyGesture([...state.pointers.values()]);
+    state.startCenter = gesture.center;
+    state.startSpread = Math.max(12, gesture.spread);
+    state.startAngle = gesture.angle;
+    state.baseX = state.moveX;
+    state.baseY = state.moveY;
+}
+
+function renderSquishy(toy, state) {
+    state.frame = 0;
+    const points = [...state.pointers.values()];
+    if (!points.length) return;
+    const gesture = getSquishyGesture(points);
+    const deltaX = gesture.center.x - state.startCenter.x;
+    const deltaY = gesture.center.y - state.startCenter.y;
+    state.moveX = clampSquishy(state.baseX + deltaX * .88, state.minX, state.maxX);
+    state.moveY = clampSquishy(state.baseY + deltaY * .84, state.minY, state.maxY);
+
+    let scaleX = 1.02;
+    let scaleY = .9;
+    let rotation = state.moveX * .018;
+    if (points.length > 1) {
+        const ratio = clampSquishy(gesture.spread / state.startSpread, .7, 1.45);
+        scaleX = ratio;
+        scaleY = clampSquishy(1.02 - (ratio - 1) * .48, .78, 1.17);
+        rotation += (gesture.angle - state.startAngle) * 180 / Math.PI;
+    }
+
+    // รวมทุกการขยับเป็น transform เดียว เพื่อให้มือถือส่งงานไปที่ GPU ได้ลื่นกว่า
+    toy.style.transform = `translate3d(${state.moveX}px,${state.moveY}px,0) rotate(${rotation}deg) scale(${scaleX},${scaleY})`;
+    toy.classList.toggle('multi-touch', points.length > 1);
+}
+
+function scheduleSquishyRender(toy, state) {
+    if (!state.frame) state.frame = requestAnimationFrame(() => renderSquishy(toy, state));
+}
+
+async function playSquishSound(action, color) {
+    if (!popAudioContext || popAudioContext.state === 'closed') {
+        popAudioContext = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (popAudioContext.state === 'suspended') await popAudioContext.resume();
+    const toneOffset = color === 'purple' ? 22 : color === 'mint' ? 42 : 0;
+    const oscillator = popAudioContext.createOscillator();
+    const gain = popAudioContext.createGain();
+    oscillator.type = 'sine';
+    oscillator.connect(gain);
+    gain.connect(popAudioContext.destination);
+    const now = popAudioContext.currentTime;
+    oscillator.frequency.setValueAtTime((action === 'press' ? 155 : 105) + toneOffset, now);
+    oscillator.frequency.exponentialRampToValueAtTime((action === 'press' ? 92 : 175) + toneOffset, now + .09);
+    gain.gain.setValueAtTime(.055, now);
+    gain.gain.exponentialRampToValueAtTime(.001, now + .1);
+    oscillator.start(now);
+    oscillator.stop(now + .105);
+    oscillator.addEventListener('ended', () => { oscillator.disconnect(); gain.disconnect(); });
+}
+
+function resetSquishyToy(toy, state) {
+    if (state.frame) cancelAnimationFrame(state.frame);
+    state.frame = 0;
+    state.pointers.clear();
+    state.moveX = 0;
+    state.moveY = 0;
+    toy.classList.remove('grabbing', 'multi-touch');
+    toy.style.removeProperty('transform');
+    ['--press-x','--press-y'].forEach(property => toy.style.removeProperty(property));
+}
+
+squishyToys.forEach(toy => {
+    const state = { pointers: new Map(), frame: 0, moveX: 0, moveY: 0, baseX: 0, baseY: 0 };
+    squishyStates.set(toy, state);
+
+    toy.addEventListener('pointerdown', event => {
+        event.preventDefault();
+        const toyRect = toy.getBoundingClientRect();
+        const stageRect = squishyStage.getBoundingClientRect();
+        state.minX = -(toy.offsetLeft + toy.offsetWidth / 2 - 10);
+        state.maxX = squishyStage.clientWidth - (toy.offsetLeft + toy.offsetWidth / 2) - 10;
+        state.minY = -(toy.offsetTop + toy.offsetHeight / 2 - 10);
+        state.maxY = squishyStage.clientHeight - (toy.offsetTop + toy.offsetHeight / 2) - 10;
+        state.pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+        rebaseSquishyGesture(state);
+        toy.classList.add('grabbing');
+        toy.classList.remove('rebounding');
+        toy.style.setProperty('--press-x', `${event.clientX - toyRect.left}px`);
+        toy.style.setProperty('--press-y', `${event.clientY - toyRect.top}px`);
+        toy.setPointerCapture(event.pointerId);
+        scheduleSquishyRender(toy, state);
+        if (state.pointers.size === 1) {
+            playSquishSound('press', toy.dataset.color);
+            if (navigator.vibrate) navigator.vibrate(5);
+        }
+    });
+
+    toy.addEventListener('pointermove', event => {
+        const pointer = state.pointers.get(event.pointerId);
+        if (!pointer) return;
+        const latest = event.getCoalescedEvents?.().at(-1) || event;
+        pointer.x = latest.clientX;
+        pointer.y = latest.clientY;
+        scheduleSquishyRender(toy, state);
+    });
+
+    const releasePointer = event => {
+        if (!state.pointers.has(event.pointerId)) return;
+        state.pointers.delete(event.pointerId);
+        if (state.pointers.size) {
+            rebaseSquishyGesture(state);
+            scheduleSquishyRender(toy, state);
+            return;
+        }
+        toy.classList.add('rebounding');
+        resetSquishyToy(toy, state);
+        playSquishSound('release', toy.dataset.color);
+        squishyHint.textContent = 'คืนรูปแล้ว ลองใช้สองหรือสามนิ้วบีบอีกที ☁️';
+        window.setTimeout(() => toy.classList.remove('rebounding'), 480);
+    };
+    toy.addEventListener('pointerup', releasePointer);
+    toy.addEventListener('pointercancel', releasePointer);
+});
+
 resetSquishyBtn.addEventListener('click', () => {
-    resetSquishy();
-    squishyHint.textContent = 'คืนรูปเรียบร้อย พร้อมบีบต่อ ✨';
+    squishyToys.forEach(toy => {
+        const state = squishyStates.get(toy);
+        toy.classList.add('rebounding');
+        resetSquishyToy(toy, state);
+        window.setTimeout(() => toy.classList.remove('rebounding'), 480);
+    });
+    squishyHint.textContent = 'คืนรูปทั้งสามตัวแล้ว พร้อมเล่นต่อ ✨';
 });
-squishyColorButtons.forEach(button => button.addEventListener('click', () => {
-    squishyToy.dataset.color = button.dataset.squishyColor;
-    squishyColorButtons.forEach(item => item.classList.toggle('active', item === button));
-}));
 
 // ==========================================
 // 4. ระบบกระดานสเก็ตช์ภาพมินิ

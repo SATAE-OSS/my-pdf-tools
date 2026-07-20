@@ -33,7 +33,7 @@
     </script>
 </head>
 <body>
-    <span class="app-version" title="PDF Magic version 1.1.0">v1.1.0</span>
+    <span class="app-version" title="PDF Magic version 1.2.0">v1.2.0</span>
     <!-- ปุ่มโหมดกลางคืน (เพิ่มใหม่) -->
     <button id="darkModeBtn" class="dark-mode-btn" type="button" aria-label="เปิดโหมดกลางคืน" aria-pressed="false">🌙</button>
     <div class="app-connectivity" aria-live="polite">
@@ -114,21 +114,28 @@
 
     <!-- ของเล่นสกุชชี่ แยกจากบับเบิ้ล -->
     <div id="squishyTab" class="container tab-content" style="display: none;">
-        <h2>🫠 สกุชชี่นุ่มนิ่ม</h2>
-        <div class="subtitle">กด บีบ หรือลากน้อง แล้วปล่อยให้เด้งกลับ</div>
+        <h2>🫠 สกุชชี่โฟมนุ่ม</h2>
+        <div class="subtitle">กดให้น้องบุ๋ม หรือลากไปรอบ ๆ แล้วปล่อยให้คืนรูป</div>
         <div class="squishy-stage" id="squishyStage">
-            <div class="squishy-shadow" aria-hidden="true"></div>
-            <button class="squishy-toy" id="squishyToy" type="button" aria-label="ของเล่นสกุชชี่ กดและลากเล่นได้">
+            <button class="squishy-toy" data-color="pink" type="button" aria-label="สกุชชี่สีชมพู กดและลากหลายนิ้วได้">
+                <span class="squishy-accessory" aria-hidden="true"></span>
+                <span class="squishy-shine" aria-hidden="true"></span>
+                <span class="squishy-face" aria-hidden="true"><i></i><b></b><i></i></span>
+            </button>
+            <button class="squishy-toy" data-color="purple" type="button" aria-label="สกุชชี่สีม่วง กดและลากหลายนิ้วได้">
+                <span class="squishy-accessory" aria-hidden="true"></span>
+                <span class="squishy-shine" aria-hidden="true"></span>
+                <span class="squishy-face" aria-hidden="true"><i></i><b></b><i></i></span>
+            </button>
+            <button class="squishy-toy" data-color="mint" type="button" aria-label="สกุชชี่สีมิ้นต์ กดและลากหลายนิ้วได้">
+                <span class="squishy-accessory" aria-hidden="true"></span>
                 <span class="squishy-shine" aria-hidden="true"></span>
                 <span class="squishy-face" aria-hidden="true"><i></i><b></b><i></i></span>
             </button>
         </div>
-        <p class="squishy-hint" id="squishyHint" aria-live="polite">ลองลากแก้มไปด้านข้างดูสิ</p>
+        <p class="squishy-hint" id="squishyHint" aria-live="polite">ใช้สองนิ้วดึงหรือบีบตัวเดียว หรือเล่นสามตัวพร้อมกันได้เลย</p>
         <div class="squishy-controls" aria-label="เลือกสีสกุชชี่">
-            <button type="button" data-squishy-color="pink" class="active" aria-label="สีชมพู">🩷</button>
-            <button type="button" data-squishy-color="purple" aria-label="สีม่วง">💜</button>
-            <button type="button" data-squishy-color="mint" aria-label="สีมิ้นต์">💚</button>
-            <button type="button" id="resetSquishyBtn">คืนรูป</button>
+            <button type="button" id="resetSquishyBtn">↺ คืนรูปทั้งหมด</button>
         </div>
     </div>
 
