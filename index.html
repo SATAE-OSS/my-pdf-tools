@@ -33,7 +33,7 @@
     </script>
 </head>
 <body>
-    <span class="app-version" title="PDF Magic version 1.4.0">v1.4.0</span>
+    <span class="app-version" title="PDF Magic version 1.5.1">v1.5.1</span>
     <!-- ปุ่มโหมดกลางคืน (เพิ่มใหม่) -->
     <button id="darkModeBtn" class="dark-mode-btn" type="button" aria-label="เปิดโหมดกลางคืน" aria-pressed="false">🌙</button>
     <div class="app-connectivity" aria-live="polite">
@@ -46,7 +46,7 @@
         <button class="tab-btn active" onclick="openTab('mergeTab', this)">✨ รวมรูป PDF</button>
         <button class="tab-btn" onclick="openTab('extractTab', this)">🔄 แยกรูป</button>
         <button class="tab-btn" onclick="openTab('bubbleTab', this)">🫧 บีบบับเบิ้ล</button>
-        <button class="tab-btn" onclick="openTab('squishyTab', this)">🫠 สกุชชี่</button>
+        <button class="tab-btn" onclick="openTab('squishyTab', this)">🫠 สไลม์</button>
         <button class="tab-btn" onclick="openTab('sketchTab', this)">🎨 สเก็ตช์ภาพ</button>
     </div>
 
@@ -114,31 +114,17 @@
 
     <!-- ของเล่นสกุชชี่ แยกจากบับเบิ้ล -->
     <div id="squishyTab" class="container tab-content" style="display: none;">
-        <h2>🫠 เยลลี่สกุชชี่</h2>
-        <div class="subtitle">ดึงให้ยืด บีบให้แบน แล้วปล่อยดูน้องเด้งดึ๋ง</div>
+        <h2>🫠 สไลม์เด้งดึ๋ง</h2>
+        <div class="subtitle">จับตรงไหนแล้วลาก สไลม์จะยืดตามนิ้วตรงนั้น</div>
         <div class="squishy-stage" id="squishyStage">
-            <button class="squishy-toy active" data-color="pink" type="button" aria-label="สกุชชี่หมีสีชมพู กดและลากหลายนิ้วได้">
-                <span class="squishy-accessory" aria-hidden="true"></span>
-                <span class="squishy-shine" aria-hidden="true"></span>
-                <span class="squishy-face" aria-hidden="true"><i></i><b></b><i></i></span>
-            </button>
-            <button class="squishy-toy" data-color="purple" type="button" aria-label="สกุชชี่สีม่วง กดและลากหลายนิ้วได้">
-                <span class="squishy-accessory" aria-hidden="true"></span>
-                <span class="squishy-shine" aria-hidden="true"></span>
-                <span class="squishy-face" aria-hidden="true"><i></i><b></b><i></i></span>
-            </button>
-            <button class="squishy-toy" data-color="mint" type="button" aria-label="สกุชชี่สีมิ้นต์ กดและลากหลายนิ้วได้">
-                <span class="squishy-accessory" aria-hidden="true"></span>
+            <button class="squishy-toy slime-toy active" data-color="mint" type="button" aria-label="สไลม์ กดและลากหลายนิ้วได้">
                 <span class="squishy-shine" aria-hidden="true"></span>
                 <span class="squishy-face" aria-hidden="true"><i></i><b></b><i></i></span>
             </button>
         </div>
-        <p class="squishy-hint" id="squishyHint" aria-live="polite">ลากหนึ่งนิ้วให้ยืด หรือใช้สองนิ้วบีบและดึงได้เลย</p>
-        <div class="squishy-controls" aria-label="เลือกตัวสกุชชี่">
-            <button type="button" class="active" data-select-squishy="pink">🐻 หมี</button>
-            <button type="button" data-select-squishy="purple">🐰 กระต่าย</button>
-            <button type="button" data-select-squishy="mint">🍐 ลูกแพร์</button>
-            <button type="button" id="resetSquishyBtn">↺ คืนรูปทั้งหมด</button>
+        <p class="squishy-hint" id="squishyHint" aria-live="polite">ลองดึงขึ้น ลง ซ้าย ขวา หรือเฉียงดูสิ</p>
+        <div class="squishy-controls">
+            <button type="button" id="resetSquishyBtn">↺ คืนรูปสไลม์</button>
         </div>
     </div>
 
@@ -200,6 +186,7 @@
                 <label>ขนาดกระดาษ
                     <select id="canvasRatio">
                         <option value="free">เต็มพื้นที่</option>
+                        <option value="original" hidden>ตามภาพที่เปิด</option>
                         <option value="1:1">จัตุรัส 1:1</option>
                         <option value="4:3">ภาพ 4:3</option>
                         <option value="16:9">จอกว้าง 16:9</option>

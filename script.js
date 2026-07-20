@@ -143,9 +143,6 @@ function generatePDF() {
 
 // ทำให้แถบเมนูเลื่อนด้วยล้อเมาส์ ลากเมาส์ และคีย์บอร์ดบนคอมได้
 const tabsBar = document.querySelector('.tabs');
-let tabsDragStartX = null;
-let tabsScrollStart = 0;
-let tabsWasDragged = false;
 
 tabsBar.addEventListener('wheel', event => {
     if (tabsBar.scrollWidth <= tabsBar.clientWidth) return;
@@ -153,35 +150,6 @@ tabsBar.addEventListener('wheel', event => {
     tabsBar.scrollLeft += Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
 }, { passive: false });
 
-tabsBar.addEventListener('pointerdown', event => {
-    if (event.pointerType !== 'mouse' || event.button !== 0) return;
-    tabsDragStartX = event.clientX;
-    tabsScrollStart = tabsBar.scrollLeft;
-    tabsWasDragged = false;
-    tabsBar.classList.add('dragging');
-    tabsBar.setPointerCapture(event.pointerId);
-});
-
-tabsBar.addEventListener('pointermove', event => {
-    if (tabsDragStartX === null) return;
-    const distance = event.clientX - tabsDragStartX;
-    if (Math.abs(distance) > 5) tabsWasDragged = true;
-    tabsBar.scrollLeft = tabsScrollStart - distance;
-});
-
-function stopTabsDrag() {
-    tabsDragStartX = null;
-    tabsBar.classList.remove('dragging');
-    window.setTimeout(() => { tabsWasDragged = false; }, 0);
-}
-tabsBar.addEventListener('pointerup', stopTabsDrag);
-tabsBar.addEventListener('pointercancel', stopTabsDrag);
-tabsBar.addEventListener('click', event => {
-    if (tabsWasDragged) {
-        event.preventDefault();
-        event.stopPropagation();
-    }
-}, true);
 tabsBar.addEventListener('keydown', event => {
     if (!['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
     event.preventDefault();
@@ -330,8 +298,13 @@ darkModeBtn.addEventListener('click', () => {
 // ==========================================
 const bubbleGrid = document.getElementById('bubbleGrid');
 const resetBubblesBtn = document.getElementById('resetBubblesBtn');
+let poppedBubbleCount = 0;
+let bubbleAutoResetTimer = null;
 
 function createBubbles() {
+    window.clearTimeout(bubbleAutoResetTimer);
+    bubbleAutoResetTimer = null;
+    poppedBubbleCount = 0;
     bubbleGrid.innerHTML = '';
     for (let i = 0; i < 20; i++) {
         const bubble = document.createElement('button');
@@ -344,6 +317,10 @@ function createBubbles() {
             bubble.classList.add('popped');
             bubble.setAttribute('aria-pressed', 'true');
             playPopSound();
+            poppedBubbleCount++;
+            if (poppedBubbleCount === 20) {
+                bubbleAutoResetTimer = window.setTimeout(createBubbles, 700);
+            }
         });
         bubbleGrid.appendChild(bubble);
     }
@@ -389,7 +366,6 @@ const squishyStage = document.getElementById('squishyStage');
 const squishyToys = Array.from(document.querySelectorAll('.squishy-toy'));
 const squishyHint = document.getElementById('squishyHint');
 const resetSquishyBtn = document.getElementById('resetSquishyBtn');
-const squishySelectorButtons = document.querySelectorAll('[data-select-squishy]');
 const squishyStates = new WeakMap();
 
 function clampSquishy(value, min, max) {
@@ -422,12 +398,12 @@ function renderSquishy(toy, state) {
     const gesture = getSquishyGesture(points);
     const deltaX = gesture.center.x - state.startCenter.x;
     const deltaY = gesture.center.y - state.startCenter.y;
-    state.moveX = clampSquishy(state.baseX + deltaX * .88, state.minX, state.maxX);
-    state.moveY = clampSquishy(state.baseY + deltaY * .84, state.minY, state.maxY);
+    state.moveX = clampSquishy(state.baseX + deltaX * .42, state.minX, state.maxX);
+    state.moveY = clampSquishy(state.baseY + deltaY * .42, state.minY, state.maxY);
 
     let scaleX = 1;
     let scaleY = 1;
-    let rotation = state.moveX * .018;
+    let rotation = 0;
     let originX = 50;
     let originY = 50;
     if (points.length > 1) {
@@ -436,12 +412,14 @@ function renderSquishy(toy, state) {
         scaleY = clampSquishy(1.03 - (ratio - 1) * .52, .55, 1.46);
         rotation += (gesture.angle - state.startAngle) * 180 / Math.PI;
     } else {
+        const horizontalStretch = Math.min(.72, Math.abs(deltaX) / 175);
+        const verticalStretch = Math.min(.72, Math.abs(deltaY) / 175);
+        scaleX = 1 + horizontalStretch - verticalStretch * .16;
+        scaleY = 1 + verticalStretch - horizontalStretch * .16;
+        scaleX = Math.max(.72, scaleX);
+        scaleY = Math.max(.72, scaleY);
         const dragDistance = Math.hypot(deltaX, deltaY);
-        const stretch = Math.min(.68, dragDistance / 190);
-        scaleX = 1 + stretch;
-        scaleY = 1 - stretch * .42;
         if (dragDistance > 3) {
-            rotation = Math.atan2(deltaY, deltaX) * 180 / Math.PI;
             originX = 50 - deltaX / dragDistance * 42;
             originY = 50 - deltaY / dragDistance * 42;
         }
@@ -572,21 +550,8 @@ resetSquishyBtn.addEventListener('click', () => {
         resetSquishyToy(toy, state);
         window.setTimeout(() => toy.classList.remove('rebounding'), 480);
     });
-    squishyHint.textContent = 'คืนรูปแล้ว พร้อมดึงเล่นต่อ ✨';
+    squishyHint.textContent = 'คืนรูปสไลม์แล้ว พร้อมดึงต่อ ✨';
 });
-
-squishySelectorButtons.forEach(button => button.addEventListener('click', () => {
-    const selectedColor = button.dataset.selectSquishy;
-    squishyToys.forEach(toy => {
-        const state = squishyStates.get(toy);
-        resetSquishyToy(toy, state);
-        toy.classList.toggle('active', toy.dataset.color === selectedColor);
-    });
-    squishySelectorButtons.forEach(item => item.classList.toggle('active', item === button));
-    const names = { pink: 'น้องหมี', purple: 'น้องกระต่าย', mint: 'น้องลูกแพร์' };
-    squishyHint.textContent = `${names[selectedColor]}พร้อมให้บีบแล้ว ลองลากให้ยืดดูสิ`;
-    playSquishSound('release', selectedColor);
-}));
 
 // ==========================================
 // 4. ระบบกระดานสเก็ตช์ภาพมินิ
@@ -620,6 +585,7 @@ let lastY = 0;
 let currentTool = 'brush';
 let shapeStart = null;
 let shapeSnapshot = null;
+let openedImageAspectRatio = null;
 const CANVAS_DRAFT_KEY = 'pdf-magic-canvas-draft';
 let draftRestored = false;
 const undoHistory = [];
@@ -745,7 +711,28 @@ selectBrushSize(brushSize.value);
 
 function getCanvasHeight(width) {
     const ratios = { '1:1': 1, '4:3': 3 / 4, '16:9': 9 / 16, a4: 1.414 };
+    if (canvasRatio.value === 'original' && openedImageAspectRatio) {
+        return Math.round(width / openedImageAspectRatio);
+    }
     return canvasRatio.value === 'free' ? 400 : Math.round(width * ratios[canvasRatio.value]);
+}
+
+function loadImageIntoCanvas(image) {
+    const aspectRatio = image.naturalWidth / image.naturalHeight;
+    if (!Number.isFinite(aspectRatio) || aspectRatio <= 0) return false;
+    recordCanvasHistory();
+    openedImageAspectRatio = aspectRatio;
+    const originalOption = canvasRatio.querySelector('option[value="original"]');
+    originalOption.hidden = false;
+    canvasRatio.value = 'original';
+    const width = canvasViewport.clientWidth || canvas.width;
+    canvas.width = width;
+    canvas.height = Math.round(width / aspectRatio);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+    updateCanvasZoom();
+    saveCanvasDraft();
+    return true;
 }
 
 function updateCanvasZoom() {
@@ -1048,6 +1035,7 @@ downloadCanvasBtn.addEventListener('click', () => {
 
 canvasRatio.addEventListener('change', () => {
     recordCanvasHistory();
+    if (canvasRatio.value !== 'original') openedImageAspectRatio = null;
     resizeCanvas();
     saveCanvasDraft();
 });

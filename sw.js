@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pdf-magic-v16';
+const CACHE_NAME = 'pdf-magic-v19';
 const urlsToCache = [
   './',
   './index.html',
