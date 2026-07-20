@@ -84,20 +84,49 @@
         <h2>🎨 มินิสเก็ตช์แพด</h2>
         <div class="subtitle">จดไอเดียหรือวาดแปลนห้องคร่าวๆ ได้เลย</div>
         
-        <div class="sketch-controls">
-            <div class="drawing-tools" role="group" aria-label="เครื่องมือวาดภาพ">
-                <button class="tool-btn active" id="brushToolBtn" type="button" aria-pressed="true" title="พู่กัน">🖌️ พู่กัน</button>
-                <button class="tool-btn" id="fillToolBtn" type="button" aria-pressed="false" title="ถังสี">🪣 ระบายสี</button>
+        <div class="sketch-controls" aria-label="แถบเครื่องมือวาดภาพ">
+            <div class="drawing-tools tool-row" role="group" aria-label="เครื่องมือ">
+                <button class="tool-btn active" id="brushToolBtn" type="button" aria-pressed="true">🖌️ <span>พู่กัน</span></button>
+                <button class="tool-btn" id="fillToolBtn" type="button" aria-pressed="false">🪣 <span>ถังสี</span></button>
+                <button class="tool-btn" id="eraserToolBtn" type="button" aria-pressed="false">🧽 <span>ยางลบ</span></button>
             </div>
-            <label class="color-control" title="เลือกสี">
-                <span>สี</span>
-                <input type="color" id="colorPicker" value="#5d4037" aria-label="เลือกสี">
-            </label>
-            <label class="brush-control" title="ขนาดพู่กัน">
-                <span>ขนาด</span>
-                <input type="range" id="brushSize" min="1" max="20" value="3" aria-label="ขนาดพู่กัน">
-            </label>
-            <button class="btn btn-outline" id="clearCanvasBtn" style="padding: 5px 15px; font-size: 14px;">🗑️ ลบทั้งหมด</button>
+
+            <div class="palette-row">
+                <span class="tool-label">สี</span>
+                <div class="color-swatches" id="colorSwatches" role="group" aria-label="สีสำเร็จรูป">
+                    <button class="color-swatch active" type="button" data-color="#5d4037" style="--swatch:#5d4037" aria-label="น้ำตาล"></button>
+                    <button class="color-swatch" type="button" data-color="#111827" style="--swatch:#111827" aria-label="ดำ"></button>
+                    <button class="color-swatch" type="button" data-color="#ef4444" style="--swatch:#ef4444" aria-label="แดง"></button>
+                    <button class="color-swatch" type="button" data-color="#f59e0b" style="--swatch:#f59e0b" aria-label="ส้ม"></button>
+                    <button class="color-swatch" type="button" data-color="#22c55e" style="--swatch:#22c55e" aria-label="เขียว"></button>
+                    <button class="color-swatch" type="button" data-color="#3b82f6" style="--swatch:#3b82f6" aria-label="น้ำเงิน"></button>
+                    <button class="color-swatch" type="button" data-color="#8b5cf6" style="--swatch:#8b5cf6" aria-label="ม่วง"></button>
+                    <button class="color-swatch" type="button" data-color="#ec4899" style="--swatch:#ec4899" aria-label="ชมพู"></button>
+                    <label class="custom-color" title="เลือกสีเพิ่มเติม">
+                        <span>＋</span>
+                        <input type="color" id="colorPicker" value="#5d4037" aria-label="เลือกสีเพิ่มเติม">
+                    </label>
+                </div>
+            </div>
+
+            <div class="size-row">
+                <span class="tool-label">ขนาด</span>
+                <div class="size-presets" role="group" aria-label="ขนาดพู่กัน">
+                    <button class="size-btn active" type="button" data-size="3" aria-label="เส้นเล็ก"><i style="--dot:3px"></i></button>
+                    <button class="size-btn" type="button" data-size="7" aria-label="เส้นกลาง"><i style="--dot:7px"></i></button>
+                    <button class="size-btn" type="button" data-size="12" aria-label="เส้นใหญ่"><i style="--dot:12px"></i></button>
+                    <button class="size-btn" type="button" data-size="20" aria-label="เส้นใหญ่มาก"><i style="--dot:20px"></i></button>
+                </div>
+                <input type="range" id="brushSize" min="1" max="30" value="3" aria-label="ปรับขนาดพู่กันแบบละเอียด">
+                <output id="brushSizeValue" for="brushSize">3</output>
+            </div>
+
+            <div class="canvas-actions tool-row" role="group" aria-label="จัดการภาพ">
+                <button class="tool-btn icon-btn" id="undoCanvasBtn" type="button" disabled>↶ <span>ย้อนกลับ</span></button>
+                <button class="tool-btn icon-btn" id="redoCanvasBtn" type="button" disabled>↷ <span>ทำซ้ำ</span></button>
+                <button class="tool-btn icon-btn" id="downloadCanvasBtn" type="button">⬇️ <span>ดาวน์โหลด</span></button>
+                <button class="tool-btn icon-btn danger" id="clearCanvasBtn" type="button">🗑️ <span>ล้างภาพ</span></button>
+            </div>
         </div>
         <canvas id="sketchCanvas" width="300" height="400"></canvas>
 

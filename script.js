@@ -322,13 +322,24 @@ const brushSize = document.getElementById('brushSize');
 const clearBtn = document.getElementById('clearCanvasBtn');
 const brushToolBtn = document.getElementById('brushToolBtn');
 const fillToolBtn = document.getElementById('fillToolBtn');
+const eraserToolBtn = document.getElementById('eraserToolBtn');
+const undoCanvasBtn = document.getElementById('undoCanvasBtn');
+const redoCanvasBtn = document.getElementById('redoCanvasBtn');
+const downloadCanvasBtn = document.getElementById('downloadCanvasBtn');
+const brushSizeValue = document.getElementById('brushSizeValue');
+const colorSwatches = document.querySelectorAll('.color-swatch');
+const sizePresetButtons = document.querySelectorAll('.size-btn');
 
 let isDrawing = false;
+let activePointerId = null;
 let lastX = 0;
 let lastY = 0;
 let currentTool = 'brush';
 const CANVAS_DRAFT_KEY = 'pdf-magic-canvas-draft';
 let draftRestored = false;
+const undoHistory = [];
+const redoHistory = [];
+const MAX_HISTORY = 15;
 
 function saveCanvasDraft() {
     if (!canvas.width || !canvas.height) return;
@@ -353,19 +364,92 @@ function restoreCanvasDraft() {
     image.src = draft;
 }
 
+function updateHistoryButtons() {
+    undoCanvasBtn.disabled = undoHistory.length === 0;
+    redoCanvasBtn.disabled = redoHistory.length === 0;
+}
+
+function recordCanvasHistory() {
+    undoHistory.push(canvas.toDataURL('image/png'));
+    if (undoHistory.length > MAX_HISTORY) undoHistory.shift();
+    redoHistory.length = 0;
+    updateHistoryButtons();
+}
+
+function drawCanvasSnapshot(dataUrl) {
+    return new Promise(resolve => {
+        const image = new Image();
+        image.onload = () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+            saveCanvasDraft();
+            resolve();
+        };
+        image.src = dataUrl;
+    });
+}
+
+async function undoCanvas() {
+    if (!undoHistory.length) return;
+    redoHistory.push(canvas.toDataURL('image/png'));
+    await drawCanvasSnapshot(undoHistory.pop());
+    updateHistoryButtons();
+}
+
+async function redoCanvas() {
+    if (!redoHistory.length) return;
+    undoHistory.push(canvas.toDataURL('image/png'));
+    await drawCanvasSnapshot(redoHistory.pop());
+    updateHistoryButtons();
+}
+
 function selectDrawingTool(tool) {
     currentTool = tool;
     const usingBrush = tool === 'brush';
+    const usingFill = tool === 'fill';
+    const usingEraser = tool === 'eraser';
     brushToolBtn.classList.toggle('active', usingBrush);
-    fillToolBtn.classList.toggle('active', !usingBrush);
+    fillToolBtn.classList.toggle('active', usingFill);
+    eraserToolBtn.classList.toggle('active', usingEraser);
     brushToolBtn.setAttribute('aria-pressed', String(usingBrush));
-    fillToolBtn.setAttribute('aria-pressed', String(!usingBrush));
-    brushSize.disabled = !usingBrush;
-    canvas.classList.toggle('fill-mode', !usingBrush);
+    fillToolBtn.setAttribute('aria-pressed', String(usingFill));
+    eraserToolBtn.setAttribute('aria-pressed', String(usingEraser));
+    brushSize.disabled = usingFill;
+    sizePresetButtons.forEach(button => button.disabled = usingFill);
+    canvas.classList.toggle('fill-mode', usingFill);
+    canvas.classList.toggle('eraser-mode', usingEraser);
 }
 
 brushToolBtn.addEventListener('click', () => selectDrawingTool('brush'));
 fillToolBtn.addEventListener('click', () => selectDrawingTool('fill'));
+eraserToolBtn.addEventListener('click', () => selectDrawingTool('eraser'));
+
+function selectColor(color) {
+    colorPicker.value = color;
+    colorSwatches.forEach(swatch => {
+        const selected = swatch.dataset.color === color;
+        swatch.classList.toggle('active', selected);
+        swatch.setAttribute('aria-pressed', String(selected));
+    });
+}
+
+colorSwatches.forEach(swatch => swatch.addEventListener('click', () => selectColor(swatch.dataset.color)));
+colorPicker.addEventListener('input', () => selectColor(colorPicker.value));
+
+function selectBrushSize(size) {
+    brushSize.value = size;
+    brushSizeValue.value = size;
+    sizePresetButtons.forEach(button => {
+        const selected = button.dataset.size === String(size);
+        button.classList.toggle('active', selected);
+        button.setAttribute('aria-pressed', String(selected));
+    });
+}
+
+sizePresetButtons.forEach(button => button.addEventListener('click', () => selectBrushSize(button.dataset.size)));
+brushSize.addEventListener('input', () => selectBrushSize(brushSize.value));
+selectColor(colorPicker.value);
+selectBrushSize(brushSize.value);
 
 // ปรับขนาด Canvas ให้พอดีมือถือ
 function resizeCanvas() {
@@ -388,20 +472,33 @@ window.addEventListener('resize', resizeCanvas);
 
 function startDrawing(e) {
     e.preventDefault();
+    if ((e.pointerType === 'mouse' && e.button !== 0) || activePointerId !== null) return;
+    activePointerId = e.pointerId;
+    if (e.pointerId !== undefined) canvas.setPointerCapture(e.pointerId);
     const pos = getPos(e);
 
     if (currentTool === 'fill') {
+        recordCanvasHistory();
         floodFill(Math.floor(pos.x), Math.floor(pos.y), colorPicker.value);
         return;
     }
 
+    recordCanvasHistory();
     isDrawing = true;
     lastX = pos.x;
     lastY = pos.y;
+
+    ctx.save();
+    ctx.globalCompositeOperation = currentTool === 'eraser' ? 'destination-out' : 'source-over';
+    ctx.beginPath();
+    ctx.arc(pos.x, pos.y, Math.max(1, Number(brushSize.value) / 2), 0, Math.PI * 2);
+    ctx.fillStyle = colorPicker.value;
+    ctx.fill();
+    ctx.restore();
 }
 
 function draw(e) {
-    if (!isDrawing) return;
+    if (!isDrawing || e.pointerId !== activePointerId) return;
     e.preventDefault(); // ป้องกันการเลื่อนจอตอนวาด
     const pos = getPos(e);
     
@@ -409,7 +506,9 @@ function draw(e) {
     ctx.moveTo(lastX, lastY);
     ctx.lineTo(pos.x, pos.y);
     ctx.strokeStyle = colorPicker.value;
-    ctx.lineWidth = brushSize.value;
+    ctx.globalCompositeOperation = currentTool === 'eraser' ? 'destination-out' : 'source-over';
+    const pressure = e.pointerType === 'pen' && e.pressure > 0 ? 0.55 + e.pressure : 1;
+    ctx.lineWidth = Number(brushSize.value) * pressure;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
     ctx.stroke();
@@ -418,16 +517,19 @@ function draw(e) {
     lastY = pos.y;
 }
 
-function stopDrawing() {
+function stopDrawing(e) {
+    if (activePointerId === null || (e?.pointerId !== undefined && e.pointerId !== activePointerId)) return;
     if (isDrawing) saveCanvasDraft();
     isDrawing = false;
+    activePointerId = null;
+    ctx.globalCompositeOperation = 'source-over';
 }
 
 // ดึงตำแหน่งเมาส์ หรือ นิ้วสัมผัส
 function getPos(e) {
     const rect = canvas.getBoundingClientRect();
-    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    const clientX = e.clientX;
+    const clientY = e.clientY;
     return {
         x: (clientX - rect.left) * (canvas.width / rect.width),
         y: (clientY - rect.top) * (canvas.height / rect.height)
@@ -508,17 +610,45 @@ function floodFill(startX, startY, hexColor) {
     saveCanvasDraft();
 }
 
-// รองรับทั้งเมาส์และนิ้วทัชสกรีน
-canvas.addEventListener('mousedown', startDrawing);
-canvas.addEventListener('mousemove', draw);
-canvas.addEventListener('mouseup', stopDrawing);
-canvas.addEventListener('mouseout', stopDrawing);
-
-canvas.addEventListener('touchstart', startDrawing, {passive: false});
-canvas.addEventListener('touchmove', draw, {passive: false});
-canvas.addEventListener('touchend', stopDrawing);
+// Pointer Events ชุดเดียวรองรับเมาส์ นิ้ว ปากกา และ Apple Pencil
+canvas.addEventListener('pointerdown', startDrawing);
+canvas.addEventListener('pointermove', draw);
+canvas.addEventListener('pointerup', stopDrawing);
+canvas.addEventListener('pointercancel', stopDrawing);
+canvas.addEventListener('lostpointercapture', stopDrawing);
 
 clearBtn.addEventListener('click', () => {
+    recordCanvasHistory();
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     saveCanvasDraft();
+});
+
+undoCanvasBtn.addEventListener('click', undoCanvas);
+redoCanvasBtn.addEventListener('click', redoCanvas);
+
+downloadCanvasBtn.addEventListener('click', () => {
+    const exportCanvas = document.createElement('canvas');
+    exportCanvas.width = canvas.width;
+    exportCanvas.height = canvas.height;
+    const exportContext = exportCanvas.getContext('2d');
+    exportContext.fillStyle = '#ffffff';
+    exportContext.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
+    exportContext.drawImage(canvas, 0, 0);
+
+    const link = document.createElement('a');
+    link.download = `sketch-${new Date().toISOString().slice(0, 10)}.png`;
+    link.href = exportCanvas.toDataURL('image/png');
+    link.click();
+});
+
+window.addEventListener('keydown', event => {
+    if (!(event.ctrlKey || event.metaKey)) return;
+    if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+    if (event.key.toLowerCase() === 'z') {
+        event.preventDefault();
+        event.shiftKey ? redoCanvas() : undoCanvas();
+    } else if (event.key.toLowerCase() === 'y') {
+        event.preventDefault();
+        redoCanvas();
+    }
 });

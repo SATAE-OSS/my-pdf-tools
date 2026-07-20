@@ -303,20 +303,18 @@ body.dark-mode .dark-mode-btn { background: #342740; color: #ffe4f0; box-shadow:
 /* ลูกเล่นที่ 3: กระดานสเก็ตช์ */
 /* ========================================= */
 .sketch-controls {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    justify-content: center;
-    align-items: center;
-    margin-bottom: 15px;
+    display: grid; gap: 12px; margin-bottom: 15px; padding: 14px;
+    background: #fff9fa; border: 1px solid #ffe4e8; border-radius: 18px;
 }
-.drawing-tools { display: flex; gap: 6px; }
+.tool-row { display: flex; gap: 8px; }
+.drawing-tools .tool-btn { flex: 1; }
 .tool-btn {
     background: #fff; color: #8d6e63; border: 2px solid #ffe4e8;
-    border-radius: 14px; padding: 8px 12px; font: 500 13px 'Prompt', sans-serif;
-    cursor: pointer; transition: all 0.2s ease;
+    border-radius: 14px; padding: 8px 12px; min-height: 44px;
+    font: 500 13px 'Prompt', sans-serif; cursor: pointer; transition: all 0.2s ease;
 }
 .tool-btn:hover { transform: translateY(-1px); border-color: #ffb6c1; }
+.tool-btn:disabled, .size-btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
 .tool-btn.active {
     background: linear-gradient(135deg, #ffb6c1, #fecfef); color: #5d4037;
     border-color: #ffb6c1; box-shadow: 0 4px 10px rgba(255,182,193,0.25);
@@ -325,14 +323,43 @@ body.dark-mode .tool-btn.active {
     background: linear-gradient(135deg, #b983ff, #ff8fbc); color: #211728;
     border-color: transparent;
 }
-.color-control, .brush-control {
-    display: flex; align-items: center; gap: 7px; color: #8d6e63; font-size: 12px;
+.tool-label { flex: 0 0 42px; color: #8d6e63; font-size: 12px; font-weight: 500; }
+.palette-row, .size-row { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.color-swatches { display: flex; gap: 6px; overflow-x: auto; padding: 3px; scrollbar-width: none; }
+.color-swatches::-webkit-scrollbar { display: none; }
+.color-swatch, .custom-color {
+    position: relative; flex: 0 0 40px; width: 40px; height: 40px;
+    border: 3px solid #fff; border-radius: 50%; background: var(--swatch);
+    box-shadow: 0 0 0 1px #ead9dd; cursor: pointer; box-sizing: border-box;
 }
-.color-control input { width: 38px; height: 34px; padding: 2px; border: 0; background: transparent; cursor: pointer; }
-.brush-control input { width: 90px; accent-color: #ff9a9e; }
-.brush-control input:disabled { opacity: 0.35; cursor: not-allowed; }
-body.dark-mode .color-control, body.dark-mode .brush-control { color: #cbbbd2; }
-body.dark-mode .brush-control input { accent-color: #c490ff; }
+.color-swatch.active::after {
+    content: '✓'; position: absolute; inset: 0; display: grid; place-items: center;
+    color: #fff; font-weight: 700; text-shadow: 0 1px 3px rgba(0,0,0,.7);
+}
+.color-swatch:focus-visible, .custom-color:focus-within { outline: 3px solid rgba(255,154,158,.35); outline-offset: 2px; }
+.custom-color {
+    display: grid; place-items: center; overflow: hidden; background: conic-gradient(#ef4444,#f59e0b,#22c55e,#3b82f6,#8b5cf6,#ec4899,#ef4444);
+    color: #fff; font-size: 22px; font-weight: 700;
+}
+.custom-color span { z-index: 1; text-shadow: 0 1px 3px rgba(0,0,0,.6); pointer-events: none; }
+.custom-color input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+.size-presets { display: flex; gap: 5px; }
+.size-btn {
+    display: grid; place-items: center; width: 42px; height: 42px; padding: 0;
+    border: 2px solid #ffe4e8; border-radius: 12px; background: #fff; cursor: pointer;
+}
+.size-btn i { width: var(--dot); height: var(--dot); max-width: 22px; max-height: 22px; border-radius: 50%; background: #5d4037; }
+.size-btn.active { border-color: #ff9a9e; background: #fff0f3; box-shadow: 0 0 0 2px rgba(255,154,158,.12); }
+.size-row input[type="range"] { flex: 1; min-width: 70px; accent-color: #ff9a9e; }
+.size-row output { min-width: 24px; color: #8d6e63; font-size: 12px; text-align: center; }
+.canvas-actions .tool-btn { flex: 1; }
+.tool-btn.danger { color: #d84b65; }
+body.dark-mode .sketch-controls { background: rgba(24,18,31,.7); border-color: #4b3b59; }
+body.dark-mode .tool-label, body.dark-mode .size-row output { color: #cbbbd2; }
+body.dark-mode .size-btn { background: #251d2e; border-color: #554060; }
+body.dark-mode .size-btn i { background: #f2ddea; }
+body.dark-mode .size-btn.active { background: #382942; border-color: #c490ff; }
+body.dark-mode .size-row input[type="range"] { accent-color: #c490ff; }
 #sketchCanvas {
     background: #fff;
     border: 2px dashed #ffb6c1;
@@ -342,13 +369,19 @@ body.dark-mode .brush-control input { accent-color: #c490ff; }
     cursor: crosshair;
 }
 #sketchCanvas.fill-mode { cursor: cell; }
+#sketchCanvas.eraser-mode { cursor: not-allowed; }
 body.dark-mode #sketchCanvas { background: #1b1622; border-color: #594466; }
 
 @media (max-width: 520px) {
-    .sketch-controls { justify-content: stretch; }
-    .drawing-tools { width: 100%; }
-    .tool-btn { flex: 1; }
-    .color-control, .brush-control { flex: 1; justify-content: center; }
+    .sketch-controls { margin-inline: -12px; padding: 12px; border-radius: 16px; }
+    .tool-btn { padding-inline: 7px; font-size: 12px; }
+    .palette-row { align-items: flex-start; }
+    .tool-label { flex-basis: 34px; padding-top: 12px; }
+    .color-swatches { padding-bottom: 7px; }
+    .size-row { flex-wrap: wrap; }
+    .size-row input[type="range"] { order: 2; flex-basis: calc(100% - 66px); margin-left: 42px; }
+    .size-row output { order: 2; }
+    .canvas-actions { display: grid; grid-template-columns: repeat(2, 1fr); }
 }
 
 /* ========================================= */
