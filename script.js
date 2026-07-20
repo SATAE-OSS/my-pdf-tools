@@ -419,16 +419,30 @@ function renderSquishy(toy, state) {
         const matrixD = sine * sine * scaleX + cosine * cosine * scaleY;
         directionalMatrix = `matrix(${matrixA},${matrixB},${matrixC},${matrixD},0,0)`;
     } else {
-        // หนึ่งนิ้วใช้ลากตำแหน่งเท่านั้น ขนาดต้องไม่เปลี่ยน
-        scaleX = 1;
-        scaleY = 1;
+        // One finger pulls the slime in the direction of travel. The opposite
+        // side compresses slightly so the blob stays roughly the same size.
+        const pullDistance = Math.hypot(deltaX, deltaY);
+        if (pullDistance > 1) {
+            const pullAngle = Math.atan2(deltaY, deltaX);
+            scaleX = 1 + clampSquishy(pullDistance / 430, 0, .2);
+            scaleY = 1 / Math.pow(scaleX, .82);
+            const cosine = Math.cos(pullAngle);
+            const sine = Math.sin(pullAngle);
+            const matrixA = cosine * cosine * scaleX + sine * sine * scaleY;
+            const matrixB = sine * cosine * (scaleX - scaleY);
+            const matrixC = matrixB;
+            const matrixD = sine * sine * scaleX + cosine * cosine * scaleY;
+            directionalMatrix = `matrix(${matrixA},${matrixB},${matrixC},${matrixD},0,0)`;
+            originX = 50 - cosine * 24;
+            originY = 50 - sine * 24;
+        } else {
+            directionalMatrix = 'scale(1)';
+        }
     }
 
     // รวมทุกการขยับเป็น transform เดียว เพื่อให้มือถือส่งงานไปที่ GPU ได้ลื่นกว่า
     toy.style.transformOrigin = `${originX}% ${originY}%`;
-    toy.style.transform = points.length > 1
-        ? `translate3d(${state.moveX}px,${state.moveY}px,0) ${directionalMatrix}`
-        : `translate3d(${state.moveX}px,${state.moveY}px,0) scale(${scaleX},${scaleY})`;
+    toy.style.transform = `translate3d(${state.moveX}px,${state.moveY}px,0) ${directionalMatrix}`;
     toy.classList.toggle('multi-touch', points.length > 1);
 }
 
@@ -471,7 +485,7 @@ async function playSquishSound(action, color) {
     const now = popAudioContext.currentTime;
     oscillator.frequency.setValueAtTime((action === 'press' ? 155 : 105) + toneOffset, now);
     oscillator.frequency.exponentialRampToValueAtTime((action === 'press' ? 92 : 175) + toneOffset, now + .09);
-    gain.gain.setValueAtTime(.055, now);
+    gain.gain.setValueAtTime(action === 'press' ? .075 : .065, now);
     gain.gain.exponentialRampToValueAtTime(.001, now + .1);
     oscillator.start(now);
     oscillator.stop(now + .105);
