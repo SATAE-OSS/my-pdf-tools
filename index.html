@@ -33,7 +33,7 @@
     </script>
 </head>
 <body>
-    <span class="app-version" title="PDF Magic version 1.5.2">v1.5.2</span>
+    <span class="app-version" title="PDF Magic version 1.5.3">v1.5.3</span>
     <!-- ปุ่มโหมดกลางคืน (เพิ่มใหม่) -->
     <button id="darkModeBtn" class="dark-mode-btn" type="button" aria-label="เปิดโหมดกลางคืน" aria-pressed="false">🌙</button>
     <div class="app-connectivity" aria-live="polite">
@@ -114,17 +114,20 @@
 
     <!-- ของเล่นสกุชชี่ แยกจากบับเบิ้ล -->
     <div id="squishyTab" class="container tab-content" style="display: none;">
-        <h2>🫠 สไลม์เด้งดึ๋ง</h2>
-        <div class="subtitle">ลากหนึ่งนิ้ว หรือใช้สองนิ้วดึงให้ยืดตามมุมได้เลย</div>
+        <h2>🫠 สกุชชี่นุ่มนิ่ม</h2>
+        <div class="subtitle">หนึ่งนิ้วลากย้าย สองนิ้วบีบหรือดึงให้ยืดตามมุม</div>
         <div class="squishy-stage" id="squishyStage">
-            <button class="squishy-toy slime-toy active" data-color="mint" type="button" aria-label="สไลม์ กดและลากหลายนิ้วได้">
+            <button class="squishy-toy slime-toy active" data-color="purple" type="button" aria-label="สกุชชี่ กดและลากสองนิ้วได้">
                 <span class="squishy-shine" aria-hidden="true"></span>
                 <span class="squishy-face" aria-hidden="true"><i></i><b></b><i></i></span>
             </button>
         </div>
-        <p class="squishy-hint" id="squishyHint" aria-live="polite">ลองดึงขึ้น ลง ซ้าย ขวา หรือเฉียงดูสิ</p>
-        <div class="squishy-controls">
-            <button type="button" id="resetSquishyBtn">↺ คืนรูปสไลม์</button>
+        <p class="squishy-hint" id="squishyHint" aria-live="polite">ลองใช้สองนิ้วดึงเฉียงดูสิ</p>
+        <div class="squishy-controls" aria-label="เลือกสีสกุชชี่">
+            <button type="button" data-slime-color="pink" aria-label="สีชมพู">🩷</button>
+            <button type="button" data-slime-color="purple" class="active" aria-label="สีม่วง">💜</button>
+            <button type="button" data-slime-color="mint" aria-label="สีเขียว">💚</button>
+            <button type="button" id="resetSquishyBtn">คืนรูป</button>
         </div>
     </div>
 

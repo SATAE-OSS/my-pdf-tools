@@ -366,6 +366,7 @@ const squishyStage = document.getElementById('squishyStage');
 const squishyToys = Array.from(document.querySelectorAll('.squishy-toy'));
 const squishyHint = document.getElementById('squishyHint');
 const resetSquishyBtn = document.getElementById('resetSquishyBtn');
+const slimeColorButtons = document.querySelectorAll('[data-slime-color]');
 const squishyStates = new WeakMap();
 
 function clampSquishy(value, min, max) {
@@ -418,17 +419,9 @@ function renderSquishy(toy, state) {
         const matrixD = sine * sine * scaleX + cosine * cosine * scaleY;
         directionalMatrix = `matrix(${matrixA},${matrixB},${matrixC},${matrixD},0,0)`;
     } else {
-        const horizontalStretch = Math.min(.72, Math.abs(deltaX) / 175);
-        const verticalStretch = Math.min(.72, Math.abs(deltaY) / 175);
-        scaleX = 1 + horizontalStretch - verticalStretch * .16;
-        scaleY = 1 + verticalStretch - horizontalStretch * .16;
-        scaleX = Math.max(.72, scaleX);
-        scaleY = Math.max(.72, scaleY);
-        const dragDistance = Math.hypot(deltaX, deltaY);
-        if (dragDistance > 3) {
-            originX = 50 - deltaX / dragDistance * 42;
-            originY = 50 - deltaY / dragDistance * 42;
-        }
+        // หนึ่งนิ้วใช้ลากตำแหน่งเท่านั้น ขนาดต้องไม่เปลี่ยน
+        scaleX = 1;
+        scaleY = 1;
     }
 
     // รวมทุกการขยับเป็น transform เดียว เพื่อให้มือถือส่งงานไปที่ GPU ได้ลื่นกว่า
@@ -561,6 +554,16 @@ resetSquishyBtn.addEventListener('click', () => {
     });
     squishyHint.textContent = 'คืนรูปสไลม์แล้ว พร้อมดึงต่อ ✨';
 });
+
+slimeColorButtons.forEach(button => button.addEventListener('click', () => {
+    const toy = squishyToys[0];
+    const state = squishyStates.get(toy);
+    resetSquishyToy(toy, state);
+    toy.dataset.color = button.dataset.slimeColor;
+    slimeColorButtons.forEach(item => item.classList.toggle('active', item === button));
+    squishyHint.textContent = 'เปลี่ยนสีแล้ว ลองใช้สองนิ้วดึงเฉียงดูสิ';
+    playSquishSound('release', toy.dataset.color);
+}));
 
 // ==========================================
 // 4. ระบบกระดานสเก็ตช์ภาพมินิ
