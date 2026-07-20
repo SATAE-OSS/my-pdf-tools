@@ -35,6 +35,8 @@ function updateAuthUI(user) {
     cloudStatus.textContent = signedIn ? 'เชื่อมต่อแล้ว' : 'ยังไม่ได้เข้าสู่ระบบ';
     cloudStatus.classList.toggle('connected', signedIn);
     currentUserEmail.textContent = user?.email || '';
+    const savedTitle = localStorage.getItem('pdf-magic-drawing-title');
+    if (signedIn && savedTitle) drawingTitle.value = savedTitle;
     if (!signedIn) savedDrawings.innerHTML = '';
 }
 
@@ -46,6 +48,9 @@ sendLoginLinkBtn.addEventListener('click', async () => {
         return;
     }
 
+    // เก็บงานไว้ก่อน เพราะลิงก์อีเมลอาจเปิดเว็บในแท็บใหม่
+    saveCanvasDraft();
+    localStorage.setItem('pdf-magic-drawing-title', drawingTitle.value.trim());
     setButtonBusy(sendLoginLinkBtn, true, 'กำลังส่ง...');
     setCloudMessage('');
     const { error } = await supabaseClient.auth.signInWithOtp({
@@ -191,6 +196,7 @@ function openDrawing(imageUrl, title) {
     image.onload = () => {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+        saveCanvasDraft();
         drawingTitle.value = title;
         canvas.scrollIntoView({ behavior: 'smooth', block: 'center' });
         setCloudMessage('เปิดภาพแล้ว สามารถวาดต่อได้เลย', 'success');

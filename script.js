@@ -15,7 +15,12 @@ function openTab(tabId, btnElement) {
     btnElement.classList.add('active');
 
     // Canvas ที่ซ่อนอยู่จะวัดความกว้างไม่ได้ จึงปรับขนาดหลังเปิดแท็บ
-    if (tabId === 'sketchTab') requestAnimationFrame(resizeCanvas);
+    if (tabId === 'sketchTab') {
+        requestAnimationFrame(() => {
+            resizeCanvas();
+            restoreCanvasDraft();
+        });
+    }
 }
 
 // ==========================================
@@ -322,6 +327,31 @@ let isDrawing = false;
 let lastX = 0;
 let lastY = 0;
 let currentTool = 'brush';
+const CANVAS_DRAFT_KEY = 'pdf-magic-canvas-draft';
+let draftRestored = false;
+
+function saveCanvasDraft() {
+    if (!canvas.width || !canvas.height) return;
+    try {
+        localStorage.setItem(CANVAS_DRAFT_KEY, canvas.toDataURL('image/png'));
+    } catch (error) {
+        console.warn('บันทึกภาพร่างในเครื่องไม่สำเร็จ:', error);
+    }
+}
+
+function restoreCanvasDraft() {
+    if (draftRestored || !canvas.width || !canvas.height) return;
+    const draft = localStorage.getItem(CANVAS_DRAFT_KEY);
+    draftRestored = true;
+    if (!draft) return;
+
+    const image = new Image();
+    image.onload = () => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+    };
+    image.src = draft;
+}
 
 function selectDrawingTool(tool) {
     currentTool = tool;
@@ -388,7 +418,10 @@ function draw(e) {
     lastY = pos.y;
 }
 
-function stopDrawing() { isDrawing = false; }
+function stopDrawing() {
+    if (isDrawing) saveCanvasDraft();
+    isDrawing = false;
+}
 
 // ดึงตำแหน่งเมาส์ หรือ นิ้วสัมผัส
 function getPos(e) {
@@ -472,6 +505,7 @@ function floodFill(startX, startY, hexColor) {
     }
 
     ctx.putImageData(imageData, 0, 0);
+    saveCanvasDraft();
 }
 
 // รองรับทั้งเมาส์และนิ้วทัชสกรีน
@@ -486,4 +520,5 @@ canvas.addEventListener('touchend', stopDrawing);
 
 clearBtn.addEventListener('click', () => {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    saveCanvasDraft();
 });
