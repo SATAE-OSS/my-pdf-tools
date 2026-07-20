@@ -350,3 +350,75 @@ body.dark-mode #sketchCanvas { background: #1b1622; border-color: #594466; }
     .tool-btn { flex: 1; }
     .color-control, .brush-control { flex: 1; justify-content: center; }
 }
+
+/* ========================================= */
+/* บันทึกภาพบน Supabase */
+/* ========================================= */
+.cloud-save-panel {
+    margin-top: 24px; padding: 22px; border-radius: 20px;
+    background: #fff9fa; border: 1px solid #ffe4e8;
+}
+.cloud-panel-heading, .cloud-user-row, .saved-drawings-header {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+}
+.cloud-panel-heading h3 { margin: 0; color: #5d4037; font-size: 18px; }
+.cloud-panel-heading p { margin: 3px 0 16px; color: #a1887f; font-size: 12px; }
+.cloud-status {
+    flex: 0 0 auto; padding: 5px 10px; border-radius: 20px;
+    background: #f0e8ea; color: #8d6e63; font-size: 11px; font-weight: 600;
+}
+.cloud-status.connected { background: #dcf8e7; color: #287a4c; }
+.cloud-field { display: block; margin-bottom: 6px; color: #8d6e63; font-size: 12px; }
+.cloud-inline-form { display: flex; align-items: stretch; gap: 8px; }
+.cloud-inline-form input { margin-bottom: 0; min-width: 0; }
+.cloud-inline-form input[type="email"] {
+    width: 100%; padding: 12px 15px; border: 2px solid #ffe4e8; border-radius: 16px;
+    box-sizing: border-box; background: #fff; color: #5d4037; font: 14px 'Prompt', sans-serif;
+}
+.cloud-inline-form .btn { width: auto; min-width: 150px; padding: 10px 16px; font-size: 13px; }
+.cloud-help { margin: 8px 0 0; color: #a1887f; font-size: 11px; }
+.cloud-user-row { margin-bottom: 14px; color: #7b625a; font-size: 13px; }
+.text-btn {
+    padding: 5px 8px; border: 0; background: transparent; color: #e76f99;
+    font: 500 12px 'Prompt', sans-serif; cursor: pointer;
+}
+.text-btn:hover { text-decoration: underline; }
+.text-btn.danger { color: #e0445e; }
+.saved-drawings-header { margin-top: 20px; }
+.saved-drawings-header h4 { margin: 0; font-size: 14px; color: #5d4037; }
+.saved-drawings { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 10px; }
+.saved-drawing-card {
+    min-width: 0; overflow: hidden; border-radius: 14px; background: #fff;
+    border: 1px solid #ffe4e8; box-shadow: 0 4px 12px rgba(255,182,193,0.12);
+}
+.saved-drawing-card > img { display: block; width: 100%; aspect-ratio: 4/3; object-fit: cover; background: #f6f0f2; }
+.saved-drawing-info { display: flex; flex-direction: column; padding: 9px 10px 3px; min-width: 0; }
+.saved-drawing-info strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; }
+.saved-drawing-info small { color: #a1887f; font-size: 9px; }
+.saved-drawing-actions { display: flex; justify-content: space-between; padding: 2px 4px 6px; }
+.drawing-placeholder { grid-column: 1/-1; text-align: center; color: #a1887f; font-size: 12px; }
+.cloud-message { min-height: 18px; margin: 12px 0 0; font-size: 12px; }
+.cloud-message.success { color: #28865a; }
+.cloud-message.error { color: #d73755; }
+.cloud-save-panel button:disabled { opacity: 0.55; cursor: wait; }
+
+body.dark-mode .cloud-save-panel { background: rgba(24,18,31,0.7); border-color: #4b3b59; }
+body.dark-mode .cloud-panel-heading h3, body.dark-mode .saved-drawings-header h4 { color: #ffe4f0; }
+body.dark-mode .cloud-panel-heading p, body.dark-mode .cloud-help,
+body.dark-mode .saved-drawing-info small, body.dark-mode .drawing-placeholder { color: #ad9db5; }
+body.dark-mode .cloud-status { background: #372c40; color: #c8b8ce; }
+body.dark-mode .cloud-status.connected { background: #203c32; color: #8ee0b7; }
+body.dark-mode .cloud-inline-form input[type="email"] { background: #1d1725; color: #f6eaf5; border-color: #544060; }
+body.dark-mode .cloud-user-row { color: #cbbbd2; }
+body.dark-mode .saved-drawing-card { background: #211a29; border-color: #4b3b59; }
+body.dark-mode .saved-drawing-card > img { background: #17131f; }
+body.dark-mode .cloud-message.success { color: #83dbae; }
+body.dark-mode .cloud-message.error { color: #ff92a7; }
+
+@media (max-width: 520px) {
+    .cloud-save-panel { padding: 17px; }
+    .cloud-panel-heading { align-items: flex-start; }
+    .cloud-inline-form { flex-direction: column; }
+    .cloud-inline-form .btn { width: 100%; }
+    .saved-drawings { grid-template-columns: 1fr; }
+}

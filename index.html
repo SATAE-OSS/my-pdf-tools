@@ -100,10 +100,50 @@
             <button class="btn btn-outline" id="clearCanvasBtn" style="padding: 5px 15px; font-size: 14px;">🗑️ ลบทั้งหมด</button>
         </div>
         <canvas id="sketchCanvas" width="300" height="400"></canvas>
+
+        <section class="cloud-save-panel" aria-labelledby="cloudSaveTitle">
+            <div class="cloud-panel-heading">
+                <div>
+                    <h3 id="cloudSaveTitle">☁️ บันทึกภาพบนคลาวด์</h3>
+                    <p>ล็อกอินเพื่อเปิดภาพของคุณได้จากอุปกรณ์อื่น</p>
+                </div>
+                <span class="cloud-status" id="cloudStatus">ยังไม่ได้เข้าสู่ระบบ</span>
+            </div>
+
+            <div id="signedOutPanel">
+                <label class="cloud-field" for="authEmail">อีเมล</label>
+                <div class="cloud-inline-form">
+                    <input type="email" id="authEmail" autocomplete="email" placeholder="name@example.com">
+                    <button class="btn" id="sendLoginLinkBtn" type="button">ส่งลิงก์เข้าสู่ระบบ</button>
+                </div>
+                <p class="cloud-help">ระบบจะส่งลิงก์ให้ทางอีเมล ไม่ต้องตั้งรหัสผ่าน</p>
+            </div>
+
+            <div id="signedInPanel" hidden>
+                <div class="cloud-user-row">
+                    <span id="currentUserEmail"></span>
+                    <button class="text-btn" id="signOutBtn" type="button">ออกจากระบบ</button>
+                </div>
+                <div class="cloud-inline-form save-form">
+                    <input type="text" id="drawingTitle" maxlength="80" placeholder="ตั้งชื่อภาพ" value="ภาพวาดของฉัน">
+                    <button class="btn" id="saveDrawingBtn" type="button">☁️ บันทึกภาพ</button>
+                </div>
+                <div class="saved-drawings-header">
+                    <h4>ภาพของฉัน</h4>
+                    <button class="text-btn" id="refreshDrawingsBtn" type="button">รีเฟรช</button>
+                </div>
+                <div id="savedDrawings" class="saved-drawings"></div>
+            </div>
+
+            <p id="cloudMessage" class="cloud-message" role="status" aria-live="polite"></p>
+        </section>
     </div>
 
     <!-- ดึงไฟล์ JavaScript ของเรามาใช้งาน -->
+    <script src="vendor/supabase.js"></script>
+    <script src="supabase-config.js"></script>
     <script src="script.js"></script>
+    <script src="cloud-drawings.js"></script>
     
     <!-- โค้ดลงทะเบียน Service Worker (สำคัญสำหรับการทำ PWA) -->
     <script>

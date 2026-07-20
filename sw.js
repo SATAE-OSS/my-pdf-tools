@@ -1,9 +1,11 @@
-const CACHE_NAME = 'pdf-magic-v3';
+const CACHE_NAME = 'pdf-magic-v4';
 const urlsToCache = [
   './',
   './index.html',
   './style.css',
   './script.js',
+  './cloud-drawings.js',
+  './supabase-config.js',
   './manifest.json',
   './icon-192.png',
   './icon-512.png',
@@ -11,7 +13,8 @@ const urlsToCache = [
   './vendor/jspdf.umd.min.js',
   './vendor/pdf.min.js',
   './vendor/pdf.worker.min.js',
-  './vendor/jszip.min.js'
+  './vendor/jszip.min.js',
+  './vendor/supabase.js'
 ];
 
 // บันทึกไฟล์ลง Cache เมื่อติดตั้งแอป
