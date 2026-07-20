@@ -34,7 +34,7 @@
 </head>
 <body>
     <!-- ปุ่มโหมดกลางคืน (เพิ่มใหม่) -->
-    <button id="darkModeBtn" class="dark-mode-btn">🌙</button>
+    <button id="darkModeBtn" class="dark-mode-btn" type="button" aria-label="เปิดโหมดกลางคืน" aria-pressed="false">🌙</button>
 
     <!-- เมนู Tabs (แก้ไขให้มี 4 ปุ่ม) -->
     <div class="tabs">
@@ -85,8 +85,18 @@
         <div class="subtitle">จดไอเดียหรือวาดแปลนห้องคร่าวๆ ได้เลย</div>
         
         <div class="sketch-controls">
-            <input type="color" id="colorPicker" value="#5d4037">
-            <input type="range" id="brushSize" min="1" max="10" value="3">
+            <div class="drawing-tools" role="group" aria-label="เครื่องมือวาดภาพ">
+                <button class="tool-btn active" id="brushToolBtn" type="button" aria-pressed="true" title="พู่กัน">🖌️ พู่กัน</button>
+                <button class="tool-btn" id="fillToolBtn" type="button" aria-pressed="false" title="ถังสี">🪣 ระบายสี</button>
+            </div>
+            <label class="color-control" title="เลือกสี">
+                <span>สี</span>
+                <input type="color" id="colorPicker" value="#5d4037" aria-label="เลือกสี">
+            </label>
+            <label class="brush-control" title="ขนาดพู่กัน">
+                <span>ขนาด</span>
+                <input type="range" id="brushSize" min="1" max="20" value="3" aria-label="ขนาดพู่กัน">
+            </label>
             <button class="btn btn-outline" id="clearCanvasBtn" style="padding: 5px 15px; font-size: 14px;">🗑️ ลบทั้งหมด</button>
         </div>
         <canvas id="sketchCanvas" width="300" height="400"></canvas>

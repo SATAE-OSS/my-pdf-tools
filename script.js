@@ -249,13 +249,21 @@ downloadZipBtn.addEventListener('click', function() {
 // 1. ระบบโหมดทำงานกลางคืน (Dark Mode)
 // ==========================================
 const darkModeBtn = document.getElementById('darkModeBtn');
+
+function applyTheme(isDark) {
+    document.body.classList.toggle('dark-mode', isDark);
+    darkModeBtn.innerText = isDark ? '☀️' : '🌙';
+    darkModeBtn.setAttribute('aria-label', isDark ? 'ปิดโหมดกลางคืน' : 'เปิดโหมดกลางคืน');
+    darkModeBtn.setAttribute('aria-pressed', String(isDark));
+}
+
+const savedTheme = localStorage.getItem('pdf-magic-theme');
+applyTheme(savedTheme ? savedTheme === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches);
+
 darkModeBtn.addEventListener('click', () => {
-    document.body.classList.toggle('dark-mode');
-    if (document.body.classList.contains('dark-mode')) {
-        darkModeBtn.innerText = '☀️';
-    } else {
-        darkModeBtn.innerText = '🌙';
-    }
+    const isDark = !document.body.classList.contains('dark-mode');
+    applyTheme(isDark);
+    localStorage.setItem('pdf-magic-theme', isDark ? 'dark' : 'light');
 });
 
 // ==========================================
@@ -307,10 +315,27 @@ const ctx = canvas.getContext('2d');
 const colorPicker = document.getElementById('colorPicker');
 const brushSize = document.getElementById('brushSize');
 const clearBtn = document.getElementById('clearCanvasBtn');
+const brushToolBtn = document.getElementById('brushToolBtn');
+const fillToolBtn = document.getElementById('fillToolBtn');
 
 let isDrawing = false;
 let lastX = 0;
 let lastY = 0;
+let currentTool = 'brush';
+
+function selectDrawingTool(tool) {
+    currentTool = tool;
+    const usingBrush = tool === 'brush';
+    brushToolBtn.classList.toggle('active', usingBrush);
+    fillToolBtn.classList.toggle('active', !usingBrush);
+    brushToolBtn.setAttribute('aria-pressed', String(usingBrush));
+    fillToolBtn.setAttribute('aria-pressed', String(!usingBrush));
+    brushSize.disabled = !usingBrush;
+    canvas.classList.toggle('fill-mode', !usingBrush);
+}
+
+brushToolBtn.addEventListener('click', () => selectDrawingTool('brush'));
+fillToolBtn.addEventListener('click', () => selectDrawingTool('fill'));
 
 // ปรับขนาด Canvas ให้พอดีมือถือ
 function resizeCanvas() {
@@ -332,8 +357,15 @@ window.addEventListener('load', resizeCanvas);
 window.addEventListener('resize', resizeCanvas);
 
 function startDrawing(e) {
-    isDrawing = true;
+    e.preventDefault();
     const pos = getPos(e);
+
+    if (currentTool === 'fill') {
+        floodFill(Math.floor(pos.x), Math.floor(pos.y), colorPicker.value);
+        return;
+    }
+
+    isDrawing = true;
     lastX = pos.x;
     lastY = pos.y;
 }
@@ -364,9 +396,82 @@ function getPos(e) {
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
     return {
-        x: clientX - rect.left,
-        y: clientY - rect.top
+        x: (clientX - rect.left) * (canvas.width / rect.width),
+        y: (clientY - rect.top) * (canvas.height / rect.height)
     };
+}
+
+function hexToRgba(hex) {
+    return [
+        parseInt(hex.slice(1, 3), 16),
+        parseInt(hex.slice(3, 5), 16),
+        parseInt(hex.slice(5, 7), 16),
+        255
+    ];
+}
+
+// เติมสีเฉพาะพื้นที่ที่เชื่อมถึงกัน (Flood Fill) เหมือนเครื่องมือถังสี
+function floodFill(startX, startY, hexColor) {
+    if (startX < 0 || startY < 0 || startX >= canvas.width || startY >= canvas.height) return;
+
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const pixels = imageData.data;
+    const fillColor = hexToRgba(hexColor);
+    const startIndex = (startY * canvas.width + startX) * 4;
+    const targetColor = Array.from(pixels.slice(startIndex, startIndex + 4));
+
+    if (targetColor.every((value, index) => value === fillColor[index])) return;
+
+    const matchesTarget = index =>
+        pixels[index] === targetColor[0] && pixels[index + 1] === targetColor[1] &&
+        pixels[index + 2] === targetColor[2] && pixels[index + 3] === targetColor[3];
+    const stack = [[startX, startY]];
+
+    while (stack.length) {
+        const [x, y] = stack.pop();
+        let currentY = y;
+        let index = (currentY * canvas.width + x) * 4;
+
+        while (currentY >= 0 && matchesTarget(index)) {
+            currentY--;
+            index -= canvas.width * 4;
+        }
+        currentY++;
+
+        let reachLeft = false;
+        let reachRight = false;
+        for (; currentY < canvas.height; currentY++) {
+            index = (currentY * canvas.width + x) * 4;
+            if (!matchesTarget(index)) break;
+
+            pixels[index] = fillColor[0];
+            pixels[index + 1] = fillColor[1];
+            pixels[index + 2] = fillColor[2];
+            pixels[index + 3] = fillColor[3];
+
+            if (x > 0) {
+                const leftIndex = index - 4;
+                if (matchesTarget(leftIndex) && !reachLeft) {
+                    stack.push([x - 1, currentY]);
+                    reachLeft = true;
+                } else if (!matchesTarget(leftIndex)) {
+                    reachLeft = false;
+                }
+            }
+
+            if (x < canvas.width - 1) {
+                const rightIndex = index + 4;
+                if (matchesTarget(rightIndex) && !reachRight) {
+                    stack.push([x + 1, currentY]);
+                    reachRight = true;
+                } else if (!matchesTarget(rightIndex)) {
+                    reachRight = false;
+                }
+            }
+        }
+    }
+
+    ctx.putImageData(imageData, 0, 0);
 }
 
 // รองรับทั้งเมาส์และนิ้วทัชสกรีน
