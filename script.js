@@ -471,12 +471,20 @@ function burstSquishySparkles(toy) {
     }
 }
 
-async function playSquishSound(action, color) {
+function primeSquishAudio() {
     const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-    if (!AudioContextClass) return;
+    if (!AudioContextClass) return false;
     if (!popAudioContext || popAudioContext.state === 'closed') {
         popAudioContext = new AudioContextClass();
     }
+    if (popAudioContext.state === 'suspended') {
+        popAudioContext.resume().catch(() => {});
+    }
+    return true;
+}
+
+async function playSquishSound(action, color) {
+    if (!primeSquishAudio()) return;
     if (popAudioContext.state === 'suspended') await popAudioContext.resume();
     const toneOffset = color === 'purple' ? 22 : color === 'mint' ? 42 : 0;
     const oscillator = popAudioContext.createOscillator();
@@ -485,10 +493,10 @@ async function playSquishSound(action, color) {
     oscillator.connect(gain);
     gain.connect(popAudioContext.destination);
     const now = popAudioContext.currentTime;
-    oscillator.frequency.setValueAtTime((action === 'press' ? 520 : 320) + toneOffset, now);
-    oscillator.frequency.exponentialRampToValueAtTime((action === 'press' ? 300 : 590) + toneOffset, now + .14);
+    oscillator.frequency.setValueAtTime((action === 'press' ? 720 : 430) + toneOffset, now);
+    oscillator.frequency.exponentialRampToValueAtTime((action === 'press' ? 380 : 760) + toneOffset, now + .14);
     gain.gain.setValueAtTime(.0001, now);
-    gain.gain.exponentialRampToValueAtTime(action === 'press' ? .13 : .11, now + .012);
+    gain.gain.exponentialRampToValueAtTime(action === 'press' ? .32 : .27, now + .012);
     gain.gain.exponentialRampToValueAtTime(.001, now + .16);
     oscillator.start(now);
     oscillator.stop(now + .165);
@@ -512,6 +520,8 @@ squishyToys.forEach(toy => {
     squishyStates.set(toy, state);
 
     toy.addEventListener('pointerdown', event => {
+        // Resume Web Audio synchronously inside the user gesture for mobile browsers.
+        primeSquishAudio();
         event.preventDefault();
         if (state.pointers.size >= 2) return;
         const toyRect = toy.getBoundingClientRect();
