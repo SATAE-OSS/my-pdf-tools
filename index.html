@@ -161,7 +161,7 @@
             <div class="canvas-actions tool-row" role="group" aria-label="จัดการภาพ">
                 <button class="tool-btn icon-btn" id="undoCanvasBtn" type="button" disabled>↶ <span>ย้อนกลับ</span></button>
                 <button class="tool-btn icon-btn" id="redoCanvasBtn" type="button" disabled>↷ <span>ทำซ้ำ</span></button>
-                <button class="tool-btn icon-btn" id="saveLocalDraftBtn" type="button">💾 <span>เก็บในเครื่อง</span></button>
+                <button class="tool-btn icon-btn" id="saveLocalDraftBtn" type="button">💾 <span>บันทึกภาพ</span></button>
                 <button class="tool-btn icon-btn" id="downloadCanvasBtn" type="button">⬇️ <span>ดาวน์โหลด</span></button>
                 <button class="tool-btn icon-btn danger" id="clearCanvasBtn" type="button">🗑️ <span>ล้างภาพ</span></button>
             </div>
@@ -202,8 +202,8 @@
         <section class="local-drafts-panel" aria-labelledby="localDraftsTitle">
             <div class="saved-drawings-header">
                 <div>
-                    <h3 id="localDraftsTitle">📱 งานที่เก็บในเครื่อง</h3>
-                    <p>เปิดได้โดยไม่ต้องล็อกอิน และไม่ส่งออกจากอุปกรณ์นี้</p>
+                    <h3 id="localDraftsTitle">📱 ภาพที่บันทึกไว้</h3>
+                    <p>เปิดวาดต่อได้โดยไม่ต้องล็อกอิน ภาพจะอยู่เฉพาะในอุปกรณ์นี้</p>
                 </div>
                 <button class="text-btn" id="clearLocalDraftsBtn" type="button">ล้างทั้งหมด</button>
             </div>
@@ -277,6 +277,22 @@
             <button class="btn btn-outline" id="confirmDialogCancel" type="button">ยกเลิก</button>
             <button class="btn danger-btn" id="confirmDialogOk" type="button">ลบ</button>
         </div>
+    </dialog>
+
+    <dialog id="saveDraftDialog" class="app-dialog save-draft-dialog" aria-labelledby="saveDraftDialogTitle">
+        <form id="saveDraftForm" method="dialog">
+            <div class="dialog-icon save-icon">💾</div>
+            <h3 id="saveDraftDialogTitle">บันทึกภาพนี้</h3>
+            <p>ตั้งชื่อไว้สักหน่อย จะได้กลับมาเปิดวาดต่อได้ง่าย</p>
+            <label class="dialog-field" for="localDraftTitle">
+                <span>ชื่อภาพ</span>
+                <input id="localDraftTitle" type="text" maxlength="80" autocomplete="off" required>
+            </label>
+            <div class="dialog-actions">
+                <button class="btn btn-outline" id="cancelSaveDraftBtn" type="button">ยกเลิก</button>
+                <button class="btn" type="submit">บันทึกภาพ</button>
+            </div>
+        </form>
     </dialog>
 
     <dialog id="shareDialog" class="app-dialog share-dialog" aria-labelledby="shareDialogTitle">

@@ -551,7 +551,8 @@ body.dark-mode .account-tools span { color: #ad9db5; }
 
 /* กล่องยืนยันที่เข้าธีมและเหมาะกับจอสัมผัส */
 .app-dialog {
-    width: min(88vw, 390px); padding: 26px; border: 1px solid #ffe4e8;
+    width: min(92vw, 390px); max-height: 90vh; box-sizing: border-box; overflow: auto;
+    padding: 26px; border: 1px solid #ffe4e8;
     border-radius: 24px; background: #fffafd; color: #5d4037;
     box-shadow: 0 24px 70px rgba(74,42,56,.3); text-align: center;
 }
@@ -568,6 +569,20 @@ body.dark-mode .account-tools span { color: #ad9db5; }
 body.dark-mode .app-dialog { background: #251d2e; color: #ffe4f0; border-color: #594466; }
 body.dark-mode .app-dialog p { color: #c1b0c8; }
 body.dark-mode .dialog-icon { background: #37283f; }
+.save-draft-dialog { text-align: left; }
+.save-draft-dialog .dialog-icon, .save-draft-dialog h3, .save-draft-dialog p { text-align: center; }
+.save-draft-dialog .save-icon { background: linear-gradient(135deg,#f0d7ff,#ffd1e5); }
+.dialog-field { display: grid; gap: 7px; margin-bottom: 20px; color: #795548; font-size: 12px; font-weight: 700; }
+.dialog-field input {
+    width: 100%; min-height: 48px; box-sizing: border-box; padding: 11px 13px;
+    border: 2px solid #f2cfda; border-radius: 13px; outline: none;
+    background: #fff; color: #4f3944; font: 14px 'Prompt', sans-serif;
+    transition: border-color .2s, box-shadow .2s;
+}
+.dialog-field input:focus { border-color: #e184c2; box-shadow: 0 0 0 4px rgba(225,132,194,.15); }
+body.dark-mode .dialog-field { color: #d6c1d4; }
+body.dark-mode .dialog-field input { background: #17121d; color: #fff1f8; border-color: #624a70; }
+body.dark-mode .dialog-field input:focus { border-color: #d58ae5; box-shadow: 0 0 0 4px rgba(213,138,229,.14); }
 .share-dialog input {
     width: 100%; box-sizing: border-box; margin-bottom: 16px; padding: 12px;
     border: 1px solid #ffe4e8; border-radius: 12px; background: #fff; color: #5d4037;

@@ -3,6 +3,10 @@ const LOCAL_STORE_NAME = 'drafts';
 const localDraftsContainer = document.getElementById('localDrafts');
 const saveLocalDraftBtn = document.getElementById('saveLocalDraftBtn');
 const clearLocalDraftsBtn = document.getElementById('clearLocalDraftsBtn');
+const saveDraftDialog = document.getElementById('saveDraftDialog');
+const saveDraftForm = document.getElementById('saveDraftForm');
+const localDraftTitle = document.getElementById('localDraftTitle');
+const cancelSaveDraftBtn = document.getElementById('cancelSaveDraftBtn');
 
 function openLocalDraftDatabase() {
     return new Promise((resolve, reject) => {
@@ -51,7 +55,7 @@ async function renderLocalDrafts() {
         const drafts = (await getAllLocalDrafts()).sort((a, b) => b.updatedAt - a.updatedAt);
         localDraftsContainer.innerHTML = '';
         if (!drafts.length) {
-            localDraftsContainer.innerHTML = '<p class="drawing-placeholder">ยังไม่มีงานที่เก็บในเครื่อง</p>';
+            localDraftsContainer.innerHTML = '<p class="drawing-placeholder">ยังไม่มีภาพที่บันทึกไว้</p>';
             return;
         }
 
@@ -103,9 +107,46 @@ async function renderLocalDrafts() {
     }
 }
 
+function requestDraftTitle(defaultTitle) {
+    return new Promise(resolve => {
+        localDraftTitle.setCustomValidity('');
+        localDraftTitle.value = defaultTitle;
+        saveDraftDialog.showModal();
+        window.setTimeout(() => localDraftTitle.select(), 0);
+
+        const finish = value => {
+            saveDraftForm.removeEventListener('submit', submit);
+            cancelSaveDraftBtn.removeEventListener('click', cancel);
+            saveDraftDialog.oncancel = null;
+            if (saveDraftDialog.open) saveDraftDialog.close();
+            resolve(value);
+        };
+        const submit = event => {
+            event.preventDefault();
+            const title = localDraftTitle.value.trim();
+            if (!title) {
+                localDraftTitle.setCustomValidity('กรุณาตั้งชื่อภาพ');
+                localDraftTitle.reportValidity();
+                return;
+            }
+            localDraftTitle.setCustomValidity('');
+            finish(title);
+        };
+        const cancel = () => finish('');
+        saveDraftForm.addEventListener('submit', submit);
+        cancelSaveDraftBtn.addEventListener('click', cancel);
+        saveDraftDialog.oncancel = event => {
+            event.preventDefault();
+            cancel();
+        };
+    });
+}
+
+localDraftTitle.addEventListener('input', () => localDraftTitle.setCustomValidity(''));
+
 saveLocalDraftBtn.addEventListener('click', async () => {
-    const defaultTitle = `ภาพร่าง ${new Intl.DateTimeFormat('th-TH', { dateStyle: 'short', timeStyle: 'short' }).format(new Date())}`;
-    const title = prompt('ตั้งชื่องานที่เก็บในเครื่อง', defaultTitle)?.trim();
+    const defaultTitle = `ภาพวาด ${new Intl.DateTimeFormat('th-TH', { dateStyle: 'short', timeStyle: 'short' }).format(new Date())}`;
+    const title = await requestDraftTitle(defaultTitle);
     if (!title) return;
     saveLocalDraftBtn.disabled = true;
     try {
@@ -123,7 +164,7 @@ saveLocalDraftBtn.addEventListener('click', async () => {
 });
 
 clearLocalDraftsBtn.addEventListener('click', async () => {
-    if (!await confirmAction('งานที่เก็บในเครื่องทั้งหมดจะถูกลบและกู้คืนไม่ได้', 'ล้างทั้งหมด')) return;
+    if (!await confirmAction('ภาพที่บันทึกไว้ในอุปกรณ์นี้ทั้งหมดจะถูกลบและกู้คืนไม่ได้', 'ล้างทั้งหมด')) return;
     await clearLocalDraftDatabase();
     renderLocalDrafts();
 });
