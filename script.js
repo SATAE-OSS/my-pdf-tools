@@ -472,23 +472,26 @@ function burstSquishySparkles(toy) {
 }
 
 async function playSquishSound(action, color) {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextClass) return;
     if (!popAudioContext || popAudioContext.state === 'closed') {
-        popAudioContext = new (window.AudioContext || window.webkitAudioContext)();
+        popAudioContext = new AudioContextClass();
     }
     if (popAudioContext.state === 'suspended') await popAudioContext.resume();
     const toneOffset = color === 'purple' ? 22 : color === 'mint' ? 42 : 0;
     const oscillator = popAudioContext.createOscillator();
     const gain = popAudioContext.createGain();
-    oscillator.type = 'sine';
+    oscillator.type = 'triangle';
     oscillator.connect(gain);
     gain.connect(popAudioContext.destination);
     const now = popAudioContext.currentTime;
-    oscillator.frequency.setValueAtTime((action === 'press' ? 155 : 105) + toneOffset, now);
-    oscillator.frequency.exponentialRampToValueAtTime((action === 'press' ? 92 : 175) + toneOffset, now + .09);
-    gain.gain.setValueAtTime(action === 'press' ? .075 : .065, now);
-    gain.gain.exponentialRampToValueAtTime(.001, now + .1);
+    oscillator.frequency.setValueAtTime((action === 'press' ? 520 : 320) + toneOffset, now);
+    oscillator.frequency.exponentialRampToValueAtTime((action === 'press' ? 300 : 590) + toneOffset, now + .14);
+    gain.gain.setValueAtTime(.0001, now);
+    gain.gain.exponentialRampToValueAtTime(action === 'press' ? .13 : .11, now + .012);
+    gain.gain.exponentialRampToValueAtTime(.001, now + .16);
     oscillator.start(now);
-    oscillator.stop(now + .105);
+    oscillator.stop(now + .165);
     oscillator.addEventListener('ended', () => { oscillator.disconnect(); gain.disconnect(); });
 }
 
