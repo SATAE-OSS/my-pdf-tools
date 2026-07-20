@@ -35,6 +35,10 @@
 <body>
     <!-- ปุ่มโหมดกลางคืน (เพิ่มใหม่) -->
     <button id="darkModeBtn" class="dark-mode-btn" type="button" aria-label="เปิดโหมดกลางคืน" aria-pressed="false">🌙</button>
+    <div class="app-connectivity" aria-live="polite">
+        <span id="onlineStatus" class="online-status">ออนไลน์</span>
+        <button id="installAppBtn" class="mini-app-btn" type="button" hidden>ติดตั้งแอป</button>
+    </div>
 
     <!-- เมนู Tabs (แก้ไขให้มี 4 ปุ่ม) -->
     <div class="tabs">
@@ -51,6 +55,35 @@
         
         <input type="file" id="fileInput" multiple accept="image/png, image/jpeg, image/jpg">
         <div id="gallery" class="gallery-grid"></div>
+        <div class="pdf-options" aria-label="ตั้งค่าไฟล์ PDF">
+            <label>ขนาดกระดาษ
+                <select id="pdfPageSize">
+                    <option value="a4">A4</option>
+                    <option value="letter">Letter</option>
+                </select>
+            </label>
+            <label>แนวกระดาษ
+                <select id="pdfOrientation">
+                    <option value="portrait">แนวตั้ง</option>
+                    <option value="landscape">แนวนอน</option>
+                </select>
+            </label>
+            <label>ระยะขอบ
+                <select id="pdfMargin">
+                    <option value="0">ไม่มีขอบ</option>
+                    <option value="5" selected>5 มม.</option>
+                    <option value="10">10 มม.</option>
+                    <option value="15">15 มม.</option>
+                </select>
+            </label>
+            <label>คุณภาพไฟล์
+                <select id="pdfQuality">
+                    <option value="0.65">ไฟล์เล็ก</option>
+                    <option value="0.82" selected>สมดุล</option>
+                    <option value="0.95">คมชัด</option>
+                </select>
+            </label>
+        </div>
         <input type="text" id="fileName" value="My_Document" placeholder="ตั้งชื่อไฟล์ PDF">
         
         <div class="btn-group">
@@ -89,6 +122,10 @@
                 <button class="tool-btn active" id="brushToolBtn" type="button" aria-pressed="true">🖌️ <span>พู่กัน</span></button>
                 <button class="tool-btn" id="fillToolBtn" type="button" aria-pressed="false">🪣 <span>ถังสี</span></button>
                 <button class="tool-btn" id="eraserToolBtn" type="button" aria-pressed="false">🧽 <span>ยางลบ</span></button>
+                <button class="tool-btn" type="button" data-drawing-tool="line" aria-pressed="false">╱ <span>เส้น</span></button>
+                <button class="tool-btn" type="button" data-drawing-tool="rect" aria-pressed="false">▭ <span>กรอบ</span></button>
+                <button class="tool-btn" type="button" data-drawing-tool="ellipse" aria-pressed="false">◯ <span>วงกลม</span></button>
+                <button class="tool-btn" type="button" data-drawing-tool="text" aria-pressed="false">T <span>ข้อความ</span></button>
             </div>
 
             <div class="palette-row">
@@ -124,11 +161,54 @@
             <div class="canvas-actions tool-row" role="group" aria-label="จัดการภาพ">
                 <button class="tool-btn icon-btn" id="undoCanvasBtn" type="button" disabled>↶ <span>ย้อนกลับ</span></button>
                 <button class="tool-btn icon-btn" id="redoCanvasBtn" type="button" disabled>↷ <span>ทำซ้ำ</span></button>
+                <button class="tool-btn icon-btn" id="saveLocalDraftBtn" type="button">💾 <span>เก็บในเครื่อง</span></button>
                 <button class="tool-btn icon-btn" id="downloadCanvasBtn" type="button">⬇️ <span>ดาวน์โหลด</span></button>
                 <button class="tool-btn icon-btn danger" id="clearCanvasBtn" type="button">🗑️ <span>ล้างภาพ</span></button>
             </div>
+
+            <div class="canvas-settings">
+                <label>ขนาดกระดาษ
+                    <select id="canvasRatio">
+                        <option value="free">เต็มพื้นที่</option>
+                        <option value="1:1">จัตุรัส 1:1</option>
+                        <option value="4:3">ภาพ 4:3</option>
+                        <option value="16:9">จอกว้าง 16:9</option>
+                        <option value="a4">กระดาษ A4</option>
+                    </select>
+                </label>
+                <label>พื้นหลัง
+                    <select id="canvasBackground">
+                        <option value="white">สีขาว</option>
+                        <option value="transparent">โปร่งใส</option>
+                    </select>
+                </label>
+                <label>ซูม
+                    <select id="canvasZoom">
+                        <option value="1">100%</option>
+                        <option value="1.25">125%</option>
+                        <option value="1.5">150%</option>
+                        <option value="2">200%</option>
+                    </select>
+                </label>
+            </div>
         </div>
-        <canvas id="sketchCanvas" width="300" height="400"></canvas>
+        <div class="canvas-viewport" id="canvasViewport">
+            <div class="canvas-zoom-stage" id="canvasZoomStage">
+                <canvas id="sketchCanvas" width="300" height="400"></canvas>
+                <div id="brushCursor" class="brush-cursor" aria-hidden="true"></div>
+            </div>
+        </div>
+
+        <section class="local-drafts-panel" aria-labelledby="localDraftsTitle">
+            <div class="saved-drawings-header">
+                <div>
+                    <h3 id="localDraftsTitle">📱 งานที่เก็บในเครื่อง</h3>
+                    <p>เปิดได้โดยไม่ต้องล็อกอิน และไม่ส่งออกจากอุปกรณ์นี้</p>
+                </div>
+                <button class="text-btn" id="clearLocalDraftsBtn" type="button">ล้างทั้งหมด</button>
+            </div>
+            <div id="localDrafts" class="saved-drawings"></div>
+        </section>
 
         <section class="cloud-save-panel" aria-labelledby="cloudSaveTitle">
             <div class="cloud-panel-heading">
@@ -140,12 +220,22 @@
             </div>
 
             <div id="signedOutPanel">
-                <label class="cloud-field" for="authEmail">อีเมล</label>
-                <div class="cloud-inline-form">
-                    <input type="email" id="authEmail" autocomplete="email" placeholder="name@example.com">
-                    <button class="btn" id="sendLoginLinkBtn" type="button">ส่งลิงก์เข้าสู่ระบบ</button>
+                <div id="emailLoginStep">
+                    <label class="cloud-field" for="authEmail">อีเมล</label>
+                    <div class="cloud-inline-form">
+                        <input type="email" id="authEmail" autocomplete="email" placeholder="name@example.com">
+                        <button class="btn" id="sendLoginLinkBtn" type="button">ส่งรหัส OTP</button>
+                    </div>
+                    <p class="cloud-help">รับรหัส 6 หลักทางอีเมลแล้วกรอกในหน้าเดิม ภาพที่วาดจะไม่หาย</p>
                 </div>
-                <p class="cloud-help">ระบบจะเก็บภาพร่างในเครื่องก่อนส่งลิงก์ และคืนภาพให้อัตโนมัติเมื่อกลับมา ไม่ต้องตั้งรหัสผ่าน</p>
+                <div id="otpLoginStep" hidden>
+                    <label class="cloud-field" for="otpCode">รหัส OTP จากอีเมล</label>
+                    <div class="cloud-inline-form otp-form">
+                        <input type="text" id="otpCode" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" placeholder="000000">
+                        <button class="btn" id="verifyOtpBtn" type="button">ยืนยันรหัส</button>
+                    </div>
+                    <button class="text-btn" id="changeLoginEmailBtn" type="button">เปลี่ยนอีเมลหรือส่งรหัสใหม่</button>
+                </div>
             </div>
 
             <div id="signedInPanel" hidden>
@@ -162,27 +252,65 @@
                     <button class="text-btn" id="refreshDrawingsBtn" type="button">รีเฟรช</button>
                 </div>
                 <div id="savedDrawings" class="saved-drawings"></div>
+                <div class="account-tools">
+                    <div>
+                        <strong>ข้อมูลของฉัน</strong>
+                        <span id="accountUsage">0 ภาพ · 0 KB</span>
+                    </div>
+                    <div class="account-actions">
+                        <button class="text-btn" id="downloadAllDrawingsBtn" type="button">ดาวน์โหลดทั้งหมด</button>
+                        <button class="text-btn danger" id="deleteAllDrawingsBtn" type="button">ลบภาพทั้งหมด</button>
+                        <button class="text-btn danger" id="deleteAccountBtn" type="button">ลบบัญชี</button>
+                    </div>
+                </div>
             </div>
 
             <p id="cloudMessage" class="cloud-message" role="status" aria-live="polite"></p>
         </section>
     </div>
 
+    <dialog id="confirmDialog" class="app-dialog" aria-labelledby="confirmDialogTitle">
+        <div class="dialog-icon">🗑️</div>
+        <h3 id="confirmDialogTitle">ยืนยันการลบ</h3>
+        <p id="confirmDialogMessage"></p>
+        <div class="dialog-actions">
+            <button class="btn btn-outline" id="confirmDialogCancel" type="button">ยกเลิก</button>
+            <button class="btn danger-btn" id="confirmDialogOk" type="button">ลบ</button>
+        </div>
+    </dialog>
+
+    <dialog id="shareDialog" class="app-dialog share-dialog" aria-labelledby="shareDialogTitle">
+        <div class="dialog-icon">🔗</div>
+        <h3 id="shareDialogTitle">แชร์ภาพ</h3>
+        <p>ทุกคนที่มีลิงก์นี้สามารถเปิดดูและดาวน์โหลดภาพได้</p>
+        <input type="text" id="shareLinkInput" readonly aria-label="ลิงก์แชร์ภาพ">
+        <div class="dialog-actions">
+            <button class="btn btn-outline" id="closeShareDialogBtn" type="button">ปิด</button>
+            <button class="btn" id="copyShareLinkBtn" type="button">คัดลอกลิงก์</button>
+        </div>
+    </dialog>
+
+    <dialog id="sharedViewDialog" class="app-dialog shared-view-dialog" aria-labelledby="sharedViewTitle">
+        <h3 id="sharedViewTitle">ภาพที่แชร์</h3>
+        <img id="sharedViewImage" alt="ภาพที่แชร์">
+        <div class="dialog-actions">
+            <button class="btn btn-outline" id="closeSharedViewBtn" type="button">ปิด</button>
+            <a class="btn" id="downloadSharedViewBtn" download>ดาวน์โหลด</a>
+        </div>
+    </dialog>
+
+    <div id="updateToast" class="update-toast" hidden>
+        <span>มีเวอร์ชันใหม่พร้อมใช้งาน</span>
+        <button id="reloadAppBtn" type="button">อัปเดต</button>
+    </div>
+
     <!-- ดึงไฟล์ JavaScript ของเรามาใช้งาน -->
     <script src="vendor/supabase.js"></script>
     <script src="supabase-config.js"></script>
     <script src="script.js"></script>
+    <script src="local-drafts.js"></script>
     <script src="cloud-drawings.js"></script>
+    <script src="pwa-ui.js"></script>
     
-    <!-- โค้ดลงทะเบียน Service Worker (สำคัญสำหรับการทำ PWA) -->
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js')
-                    .then(registration => console.log('ServiceWorker ทำงานสำเร็จ!'))
-                    .catch(err => console.log('ServiceWorker ล้มเหลว: ', err));
-            });
-        }
-    </script>
 </body>
 </html>

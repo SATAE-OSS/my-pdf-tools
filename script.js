@@ -30,6 +30,10 @@ const fileInput = document.getElementById('fileInput');
 const gallery = document.getElementById('gallery');
 const previewBtn = document.getElementById('previewBtn');
 const downloadBtn = document.getElementById('downloadBtn');
+const pdfPageSize = document.getElementById('pdfPageSize');
+const pdfOrientation = document.getElementById('pdfOrientation');
+const pdfMargin = document.getElementById('pdfMargin');
+const pdfQuality = document.getElementById('pdfQuality');
 
 function updatePageNumbers() {
     const cards = gallery.querySelectorAll('.img-card');
@@ -71,12 +75,25 @@ fileInput.addEventListener('change', function(e) {
                 div.remove();
                 updatePageNumbers();
             });
+
+            const rotateBtn = document.createElement('button');
+            rotateBtn.innerHTML = '↻';
+            rotateBtn.className = 'rotate-btn';
+            rotateBtn.title = 'หมุนรูป 90 องศา';
+            div.dataset.rotation = '0';
+            rotateBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const rotation = (Number(div.dataset.rotation) + 90) % 360;
+                div.dataset.rotation = String(rotation);
+                img.style.transform = `rotate(${rotation}deg)`;
+            });
             
             const img = document.createElement('img');
             img.src = event.target.result;
             
             div.appendChild(badge);
             div.appendChild(deleteBtn);
+            div.appendChild(rotateBtn);
             div.appendChild(img);
             gallery.appendChild(div);
             
@@ -88,27 +105,53 @@ fileInput.addEventListener('change', function(e) {
 });
 
 function generatePDF() {
-    const images = gallery.querySelectorAll('img');
-    if(images.length === 0) return null;
+    const cards = gallery.querySelectorAll('.img-card');
+    if(cards.length === 0) return null;
     
     const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF();
+    const format = pdfPageSize.value;
+    const orientation = pdfOrientation.value;
+    const margin = Number(pdfMargin.value);
+    const quality = Number(pdfQuality.value);
+    const pdf = new jsPDF({ orientation, unit: 'mm', format, compress: true });
     
-    images.forEach((img, index) => {
+    cards.forEach((card, index) => {
+        const img = card.querySelector('img');
         if(index > 0) pdf.addPage();
         const pageWidth = pdf.internal.pageSize.getWidth();
         const pageHeight = pdf.internal.pageSize.getHeight();
-        const ratio = img.naturalWidth / img.naturalHeight;
+        const rotation = Number(card.dataset.rotation || 0);
+        const processedImage = prepareImageForPdf(img, rotation, quality);
+        const rotated = rotation === 90 || rotation === 270;
+        const sourceWidth = rotated ? img.naturalHeight : img.naturalWidth;
+        const sourceHeight = rotated ? img.naturalWidth : img.naturalHeight;
+        const ratio = sourceWidth / sourceHeight;
+        const availableWidth = Math.max(1, pageWidth - margin * 2);
+        const availableHeight = Math.max(1, pageHeight - margin * 2);
         
-        let width = pageWidth;
-        let height = pageWidth / ratio;
-        if(height > pageHeight) { height = pageHeight; width = pageHeight * ratio; }
+        let width = availableWidth;
+        let height = availableWidth / ratio;
+        if(height > availableHeight) { height = availableHeight; width = availableHeight * ratio; }
         
         const x = (pageWidth - width) / 2;
         const y = (pageHeight - height) / 2;
-        pdf.addImage(img.src, 'JPEG', x, y, width, height);
+        pdf.addImage(processedImage, 'JPEG', x, y, width, height, undefined, 'MEDIUM');
     });
     return pdf;
+}
+
+function prepareImageForPdf(image, rotation, quality) {
+    const rotated = rotation === 90 || rotation === 270;
+    const output = document.createElement('canvas');
+    output.width = rotated ? image.naturalHeight : image.naturalWidth;
+    output.height = rotated ? image.naturalWidth : image.naturalHeight;
+    const outputContext = output.getContext('2d');
+    outputContext.fillStyle = '#ffffff';
+    outputContext.fillRect(0, 0, output.width, output.height);
+    outputContext.translate(output.width / 2, output.height / 2);
+    outputContext.rotate(rotation * Math.PI / 180);
+    outputContext.drawImage(image, -image.naturalWidth / 2, -image.naturalHeight / 2);
+    return output.toDataURL('image/jpeg', quality);
 }
 
 previewBtn.addEventListener('click', function() {
@@ -291,23 +334,34 @@ function createBubbles() {
     }
 }
 
-// สร้างเสียง "ป๊อป" ด้วย Web Audio API (ไม่ต้องโหลดไฟล์เสียงเพิ่ม)
-function playPopSound() {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
+// ใช้ AudioContext ตัวเดียวซ้ำ เพราะมือถือจำกัดจำนวน context ที่เปิดพร้อมกัน
+let popAudioContext = null;
+async function playPopSound() {
+    if (!popAudioContext || popAudioContext.state === 'closed') {
+        popAudioContext = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (popAudioContext.state === 'suspended') {
+        await popAudioContext.resume();
+    }
+
+    const osc = popAudioContext.createOscillator();
+    const gain = popAudioContext.createGain();
     osc.connect(gain);
-    gain.connect(ctx.destination);
+    gain.connect(popAudioContext.destination);
     
     osc.type = 'sine';
-    osc.frequency.setValueAtTime(800, ctx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(300, ctx.currentTime + 0.1);
+    osc.frequency.setValueAtTime(800, popAudioContext.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(300, popAudioContext.currentTime + 0.1);
     
-    gain.gain.setValueAtTime(1, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+    gain.gain.setValueAtTime(0.45, popAudioContext.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, popAudioContext.currentTime + 0.1);
     
     osc.start();
-    osc.stop(ctx.currentTime + 0.1);
+    osc.stop(popAudioContext.currentTime + 0.1);
+    osc.addEventListener('ended', () => {
+        osc.disconnect();
+        gain.disconnect();
+    });
 }
 // เรียกสร้างบับเบิ้ลครั้งแรกตอนเปิดเว็บ
 window.addEventListener('load', createBubbles);
@@ -329,12 +383,21 @@ const downloadCanvasBtn = document.getElementById('downloadCanvasBtn');
 const brushSizeValue = document.getElementById('brushSizeValue');
 const colorSwatches = document.querySelectorAll('.color-swatch');
 const sizePresetButtons = document.querySelectorAll('.size-btn');
+const extraToolButtons = document.querySelectorAll('[data-drawing-tool]');
+const canvasRatio = document.getElementById('canvasRatio');
+const canvasBackground = document.getElementById('canvasBackground');
+const canvasZoom = document.getElementById('canvasZoom');
+const canvasViewport = document.getElementById('canvasViewport');
+const canvasZoomStage = document.getElementById('canvasZoomStage');
+const brushCursor = document.getElementById('brushCursor');
 
 let isDrawing = false;
 let activePointerId = null;
 let lastX = 0;
 let lastY = 0;
 let currentTool = 'brush';
+let shapeStart = null;
+let shapeSnapshot = null;
 const CANVAS_DRAFT_KEY = 'pdf-magic-canvas-draft';
 let draftRestored = false;
 const undoHistory = [];
@@ -414,15 +477,22 @@ function selectDrawingTool(tool) {
     brushToolBtn.setAttribute('aria-pressed', String(usingBrush));
     fillToolBtn.setAttribute('aria-pressed', String(usingFill));
     eraserToolBtn.setAttribute('aria-pressed', String(usingEraser));
+    extraToolButtons.forEach(button => {
+        const selected = button.dataset.drawingTool === tool;
+        button.classList.toggle('active', selected);
+        button.setAttribute('aria-pressed', String(selected));
+    });
     brushSize.disabled = usingFill;
     sizePresetButtons.forEach(button => button.disabled = usingFill);
     canvas.classList.toggle('fill-mode', usingFill);
     canvas.classList.toggle('eraser-mode', usingEraser);
+    if (!usingEraser) brushCursor.classList.remove('visible');
 }
 
 brushToolBtn.addEventListener('click', () => selectDrawingTool('brush'));
 fillToolBtn.addEventListener('click', () => selectDrawingTool('fill'));
 eraserToolBtn.addEventListener('click', () => selectDrawingTool('eraser'));
+extraToolButtons.forEach(button => button.addEventListener('click', () => selectDrawingTool(button.dataset.drawingTool)));
 
 function selectColor(color) {
     colorPicker.value = color;
@@ -451,10 +521,24 @@ brushSize.addEventListener('input', () => selectBrushSize(brushSize.value));
 selectColor(colorPicker.value);
 selectBrushSize(brushSize.value);
 
-// ปรับขนาด Canvas ให้พอดีมือถือ
+function getCanvasHeight(width) {
+    const ratios = { '1:1': 1, '4:3': 3 / 4, '16:9': 9 / 16, a4: 1.414 };
+    return canvasRatio.value === 'free' ? 400 : Math.round(width * ratios[canvasRatio.value]);
+}
+
+function updateCanvasZoom() {
+    const zoom = Number(canvasZoom.value);
+    canvasZoomStage.style.width = `${canvas.width * zoom}px`;
+}
+
+// ปรับขนาด Canvas ให้พอดีกับอุปกรณ์และอัตราส่วนที่เลือก
 function resizeCanvas() {
-    const newWidth = canvas.parentElement.clientWidth;
-    if (!newWidth || (canvas.width === newWidth && canvas.height === 400)) return;
+    const newWidth = canvasViewport.clientWidth;
+    const newHeight = getCanvasHeight(newWidth);
+    if (!newWidth || (canvas.width === newWidth && canvas.height === newHeight)) {
+        updateCanvasZoom();
+        return;
+    }
 
     // เก็บภาพเดิมไว้ เพราะการเปลี่ยน width/height จะล้าง Canvas อัตโนมัติ
     const snapshot = document.createElement('canvas');
@@ -463,9 +547,10 @@ function resizeCanvas() {
     snapshot.getContext('2d').drawImage(canvas, 0, 0);
 
     canvas.width = newWidth;
-    canvas.height = 400;
+    canvas.height = newHeight;
     ctx.drawImage(snapshot, 0, 0, snapshot.width, snapshot.height,
         0, 0, canvas.width, canvas.height);
+    updateCanvasZoom();
 }
 window.addEventListener('load', resizeCanvas);
 window.addEventListener('resize', resizeCanvas);
@@ -477,6 +562,24 @@ function startDrawing(e) {
     if (e.pointerId !== undefined) canvas.setPointerCapture(e.pointerId);
     const pos = getPos(e);
 
+    if (currentTool === 'text') {
+        const text = window.prompt('พิมพ์ข้อความที่ต้องการใส่');
+        if (!text) {
+            activePointerId = null;
+            return;
+        }
+        recordCanvasHistory();
+        ctx.save();
+        ctx.fillStyle = colorPicker.value;
+        ctx.font = `${Math.max(16, Number(brushSize.value) * 3)}px Prompt, sans-serif`;
+        ctx.textBaseline = 'top';
+        ctx.fillText(text.slice(0, 100), pos.x, pos.y);
+        ctx.restore();
+        saveCanvasDraft();
+        activePointerId = null;
+        return;
+    }
+
     if (currentTool === 'fill') {
         recordCanvasHistory();
         floodFill(Math.floor(pos.x), Math.floor(pos.y), colorPicker.value);
@@ -487,6 +590,12 @@ function startDrawing(e) {
     isDrawing = true;
     lastX = pos.x;
     lastY = pos.y;
+
+    if (['line', 'rect', 'ellipse'].includes(currentTool)) {
+        shapeStart = pos;
+        shapeSnapshot = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        return;
+    }
 
     ctx.save();
     ctx.globalCompositeOperation = currentTool === 'eraser' ? 'destination-out' : 'source-over';
@@ -501,6 +610,30 @@ function draw(e) {
     if (!isDrawing || e.pointerId !== activePointerId) return;
     e.preventDefault(); // ป้องกันการเลื่อนจอตอนวาด
     const pos = getPos(e);
+
+    if (['line', 'rect', 'ellipse'].includes(currentTool)) {
+        ctx.putImageData(shapeSnapshot, 0, 0);
+        ctx.save();
+        ctx.strokeStyle = colorPicker.value;
+        ctx.lineWidth = Number(brushSize.value);
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.beginPath();
+        if (currentTool === 'line') {
+            ctx.moveTo(shapeStart.x, shapeStart.y);
+            ctx.lineTo(pos.x, pos.y);
+        } else if (currentTool === 'rect') {
+            ctx.rect(shapeStart.x, shapeStart.y, pos.x - shapeStart.x, pos.y - shapeStart.y);
+        } else {
+            const centerX = (shapeStart.x + pos.x) / 2;
+            const centerY = (shapeStart.y + pos.y) / 2;
+            ctx.ellipse(centerX, centerY, Math.abs(pos.x - shapeStart.x) / 2,
+                Math.abs(pos.y - shapeStart.y) / 2, 0, 0, Math.PI * 2);
+        }
+        ctx.stroke();
+        ctx.restore();
+        return;
+    }
     
     ctx.beginPath();
     ctx.moveTo(lastX, lastY);
@@ -522,6 +655,8 @@ function stopDrawing(e) {
     if (isDrawing) saveCanvasDraft();
     isDrawing = false;
     activePointerId = null;
+    shapeStart = null;
+    shapeSnapshot = null;
     ctx.globalCompositeOperation = 'source-over';
 }
 
@@ -534,6 +669,17 @@ function getPos(e) {
         x: (clientX - rect.left) * (canvas.width / rect.width),
         y: (clientY - rect.top) * (canvas.height / rect.height)
     };
+}
+
+function updateBrushCursor(e) {
+    if (currentTool !== 'eraser') return;
+    const rect = canvas.getBoundingClientRect();
+    const size = Number(brushSize.value) * (rect.width / canvas.width);
+    brushCursor.style.width = `${size}px`;
+    brushCursor.style.height = `${size}px`;
+    brushCursor.style.left = `${e.clientX - rect.left}px`;
+    brushCursor.style.top = `${e.clientY - rect.top}px`;
+    brushCursor.classList.add('visible');
 }
 
 function hexToRgba(hex) {
@@ -612,12 +758,23 @@ function floodFill(startX, startY, hexColor) {
 
 // Pointer Events ชุดเดียวรองรับเมาส์ นิ้ว ปากกา และ Apple Pencil
 canvas.addEventListener('pointerdown', startDrawing);
-canvas.addEventListener('pointermove', draw);
-canvas.addEventListener('pointerup', stopDrawing);
+canvas.addEventListener('pointermove', event => {
+    updateBrushCursor(event);
+    draw(event);
+});
+canvas.addEventListener('pointerdown', updateBrushCursor);
+canvas.addEventListener('pointerup', event => {
+    stopDrawing(event);
+    if (event.pointerType === 'touch') brushCursor.classList.remove('visible');
+});
 canvas.addEventListener('pointercancel', stopDrawing);
 canvas.addEventListener('lostpointercapture', stopDrawing);
+canvas.addEventListener('pointerleave', () => {
+    if (!isDrawing) brushCursor.classList.remove('visible');
+});
 
-clearBtn.addEventListener('click', () => {
+clearBtn.addEventListener('click', async () => {
+    if (!await confirmAction('ภาพบนกระดาษวาดจะถูกล้างทั้งหมด', 'ล้างภาพ')) return;
     recordCanvasHistory();
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     saveCanvasDraft();
@@ -631,8 +788,10 @@ downloadCanvasBtn.addEventListener('click', () => {
     exportCanvas.width = canvas.width;
     exportCanvas.height = canvas.height;
     const exportContext = exportCanvas.getContext('2d');
-    exportContext.fillStyle = '#ffffff';
-    exportContext.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
+    if (canvasBackground.value === 'white') {
+        exportContext.fillStyle = '#ffffff';
+        exportContext.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
+    }
     exportContext.drawImage(canvas, 0, 0);
 
     const link = document.createElement('a');
@@ -640,6 +799,20 @@ downloadCanvasBtn.addEventListener('click', () => {
     link.href = exportCanvas.toDataURL('image/png');
     link.click();
 });
+
+canvasRatio.addEventListener('change', () => {
+    recordCanvasHistory();
+    resizeCanvas();
+    saveCanvasDraft();
+});
+canvasZoom.addEventListener('change', updateCanvasZoom);
+canvasBackground.addEventListener('change', () => {
+    canvas.classList.toggle('transparent-canvas', canvasBackground.value === 'transparent');
+    localStorage.setItem('pdf-magic-canvas-background', canvasBackground.value);
+});
+
+canvasBackground.value = localStorage.getItem('pdf-magic-canvas-background') || 'white';
+canvas.classList.toggle('transparent-canvas', canvasBackground.value === 'transparent');
 
 window.addEventListener('keydown', event => {
     if (!(event.ctrlKey || event.metaKey)) return;
@@ -652,3 +825,32 @@ window.addEventListener('keydown', event => {
         redoCanvas();
     }
 });
+
+const confirmDialog = document.getElementById('confirmDialog');
+const confirmDialogMessage = document.getElementById('confirmDialogMessage');
+const confirmDialogOk = document.getElementById('confirmDialogOk');
+const confirmDialogCancel = document.getElementById('confirmDialogCancel');
+
+function confirmAction(message, confirmLabel = 'ลบ') {
+    return new Promise(resolve => {
+        confirmDialogMessage.textContent = message;
+        confirmDialogOk.textContent = confirmLabel;
+        confirmDialog.showModal();
+
+        const finish = result => {
+            confirmDialog.close();
+            confirmDialogOk.removeEventListener('click', approve);
+            confirmDialogCancel.removeEventListener('click', cancel);
+            confirmDialog.oncancel = null;
+            resolve(result);
+        };
+        const approve = () => finish(true);
+        const cancel = () => finish(false);
+        confirmDialogOk.addEventListener('click', approve);
+        confirmDialogCancel.addEventListener('click', cancel);
+        confirmDialog.oncancel = event => {
+            event.preventDefault();
+            cancel();
+        };
+    });
+}
