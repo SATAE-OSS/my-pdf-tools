@@ -22,17 +22,19 @@ body {
 /* ดีไซน์เมนู Tabs                         */
 /* -------------------------------------- */
 .tabs {
-    display: flex; justify-content: flex-start; gap: 12px; margin: max(12px, env(safe-area-inset-top)) 0 25px;
-    padding: 8px 4px 6px; box-sizing: border-box; scroll-padding-inline: 4px;
+    display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 10px;
+    margin: max(12px, env(safe-area-inset-top)) 0 25px;
+    padding: 8px 4px 6px; box-sizing: border-box;
 }
 .tab-btn {
+    min-width: 0; width: 100%;
     background: #ffffff; 
     color: #a1887f; 
     border: 2px solid #ffe4e8; 
-    padding: 12px 24px;
+    padding: 12px 10px;
     border-radius: 30px; 
     font-family: 'Prompt', sans-serif; 
-    font-size: 15px; 
+    font-size: 14px;
     font-weight: 500;
     cursor: pointer; 
     transition: all 0.3s ease; 
@@ -311,16 +313,10 @@ body.dark-mode .bubble-grid { background: rgba(185,131,255,0.09); }
 body.dark-mode .bubble { background: radial-gradient(circle at 30% 30%, #f9eaff, #9c72ca); }
 body.dark-mode .dark-mode-btn { background: #342740; color: #ffe4f0; box-shadow: 0 6px 18px rgba(0,0,0,0.35); }
 
-/* ทำให้ Tabs เลื่อนซ้ายขวาได้บนมือถือ */
-.tabs {
-    display: flex;
-    overflow-x: auto;
-    white-space: nowrap;
-    padding-bottom: 8px;
-    overscroll-behavior-inline: contain;
+@media (max-width:520px) {
+    .tabs { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; }
+    .tab-btn { min-height: 48px; padding: 10px 7px; font-size: 13px; }
 }
-.tabs:focus-visible { outline: 2px solid rgba(255,143,188,.65); outline-offset: 3px; border-radius: 18px; }
-.tabs::-webkit-scrollbar { display: none; }
 
 /* ========================================= */
 /* ลูกเล่นที่ 2: บับเบิ้ลกันกระแทก */

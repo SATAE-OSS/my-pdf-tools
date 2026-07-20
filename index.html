@@ -33,7 +33,7 @@
     </script>
 </head>
 <body>
-    <span class="app-version" title="PDF Magic version 1.6.1">v1.6.1</span>
+    <span class="app-version" title="PDF Magic version 1.6.2">v1.6.2</span>
     <!-- ปุ่มโหมดกลางคืน (เพิ่มใหม่) -->
     <button id="darkModeBtn" class="dark-mode-btn" type="button" aria-label="เปิดโหมดกลางคืน" aria-pressed="false">🌙</button>
     <div class="app-connectivity" aria-live="polite">
@@ -42,13 +42,13 @@
     </div>
 
     <!-- เมนูหลัก -->
-    <div class="tabs" tabindex="0" aria-label="เมนูเครื่องมือ เลื่อนซ้ายขวาได้">
+    <div class="tabs" aria-label="เมนูเครื่องมือทั้งหมด">
         <button class="tab-btn active" onclick="openTab('mergeTab', this)">✨ รวมรูป PDF</button>
         <button class="tab-btn" onclick="openTab('extractTab', this)">🔄 แยกรูป</button>
+        <button class="tab-btn" onclick="openTab('sketchTab', this)">🎨 สเก็ตช์</button>
+        <button class="tab-btn" onclick="openTab('scaleTab', this)">📐 สเกล/หน่วย</button>
         <button class="tab-btn" onclick="openTab('bubbleTab', this)">🫧 บีบบับเบิ้ล</button>
         <button class="tab-btn" onclick="openTab('squishyTab', this)">🫠 สไลม์</button>
-        <button class="tab-btn" onclick="openTab('sketchTab', this)">🎨 สเก็ตช์ภาพ</button>
-        <button class="tab-btn" onclick="openTab('scaleTab', this)">📐 สเกลและหน่วย</button>
     </div>
 
     <!-- หน้าที่ 1: รวมรูปเป็น PDF -->
