@@ -84,6 +84,11 @@
             panel.classList.toggle('active', active);
         });
     }));
+    window.openScaleTool = panelId => {
+        openTab('scaleTab', document.getElementById('toolsNavBtn'));
+        const panelButton = panelButtons.find(button => button.dataset.scalePanel === panelId);
+        if (panelButton) panelButton.click();
+    };
 
     // Drawing scale calculator.
     const scaleInput = document.getElementById('scaleInputValue');

@@ -66,7 +66,7 @@
     </section>
 
     <div id="appShell" class="app-shell" hidden>
-    <span class="app-version" title="Jane Tools version 2.2.0">v2.2.0</span>
+    <span class="app-version" title="Jane Tools version 2.3.0">v2.3.0</span>
     <!-- ปุ่มโหมดกลางคืน (เพิ่มใหม่) -->
     <button id="darkModeBtn" class="dark-mode-btn" type="button" aria-label="เปิดโหมดกลางคืน" aria-pressed="false">🌙</button>
     <div class="app-connectivity" aria-live="polite">
@@ -150,14 +150,28 @@
     </div>
 
     <div id="toolsTab" class="container tab-content tools-hub" style="display: none;">
-        <div class="planner-page-header"><div><span class="page-kicker">TOOLBOX</span><h2>🧰 เครื่องมือทั้งหมด</h2><p>งานเอกสาร วาดรูป คำนวณ และพักสมอง รวมไว้ที่เดียว</p></div></div>
-        <div class="tool-hub-grid">
-            <button type="button" onclick="openTab('mergeTab', document.getElementById('toolsNavBtn'))"><span>✨</span><strong>รวมรูปเป็น PDF</strong><small>เรียงรูปแล้วสร้างไฟล์เดียว</small></button>
-            <button type="button" onclick="openTab('extractTab', document.getElementById('toolsNavBtn'))"><span>🔄</span><strong>แยกรูปจาก PDF</strong><small>เลือกโหลดทีละหน้า</small></button>
-            <button type="button" onclick="openTab('sketchTab', document.getElementById('toolsNavBtn'))"><span>🎨</span><strong>สเก็ตช์ภาพ</strong><small>วาดและบันทึกบนคลาวด์</small></button>
-            <button type="button" onclick="openTab('scaleTab', document.getElementById('toolsNavBtn'))"><span>📐</span><strong>สเกลและหน่วย</strong><small>คำนวณแบบและกระดาษ</small></button>
-            <button type="button" onclick="openTab('bubbleTab', document.getElementById('toolsNavBtn'))"><span>🫧</span><strong>บับเบิล</strong><small>พักสมองแป๊บหนึ่ง</small></button>
-            <button type="button" onclick="openTab('squishyTab', document.getElementById('toolsNavBtn'))"><span>🫠</span><strong>สไลม์</strong><small>ดึง บีบ และฟังเสียงนุ่ม ๆ</small></button>
+        <div class="planner-page-header"><div><span class="page-kicker">TOOLBOX</span><h2>🧰 เลือกหมวดเครื่องมือ</h2><p>จัดกลุ่มใหม่ให้หาเจอเร็ว ไม่ต้องไล่ดูทีละเครื่องมือ</p></div></div>
+        <div class="tool-hub-grid category-tool-grid">
+            <button class="featured-tool-card" type="button" onclick="openScaleTool('interiorCalculator')"><span>📐</span><strong>คำนวณงานภายใน</strong><small>ฝ้า สลิง วัสดุ แสง ระยะ และเฟอร์นิเจอร์</small><em>8 เครื่องมือพร้อมใช้ →</em></button>
+            <button type="button" onclick="openTab('documentToolsTab', document.getElementById('toolsNavBtn'))"><span>📄</span><strong>งานเอกสาร</strong><small>รวมและแยกไฟล์ PDF</small><em>2 เครื่องมือ →</em></button>
+            <button type="button" onclick="openTab('sketchTab', document.getElementById('toolsNavBtn'))"><span>🎨</span><strong>วาดและสเก็ตช์</strong><small>วาดภาพและบันทึกบนคลาวด์</small><em>เปิดกระดาน →</em></button>
+            <button type="button" onclick="openTab('playToolsTab', document.getElementById('toolsNavBtn'))"><span>🧸</span><strong>พักสมอง</strong><small>บับเบิลและสไลม์นุ่ม ๆ</small><em>2 ของเล่น →</em></button>
+        </div>
+    </div>
+
+    <div id="documentToolsTab" class="container tab-content tools-hub category-page" style="display: none;">
+        <div class="category-page-header"><button class="category-back" type="button" onclick="openTab('toolsTab', document.getElementById('toolsNavBtn'))">← กลับ</button><div><span class="page-kicker">DOCUMENTS</span><h2>📄 งานเอกสาร</h2><p>เลือกสิ่งที่ต้องการทำกับไฟล์ PDF</p></div></div>
+        <div class="tool-hub-grid category-choice-grid">
+            <button type="button" onclick="openTab('mergeTab', document.getElementById('toolsNavBtn'))"><span>✨</span><strong>รวมรูปเป็น PDF</strong><small>เรียงรูปหลายรูปแล้วสร้างเป็นไฟล์ PDF เดียว</small><em>เริ่มรวมไฟล์ →</em></button>
+            <button type="button" onclick="openTab('extractTab', document.getElementById('toolsNavBtn'))"><span>🔄</span><strong>แยกรูปจาก PDF</strong><small>เปิดดูแต่ละหน้าและเลือกดาวน์โหลดเฉพาะหน้าที่ต้องการ</small><em>เริ่มแยกรูป →</em></button>
+        </div>
+    </div>
+
+    <div id="playToolsTab" class="container tab-content tools-hub category-page" style="display: none;">
+        <div class="category-page-header"><button class="category-back" type="button" onclick="openTab('toolsTab', document.getElementById('toolsNavBtn'))">← กลับ</button><div><span class="page-kicker">PLAYGROUND</span><h2>🧸 พักสมอง</h2><p>เลือกของเล่นที่อยากเล่นตอนพัก</p></div></div>
+        <div class="tool-hub-grid category-choice-grid">
+            <button type="button" onclick="openTab('bubbleTab', document.getElementById('toolsNavBtn'))"><span>🫧</span><strong>บีบบับเบิล</strong><small>กดให้ครบแล้วกระดานจะเริ่มใหม่ให้อัตโนมัติ</small><em>ไปเล่นบับเบิล →</em></button>
+            <button type="button" onclick="openTab('squishyTab', document.getElementById('toolsNavBtn'))"><span>🫠</span><strong>เล่นสไลม์</strong><small>ดึง บีบ ยืด และฟังเสียงนุ่ม ๆ</small><em>ไปเล่นสไลม์ →</em></button>
         </div>
     </div>
 
@@ -244,8 +258,8 @@
 
     <!-- เครื่องคำนวณสเกลและหน่วยสำหรับงานออกแบบภายใน -->
     <div id="scaleTab" class="container tab-content scale-tool-page" style="display: none;">
-        <h2>📐 สเกลและหน่วย</h2>
-        <div class="subtitle">คำนวณงานเขียนแบบได้โดยไม่ต้องจำสูตร ลองใส่ตัวเลขแล้วดูคำตอบทันที</div>
+        <h2>📐 เครื่องคำนวณงานออกแบบ</h2>
+        <div class="subtitle">งานภายใน สเกล หน่วย และกระดาษ รวมอยู่ในหน้าเดียว</div>
 
         <div class="scale-section-nav" role="tablist" aria-label="เลือกเครื่องมือคำนวณ">
             <button class="active" type="button" data-scale-panel="scaleCalculator" role="tab" aria-selected="true">📏 คำนวณสเกล</button>
