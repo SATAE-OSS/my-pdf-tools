@@ -137,16 +137,9 @@
     }
 
     function renderCalendarAgenda(date) {
-        const dailyCourses = courses
-            .filter(course => Number(course.day_of_week) === courseDayFromDate(date))
-            .sort((a, b) => String(a.start_time).localeCompare(String(b.start_time)));
         const dailyHomework = homeworkForDate(date)
             .sort((a, b) => new Date(a.due_at) - new Date(b.due_at));
         byId('calendarAgendaTitle').textContent = new Intl.DateTimeFormat('th-TH', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(date);
-        const courseItems = dailyCourses.map(course => `
-            <button class="calendar-agenda-item course-event" type="button" data-calendar-course="${course.id}" style="--event-color:${escapeHTML(course.color)}">
-                <i></i><div><span>วิชาเรียน</span><strong>${escapeHTML(course.name)}</strong><small>${course.room ? escapeHTML(course.room) : 'ยังไม่ระบุห้อง'}</small></div><time>${formatCourseTime(course)}</time>
-            </button>`);
         const homeworkItems = dailyHomework.map(task => {
             const course = courseById(task.course_id) || { name: 'ไม่พบวิชา', color: '#c88cac' };
             const state = homeworkState(task);
@@ -154,7 +147,7 @@
                 <i></i><div><span>${state.complete ? 'การบ้านเสร็จแล้ว' : state.late ? 'การบ้านเลยกำหนด' : 'กำหนดส่งการบ้าน'}</span><strong>${escapeHTML(task.title)}</strong><small>${escapeHTML(course.name)}</small></div><time>${formatTimeInput(new Date(task.due_at))}</time>
             </button>`;
         });
-        calendarAgendaList.innerHTML = [...courseItems, ...homeworkItems].join('') || '<p class="calendar-empty">วันนี้ยังไม่มีเรียนหรือการบ้านกำหนดส่ง 🌿</p>';
+        calendarAgendaList.innerHTML = homeworkItems.join('') || '<p class="calendar-empty">วันนี้ไม่มีการบ้านกำหนดส่ง 🌿</p>';
     }
 
     function renderCalendar() {
@@ -168,7 +161,6 @@
         calendarGrid.innerHTML = Array.from({ length: 42 }, (_, index) => {
             const date = new Date(gridStart.getFullYear(), gridStart.getMonth(), gridStart.getDate() + index);
             const dateKey = formatDateInput(date);
-            const dailyCourses = courses.filter(course => Number(course.day_of_week) === courseDayFromDate(date));
             const dailyHomework = homeworkForDate(date);
             const homeworkLabels = dailyHomework.slice(0, 2).map(task => {
                 const state = homeworkState(task);
@@ -178,7 +170,6 @@
             return `<button type="button" role="gridcell" data-calendar-date="${dateKey}" class="calendar-day ${date.getMonth() !== month ? 'outside-month' : ''} ${dateKey === todayKey ? 'today' : ''} ${dateKey === selectedCalendarDate ? 'selected' : ''}" aria-selected="${dateKey === selectedCalendarDate}">
                 <span class="calendar-day-number">${date.getDate()}</span>
                 <span class="calendar-event-summary">
-                    ${dailyCourses.length ? `<span class="calendar-class-count">📚 ${dailyCourses.length} วิชา</span>` : ''}
                     ${homeworkLabels}${extraCount ? `<small>+${extraCount} งาน</small>` : ''}
                 </span>
             </button>`;
@@ -359,7 +350,7 @@
     function openHomeworkDialog(task = null, dueDate = '') {
         if (!courses.length) {
             setPlannerMessage('homeworkMessage', 'เพิ่มวิชาในตารางเรียนก่อน แล้วจึงเพิ่มการบ้านได้', 'error');
-            openTab('scheduleTab', byId('scheduleNavBtn'));
+            window.openSchedulePage('weekView');
             return;
         }
         homeworkForm.reset();
@@ -507,16 +498,22 @@
         }
     });
 
-    document.querySelectorAll('[data-planner-view]').forEach(button => button.addEventListener('click', () => {
-        document.querySelectorAll('[data-planner-view]').forEach(item => {
-            const active = item === button;
+    const plannerViewButtons = [...document.querySelectorAll('[data-planner-view]')];
+    function showPlannerView(viewId) {
+        plannerViewButtons.forEach(item => {
+            const active = item.dataset.plannerView === viewId;
             item.classList.toggle('active', active);
             item.setAttribute('aria-selected', String(active));
         });
         document.querySelectorAll('.planner-view-panel').forEach(panel => {
-            panel.hidden = panel.id !== button.dataset.plannerView;
+            panel.hidden = panel.id !== viewId;
         });
-    }));
+    }
+    plannerViewButtons.forEach(button => button.addEventListener('click', () => showPlannerView(button.dataset.plannerView)));
+    window.openSchedulePage = (viewId = 'weekView') => {
+        openTab('scheduleTab', byId('scheduleNavBtn'));
+        showPlannerView(viewId);
+    };
 
     calendarGrid.addEventListener('click', event => {
         const dayButton = event.target.closest('[data-calendar-date]');
@@ -529,9 +526,7 @@
     });
 
     calendarAgendaList.addEventListener('click', event => {
-        const courseButton = event.target.closest('[data-calendar-course]');
         const homeworkButton = event.target.closest('[data-calendar-homework]');
-        if (courseButton) openCourseDialog(courses.find(course => course.id === courseButton.dataset.calendarCourse));
         if (homeworkButton) openHomeworkDialog(homework.find(task => task.id === homeworkButton.dataset.calendarHomework));
     });
 

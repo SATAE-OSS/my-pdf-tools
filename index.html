@@ -66,7 +66,7 @@
     </section>
 
     <div id="appShell" class="app-shell" hidden>
-    <span class="app-version" title="Jane Tools version 2.5.0">v2.5.0</span>
+    <span class="app-version" title="Jane Tools version 2.6.0">v2.6.0</span>
     <!-- ปุ่มโหมดกลางคืน (เพิ่มใหม่) -->
     <button id="darkModeBtn" class="dark-mode-btn" type="button" aria-label="เปิดโหมดกลางคืน" aria-pressed="false">🌙</button>
     <div class="app-connectivity" aria-live="polite">
@@ -88,7 +88,7 @@
     <!-- เมนูหลักของแอป -->
     <nav class="tabs app-main-nav" aria-label="เมนูหลัก">
         <button class="tab-btn active" id="dashboardNavBtn" onclick="openTab('dashboardTab', this)">🏠 วันนี้</button>
-        <button class="tab-btn" id="scheduleNavBtn" onclick="openTab('scheduleTab', this)">🗓️ ปฏิทิน</button>
+        <button class="tab-btn" id="scheduleNavBtn" onclick="openSchedulePage('weekView')">📚 ตารางเรียน</button>
         <button class="tab-btn" id="homeworkNavBtn" onclick="openTab('homeworkTab', this)">✅ การบ้าน</button>
         <button class="tab-btn" id="toolsNavBtn" onclick="openTab('toolsTab', this)">🧰 เครื่องมือ</button>
     </nav>
@@ -110,7 +110,7 @@
         </section>
         <div class="dashboard-grid">
             <section class="dashboard-card">
-                <div class="section-heading"><div><span>วันนี้</span><h3>ตารางเรียน</h3></div><button type="button" onclick="openTab('scheduleTab', document.getElementById('scheduleNavBtn'))">ดูทั้งหมด</button></div>
+                <div class="section-heading"><div><span>วันนี้</span><h3>ตารางเรียน</h3></div><button type="button" onclick="openSchedulePage('weekView')">ดูทั้งหมด</button></div>
                 <div id="dashboardTodayClasses" class="dashboard-list"><p class="empty-state">วันนี้ยังไม่มีวิชาเรียน</p></div>
                 <button class="soft-action-btn" id="quickAddCourseBtn" type="button">＋ เพิ่มวิชา</button>
             </section>
@@ -124,14 +124,14 @@
 
     <div id="scheduleTab" class="container tab-content planner-page" style="display: none;">
         <div class="planner-page-header">
-            <div><span class="page-kicker">MY CALENDAR</span><h2>🗓️ ปฏิทินและตารางเรียน</h2><p>ดูวิชาเรียนกับกำหนดส่งการบ้านในที่เดียว</p></div>
+            <div><span class="page-kicker">MY WEEK</span><h2>📚 ตารางเรียน</h2><p>เลือกวันเพื่อดูเวลา วิชา และห้องเรียนได้ชัด ๆ</p></div>
             <button class="btn planner-add-btn" id="addCourseBtn" type="button">＋ เพิ่มวิชา</button>
         </div>
         <div class="planner-view-switch" role="tablist" aria-label="เลือกรูปแบบปฏิทิน">
-            <button class="active" type="button" data-planner-view="calendarView" role="tab" aria-selected="true">📅 รายเดือน</button>
-            <button type="button" data-planner-view="weekView" role="tab" aria-selected="false">📚 ตารางรายสัปดาห์</button>
+            <button class="active" type="button" data-planner-view="weekView" role="tab" aria-selected="true">📚 ตารางรายสัปดาห์</button>
+            <button type="button" data-planner-view="calendarView" role="tab" aria-selected="false">📅 ปฏิทินการบ้าน</button>
         </div>
-        <section id="calendarView" class="planner-view-panel">
+        <section id="calendarView" class="planner-view-panel" hidden>
             <div class="calendar-toolbar">
                 <button id="calendarPrevBtn" type="button" aria-label="เดือนก่อนหน้า">‹</button>
                 <div><strong id="calendarMonthTitle"></strong><button id="calendarTodayBtn" type="button">วันนี้</button></div>
@@ -140,11 +140,11 @@
             <div class="calendar-weekdays" aria-hidden="true"><span>จ.</span><span>อ.</span><span>พ.</span><span>พฤ.</span><span>ศ.</span><span>ส.</span><span>อา.</span></div>
             <div id="calendarGrid" class="calendar-grid" role="grid" aria-label="ปฏิทินรายเดือน"></div>
             <section class="calendar-agenda">
-                <div class="calendar-agenda-heading"><div><span>รายการของวันที่เลือก</span><h3 id="calendarAgendaTitle"></h3></div><button id="calendarAddHomeworkBtn" type="button">＋ การบ้าน</button></div>
+                <div class="calendar-agenda-heading"><div><span>การบ้านของวันที่เลือก</span><h3 id="calendarAgendaTitle"></h3></div><button id="calendarAddHomeworkBtn" type="button">＋ การบ้าน</button></div>
                 <div id="calendarAgendaList" class="calendar-agenda-list"></div>
             </section>
         </section>
-        <section id="weekView" class="planner-view-panel" hidden>
+        <section id="weekView" class="planner-view-panel">
             <div class="week-strip" id="weekStrip" aria-label="เลือกวันในตารางเรียน"></div>
             <div id="scheduleBoard" class="schedule-board" aria-live="polite"></div>
         </section>
