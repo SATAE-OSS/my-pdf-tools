@@ -19,7 +19,6 @@
 
     const byId = id => document.getElementById(id);
     const scheduleBoard = byId('scheduleBoard');
-    const weekStrip = byId('weekStrip');
     const calendarGrid = byId('calendarGrid');
     const calendarAgendaList = byId('calendarAgendaList');
     const homeworkList = byId('homeworkList');
@@ -177,28 +176,25 @@
         renderCalendarAgenda(new Date(`${selectedCalendarDate}T12:00:00`));
     }
 
-    function renderWeekStrip() {
-        weekStrip.innerHTML = dayNames.slice(1).map((day, index) => {
-            const dayNumber = index + 1;
-            return `<button type="button" data-day="${dayNumber}" class="${dayNumber === activeDay ? 'active' : ''}" aria-pressed="${dayNumber === activeDay}"><span class="day-full">${day}</span><span class="day-short">${shortDayNames[dayNumber]}</span></button>`;
-        }).join('');
-    }
-
     function renderSchedule() {
-        renderWeekStrip();
-        const dailyCourses = courses.filter(course => Number(course.day_of_week) === activeDay)
-            .sort((first, second) => String(first.start_time).localeCompare(String(second.start_time)));
-        if (!dailyCourses.length) {
-            scheduleBoard.innerHTML = `<div class="planner-empty-card"><span>📚</span><h3>วัน${dayNames[activeDay]}ไม่มีเรียน</h3><p>เลือกวันอื่น หรือกด “เพิ่มวิชา” เพื่อสร้างตาราง</p></div>`;
+        if (!courses.length) {
+            scheduleBoard.innerHTML = '<div class="planner-empty-card"><span>📚</span><h3>ยังไม่มีวิชาในตาราง</h3><p>กด “เพิ่มวิชา” เพื่อสร้างตารางเรียนของคุณ</p></div>';
             return;
         }
-        scheduleBoard.innerHTML = `<section class="daily-schedule"><div class="daily-schedule-title"><span>ตารางวัน</span><h3>${dayNames[activeDay]}</h3></div><div class="daily-course-list">${dailyCourses.map(course => `
-            <article class="daily-course-card" style="--course-color:${escapeHTML(course.color)}">
-                <div class="daily-course-time"><strong>${String(course.start_time).slice(0, 5)}</strong><span>ถึง ${String(course.end_time).slice(0, 5)} น.</span></div>
-                <i></i>
-                <div class="daily-course-info"><strong>${escapeHTML(course.name)}</strong>${course.code ? `<small>${escapeHTML(course.code)}</small>` : ''}<span>${course.room ? `📍 ${escapeHTML(course.room)}` : '📍 ยังไม่ระบุห้อง'}${course.instructor ? ` · ${escapeHTML(course.instructor)}` : ''}</span></div>
-                <div class="course-actions"><button type="button" data-edit-course="${course.id}">แก้ไข</button><button type="button" class="danger" data-delete-course="${course.id}">ลบ</button></div>
-            </article>`).join('')}</div></section>`;
+        const daySections = dayNames.slice(1).map((day, index) => {
+            const dayNumber = index + 1;
+            const dailyCourses = courses.filter(course => Number(course.day_of_week) === dayNumber)
+                .sort((first, second) => String(first.start_time).localeCompare(String(second.start_time)));
+            if (!dailyCourses.length) return '';
+            return `<section class="daily-schedule"><div class="daily-schedule-title"><span>ตารางวัน</span><h3>${day}</h3><small>${dailyCourses.length} วิชา</small></div><div class="daily-course-list">${dailyCourses.map(course => `
+                <article class="daily-course-card" style="--course-color:${escapeHTML(course.color)}">
+                    <div class="daily-course-time"><strong>${String(course.start_time).slice(0, 5)}</strong><span>ถึง ${String(course.end_time).slice(0, 5)} น.</span></div>
+                    <i></i>
+                    <div class="daily-course-info"><strong>${escapeHTML(course.name)}</strong>${course.code ? `<small>${escapeHTML(course.code)}</small>` : ''}<span>${course.room ? `📍 ${escapeHTML(course.room)}` : '📍 ยังไม่ระบุห้อง'}${course.instructor ? ` · ${escapeHTML(course.instructor)}` : ''}</span></div>
+                    <div class="course-actions"><button type="button" data-edit-course="${course.id}">แก้ไข</button><button type="button" class="danger" data-delete-course="${course.id}">ลบ</button></div>
+                </article>`).join('')}</div></section>`;
+        }).filter(Boolean);
+        scheduleBoard.innerHTML = `<div class="weekly-schedule-list">${daySections.join('')}</div>`;
     }
 
     function populateHomeworkCourses(selectedId = '') {
@@ -476,13 +472,6 @@
         rescheduleDialog.close();
         await loadPlannerData();
         setPlannerMessage('homeworkMessage', 'บันทึกกำหนดส่งใหม่และสถานะแล้ว', 'success');
-    });
-
-    weekStrip.addEventListener('click', event => {
-        const button = event.target.closest('[data-day]');
-        if (!button) return;
-        activeDay = Number(button.dataset.day);
-        renderSchedule();
     });
 
     scheduleBoard.addEventListener('click', async event => {

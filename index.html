@@ -66,7 +66,7 @@
     </section>
 
     <div id="appShell" class="app-shell" hidden>
-    <span class="app-version" title="Jane Tools version 2.6.0">v2.6.0</span>
+    <span class="app-version" title="Jane Tools version 2.7.0">v2.7.0</span>
     <!-- ปุ่มโหมดกลางคืน (เพิ่มใหม่) -->
     <button id="darkModeBtn" class="dark-mode-btn" type="button" aria-label="เปิดโหมดกลางคืน" aria-pressed="false">🌙</button>
     <div class="app-connectivity" aria-live="polite">
@@ -124,11 +124,11 @@
 
     <div id="scheduleTab" class="container tab-content planner-page" style="display: none;">
         <div class="planner-page-header">
-            <div><span class="page-kicker">MY WEEK</span><h2>📚 ตารางเรียน</h2><p>เลือกวันเพื่อดูเวลา วิชา และห้องเรียนได้ชัด ๆ</p></div>
+            <div><span class="page-kicker">MY WEEK</span><h2>📚 ตารางเรียน</h2><p>ดูทุกวันและทุกวิชาเรียงต่อกันในหน้าเดียว</p></div>
             <button class="btn planner-add-btn" id="addCourseBtn" type="button">＋ เพิ่มวิชา</button>
         </div>
         <div class="planner-view-switch" role="tablist" aria-label="เลือกรูปแบบปฏิทิน">
-            <button class="active" type="button" data-planner-view="weekView" role="tab" aria-selected="true">📚 ตารางรายสัปดาห์</button>
+            <button class="active" type="button" data-planner-view="weekView" role="tab" aria-selected="true">📚 ตารางรวม</button>
             <button type="button" data-planner-view="calendarView" role="tab" aria-selected="false">📅 ปฏิทินการบ้าน</button>
         </div>
         <section id="calendarView" class="planner-view-panel" hidden>
@@ -145,7 +145,6 @@
             </section>
         </section>
         <section id="weekView" class="planner-view-panel">
-            <div class="week-strip" id="weekStrip" aria-label="เลือกวันในตารางเรียน"></div>
             <div id="scheduleBoard" class="schedule-board" aria-live="polite"></div>
         </section>
         <p id="scheduleMessage" class="planner-message" role="status"></p>
