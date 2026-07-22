@@ -463,7 +463,7 @@ body.dark-mode .squishy-controls button { background: #251d2e; color: #ffe4f0; b
 /* เครื่องคำนวณสเกลและหน่วย */
 .scale-tool-page { max-width: 920px; }
 .scale-section-nav {
-    display: grid; grid-template-columns: repeat(3,1fr); gap: 8px;
+    display: grid; grid-template-columns: repeat(4,1fr); gap: 8px;
     margin: 22px 0 14px; padding: 6px; border-radius: 18px;
     background: #f8edf3; border: 1px solid #f0d8e4;
 }
@@ -568,9 +568,56 @@ body.dark-mode .squishy-controls button { background: #251d2e; color: #ffe4f0; b
 .paper-result.does-not-fit { border-color: #f1c4cb; background: #fff0f2; }
 .paper-result.does-not-fit strong { color: #b64459; }
 .paper-result.does-not-fit p { color: #936b72; }
+
+/* เครื่องคำนวณงานออกแบบภายใน */
+.interior-calc-panel { display: grid; gap: 18px; }
+.interior-tool-picker {
+    display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 8px;
+    padding: 6px; border: 1px solid #eed7e3; border-radius: 17px; background: #faf0f5;
+}
+.interior-tool-picker button {
+    min-height: 44px; padding: 8px; border: 0; border-radius: 12px; background: transparent;
+    color: #876978; font: 600 12px 'Prompt',sans-serif; cursor: pointer;
+}
+.interior-tool-picker button.active { background: #fff; color: #8b4166; box-shadow: 0 5px 14px rgba(116,72,94,.11); }
+.interior-tool { display: grid; gap: 17px; }
+.interior-tool[hidden] { display: none; }
+.interior-guide {
+    display: grid; grid-template-columns: minmax(180px,.75fr) minmax(0,1.25fr); gap: 18px; align-items: center;
+    padding: 16px; border-radius: 18px; background: #fff8fb; border: 1px solid #f0dce6;
+}
+.interior-guide p { margin: 0; color: #8d7180; font-size: 12px; line-height: 1.75; }
+.interior-guide p strong { color: #664653; }
+.interior-input-grid { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 12px; }
+.interior-input-grid.compact-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+.interior-results { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 9px; }
+.interior-result-card {
+    display: grid; align-content: start; gap: 4px; min-height: 92px; padding: 14px; box-sizing: border-box;
+    border: 1px solid #ead4df; border-radius: 15px; background: linear-gradient(145deg,#fff,#fff6fa);
+}
+.interior-result-card span { color: #9a7d8b; font-size: 9px; }
+.interior-result-card strong { color: #71485c; font-size: 19px; line-height: 1.25; overflow-wrap: anywhere; }
+.interior-result-card small { color: #aa8f9c; font-size: 9px; line-height: 1.5; }
+.interior-result-card.wide { grid-column: 1/-1; min-height: auto; }
+.calculation-note { margin: -4px 0 0; padding: 11px 13px; border-radius: 12px; background: #fff8e8; color: #8c7655; font-size: 10px; line-height: 1.6; }
+
+.ceiling-guide-art { position: relative; height: 112px; overflow: hidden; border-radius: 13px; background: linear-gradient(#e8dff0 0 15px,#fff 15px 87px,#f2d7e3 87px); color: #735966; font-size: 9px; }
+.ceiling-guide-art > span { position: absolute; left: 9px; top: 2px; }.ceiling-guide-art > b { position: absolute; left: 9px; bottom: 10px; }
+.ceiling-guide-art > i { position: absolute; left: 50%; top: 15px; width: 1px; height: 72px; border-left: 2px dashed #c47b9d; }
+.ceiling-guide-art > i::after { content: ''; position: absolute; left: -19px; bottom: 0; width: 38px; height: 5px; border-radius: 5px; background: #9f6d86; }
+.ceiling-guide-art > em { position: absolute; left: calc(50% + 8px); top: 43px; color: #bd638d; font-style: normal; }
+.spacing-guide-art { position: relative; min-height: 74px; margin-inline: 10px; border-top: 2px solid #dab5c7; border-bottom: 2px solid #dab5c7; }
+.spacing-guide-art::before,.spacing-guide-art::after { content:''; position:absolute; top:-7px; bottom:-7px; width:2px; background:#dab5c7; }.spacing-guide-art::before{left:0}.spacing-guide-art::after{right:0}
+.spacing-preview-point { position: absolute; top: 27px; width: 14px; height: 14px; transform: translateX(-50%); border: 3px solid #fff; border-radius: 50%; background: #e584b1; box-shadow: 0 3px 8px rgba(178,85,128,.25); }
+.spacing-preview-point::after { content: attr(data-pos); position: absolute; left: 50%; top: 19px; transform: translateX(-50%); color: #9b7e8c; font-size: 7px; white-space: nowrap; }
+.wall-guide-art { position: relative; height: 100px; border: 5px solid #dfb8ca; border-bottom-width: 9px; border-radius: 6px 6px 2px 2px; background: repeating-linear-gradient(90deg,#fff 0 22px,#fff8fb 22px 23px); color: #9b7084; font-size: 9px; }
+.wall-guide-art span { position: absolute; left: 8px; top: 7px; }.wall-guide-art i { position: absolute; left: 23%; bottom: 0; width: 24%; height: 62%; background: #b893a5; }.wall-guide-art b { position: absolute; right: 13%; top: 23%; width: 25%; height: 32%; border: 4px solid #a9bfd7; background: #e3f1fa; }
+.tile-guide-art { min-height: 100px; border-radius: 10px; background: repeating-linear-gradient(0deg,transparent 0 27px,#e4bfd1 27px 29px),repeating-linear-gradient(90deg,#fff8fb 0 42px,#e4bfd1 42px 44px); box-shadow: inset 0 0 0 1px #e7cad8; }
+
 body.dark-mode .scale-section-nav,
 body.dark-mode .scale-mode-switch,
-body.dark-mode .paper-preview-wrap { background: #1a1421; border-color: #4c3b56; }
+body.dark-mode .paper-preview-wrap,
+body.dark-mode .interior-tool-picker { background: #1a1421; border-color: #4c3b56; }
 body.dark-mode .scale-section-nav button,
 body.dark-mode .scale-mode-switch button,
 body.dark-mode .scale-presets button { color: #cbb7c5; }
@@ -597,8 +644,18 @@ body.dark-mode .unit-equation { background: #251b2c; color: #f0d6e2; }
 body.dark-mode .paper-preview { background: #fdf9fb; }
 body.dark-mode .paper-result { background: #173229; border-color: #315a49; }
 body.dark-mode .paper-result.does-not-fit { background: #3a2027; border-color: #70404b; }
+body.dark-mode .interior-guide,
+body.dark-mode .interior-result-card { background: #251c2d; border-color: #513d59; }
+body.dark-mode .interior-tool-picker button { color: #c7b1be; }
+body.dark-mode .interior-tool-picker button.active { background: #33263b; color: #ffdce9; }
+body.dark-mode .interior-guide p,
+body.dark-mode .interior-result-card span,
+body.dark-mode .interior-result-card small { color: #bda7b4; }
+body.dark-mode .interior-guide p strong,
+body.dark-mode .interior-result-card strong { color: #ffe1ed; }
+body.dark-mode .calculation-note { background: #382f20; color: #e2cc9b; }
 @media (max-width:680px) {
-    .scale-section-nav { grid-template-columns: 1fr; }
+    .scale-section-nav { grid-template-columns: repeat(2,minmax(0,1fr)); }
     .scale-section-nav button { min-height: 42px; }
     .scale-panel { padding: 17px; border-radius: 20px; }
     .scale-panel-heading { align-items: flex-start; }
@@ -609,6 +666,13 @@ body.dark-mode .paper-result.does-not-fit { background: #3a2027; border-color: #
     .swap-units-btn:hover { transform: rotate(270deg); }
     .paper-check-layout { grid-template-columns: 1fr; }
     .paper-preview-wrap { min-height: 215px; }
+    .interior-tool-picker { grid-template-columns: repeat(2,minmax(0,1fr)); }
+    .interior-guide { grid-template-columns: 1fr; }
+    .interior-input-grid,.interior-input-grid.compact-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+    .interior-results { grid-template-columns: repeat(2,minmax(0,1fr)); }
+}
+@media (max-width:420px) {
+    .interior-input-grid,.interior-input-grid.compact-grid { grid-template-columns: 1fr; }
 }
 
 /* ========================================= */

@@ -264,6 +264,150 @@
     paperCustomScale.addEventListener('input', updatePaperChecker);
     [paperSize, paperOrientation].forEach(select => select.addEventListener('change', updatePaperChecker));
 
+    // Interior work calculators.
+    const interiorToolButtons = [...page.querySelectorAll('[data-interior-tool]')];
+    const interiorTools = [...page.querySelectorAll('.interior-tool')];
+    const resultCard = (label, value, note = '', wide = false) => `
+        <article class="interior-result-card${wide ? ' wide' : ''}">
+            <span>${label}</span><strong>${value}</strong>${note ? `<small>${note}</small>` : ''}
+        </article>`;
+
+    interiorToolButtons.forEach(button => button.addEventListener('click', () => {
+        interiorToolButtons.forEach(item => item.classList.toggle('active', item === button));
+        interiorTools.forEach(tool => {
+            const active = tool.id === button.dataset.interiorTool;
+            tool.hidden = !active;
+            tool.classList.toggle('active', active);
+        });
+    }));
+
+    function positiveNumber(id, fallback = 0) {
+        const value = Number(document.getElementById(id).value);
+        return Number.isFinite(value) && value > 0 ? value : fallback;
+    }
+
+    const ceilingControlIds = ['ceilingWidth', 'ceilingLength', 'slabHeight', 'ceilingHeight', 'hangerSpacingX', 'hangerSpacingY', 'ceilingBoardSize', 'ceilingWaste'];
+    function updateCeilingCalculator() {
+        const width = positiveNumber('ceilingWidth');
+        const length = positiveNumber('ceilingLength');
+        const slabHeight = positiveNumber('slabHeight');
+        const finishHeight = positiveNumber('ceilingHeight');
+        const spacingX = positiveNumber('hangerSpacingX');
+        const spacingY = positiveNumber('hangerSpacingY');
+        const result = document.getElementById('ceilingResults');
+        if (!width || !length || !slabHeight || !finishHeight || !spacingX || !spacingY || finishHeight >= slabHeight) {
+            result.innerHTML = resultCard('ตรวจข้อมูล', 'กรอกระดับให้ถูกต้อง', 'ระดับฝ้าต้องต่ำกว่าระดับท้องพื้น', true);
+            return;
+        }
+        const [boardWidth, boardLength] = document.getElementById('ceilingBoardSize').value.split('x').map(Number);
+        const waste = Number(document.getElementById('ceilingWaste').value) / 100;
+        const area = width * length;
+        const drop = slabHeight - finishHeight;
+        const acrossCount = Math.ceil(width / spacingX) + 1;
+        const alongCount = Math.ceil(length / spacingY) + 1;
+        const hangerCount = acrossCount * alongCount;
+        const boards = Math.ceil(area / (boardWidth * boardLength) * (1 + waste));
+        const totalHangerLength = hangerCount * drop / 100;
+        result.innerHTML = [
+            resultCard('พื้นที่ฝ้า', `${formatNumber(area)} ตร.ม.`, `รอบห้อง ${formatNumber((width + length) * 2)} เมตร`),
+            resultCard('ระยะดรอป/สลิงต่อเส้น', `${formatNumber(drop)} ซม.`, `จาก ${formatNumber(slabHeight)} เหลือ ${formatNumber(finishHeight)} ซม.`),
+            resultCard('จุดสลิงโดยประมาณ', `${formatNumber(hangerCount)} จุด`, `ตารางประมาณ ${acrossCount} × ${alongCount} จุด`),
+            resultCard('แผ่นฝ้าโดยประมาณ', `${formatNumber(boards)} แผ่น`, `รวมเผื่อเศษ ${formatNumber(waste * 100)}%`),
+            resultCard('ความยาวสลิงรวมขั้นต่ำ', `${formatNumber(totalHangerLength)} เมตร`, 'ยังไม่รวมระยะผูก ยึด และเศษหน้างาน', true)
+        ].join('');
+    }
+
+    const spacingControlIds = ['spacingLength', 'spacingCount', 'spacingMode', 'spacingEdge'];
+    function updateSpacingCalculator() {
+        const length = positiveNumber('spacingLength');
+        const count = Math.max(1, Math.min(30, Math.round(positiveNumber('spacingCount', 1))));
+        const mode = document.getElementById('spacingMode').value;
+        const customEdge = Math.max(0, Number(document.getElementById('spacingEdge').value) || 0);
+        const edgeWrapper = document.getElementById('spacingEdgeWrap');
+        edgeWrapper.hidden = mode !== 'customEdge';
+        const result = document.getElementById('spacingResults');
+        let gap;
+        let edge;
+        let positions;
+        if (mode === 'equalEdges') {
+            gap = length / (count + 1);
+            edge = gap;
+            positions = Array.from({ length: count }, (_, index) => gap * (index + 1));
+        } else if (count === 1) {
+            gap = 0;
+            edge = length / 2;
+            positions = [length / 2];
+        } else {
+            edge = customEdge;
+            gap = (length - edge * 2) / (count - 1);
+            positions = Array.from({ length: count }, (_, index) => edge + gap * index);
+        }
+        if (!length || gap < 0) {
+            result.innerHTML = resultCard('ตรวจข้อมูล', 'พื้นที่ไม่พอ', 'ลดระยะจากขอบหรือลดจำนวนจุด', true);
+            return;
+        }
+        const preview = document.getElementById('spacingPreview');
+        preview.innerHTML = positions.slice(0, 12).map(position => `<i class="spacing-preview-point" style="left:${position / length * 100}%" data-pos="${formatNumber(position)}"></i>`).join('');
+        result.innerHTML = [
+            resultCard('ระยะห่างระหว่างจุด', count === 1 ? 'มีจุดเดียว' : `${formatNumber(gap)} ซม.`),
+            resultCard('ระยะจากขอบ', `${formatNumber(edge)} ซม.`, 'วัดจากขอบถึงกึ่งกลางจุดแรก'),
+            resultCard('ตำแหน่งที่ต้องทำเครื่องหมาย', positions.map(position => formatNumber(position)).join(', ') + ' ซม.', 'วัดต่อเนื่องจากขอบด้านเดียวกัน', true)
+        ].join('');
+    }
+
+    const wallControlIds = ['wallLength', 'wallHeight', 'wallOpenings', 'paintCoats', 'paintCoverage', 'paintWaste'];
+    function updateWallCalculator() {
+        const length = positiveNumber('wallLength');
+        const height = positiveNumber('wallHeight');
+        const openings = Math.max(0, Number(document.getElementById('wallOpenings').value) || 0);
+        const coats = Math.max(1, Math.round(positiveNumber('paintCoats', 1)));
+        const coverage = positiveNumber('paintCoverage');
+        const waste = Number(document.getElementById('paintWaste').value) / 100;
+        const grossArea = length * height;
+        const netArea = Math.max(0, grossArea - openings);
+        const paintLiters = coverage ? netArea * coats / coverage * (1 + waste) : 0;
+        document.getElementById('wallResults').innerHTML = [
+            resultCard('พื้นที่ผนังก่อนหัก', `${formatNumber(grossArea)} ตร.ม.`),
+            resultCard('พื้นที่ช่องเปิด', `${formatNumber(openings)} ตร.ม.`),
+            resultCard('พื้นที่ผนังสุทธิ', `${formatNumber(netArea)} ตร.ม.`, 'ใช้เป็นพื้นที่ตั้งต้นสำหรับวัสดุ'),
+            resultCard('สีที่ควรเตรียม', `${formatNumber(paintLiters)} ลิตร`, `${coats} เที่ยว รวมเผื่อ ${formatNumber(waste * 100)}%`)
+        ].join('');
+    }
+
+    const tileControlIds = ['tileAreaWidth', 'tileAreaLength', 'tileWidth', 'tileLength', 'tilesPerBox', 'tileWaste'];
+    function updateTileCalculator() {
+        const areaWidth = positiveNumber('tileAreaWidth');
+        const areaLength = positiveNumber('tileAreaLength');
+        const tileWidth = positiveNumber('tileWidth') / 100;
+        const tileLength = positiveNumber('tileLength') / 100;
+        const perBox = Math.max(1, Math.round(positiveNumber('tilesPerBox', 1)));
+        const waste = Number(document.getElementById('tileWaste').value) / 100;
+        const area = areaWidth * areaLength;
+        const tileArea = tileWidth * tileLength;
+        const rawTiles = tileArea ? area / tileArea : 0;
+        const requiredTiles = Math.ceil(rawTiles * (1 + waste));
+        const boxes = Math.ceil(requiredTiles / perBox);
+        const purchasedTiles = boxes * perBox;
+        document.getElementById('tileResults').innerHTML = [
+            resultCard('พื้นที่ทั้งหมด', `${formatNumber(area)} ตร.ม.`),
+            resultCard('จำนวนก่อนเผื่อ', `${formatNumber(Math.ceil(rawTiles))} แผ่น`),
+            resultCard('จำนวนรวมเผื่อ', `${formatNumber(requiredTiles)} แผ่น`, `เผื่อตัด/แตก ${formatNumber(waste * 100)}%`),
+            resultCard('จำนวนที่ควรซื้อ', `${formatNumber(boxes)} กล่อง`, `${formatNumber(purchasedTiles)} แผ่น เมื่อกล่องละ ${perBox} แผ่น`)
+        ].join('');
+    }
+
+    function listenToCalculator(ids, update) {
+        ids.forEach(id => {
+            const control = document.getElementById(id);
+            control.addEventListener(control.tagName === 'SELECT' ? 'change' : 'input', update);
+        });
+        update();
+    }
+    listenToCalculator(ceilingControlIds, updateCeilingCalculator);
+    listenToCalculator(spacingControlIds, updateSpacingCalculator);
+    listenToCalculator(wallControlIds, updateWallCalculator);
+    listenToCalculator(tileControlIds, updateTileCalculator);
+
     updateScaleCalculator();
     updatePaperChecker();
 })();

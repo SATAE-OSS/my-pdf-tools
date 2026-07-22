@@ -66,7 +66,7 @@
     </section>
 
     <div id="appShell" class="app-shell" hidden>
-    <span class="app-version" title="Jane Tools version 2.0.0">v2.0.0</span>
+    <span class="app-version" title="Jane Tools version 2.1.0">v2.1.0</span>
     <!-- ปุ่มโหมดกลางคืน (เพิ่มใหม่) -->
     <button id="darkModeBtn" class="dark-mode-btn" type="button" aria-label="เปิดโหมดกลางคืน" aria-pressed="false">🌙</button>
     <div class="app-connectivity" aria-live="polite">
@@ -251,6 +251,7 @@
             <button class="active" type="button" data-scale-panel="scaleCalculator" role="tab" aria-selected="true">📏 คำนวณสเกล</button>
             <button type="button" data-scale-panel="unitConverter" role="tab" aria-selected="false">🔄 แปลงหน่วย</button>
             <button type="button" data-scale-panel="paperChecker" role="tab" aria-selected="false">📄 เช็กกระดาษ</button>
+            <button type="button" data-scale-panel="interiorCalculator" role="tab" aria-selected="false">🛠️ คำนวณงานภายใน</button>
         </div>
 
         <section id="scaleCalculator" class="scale-panel active" aria-labelledby="scaleCalculatorTitle">
@@ -446,6 +447,79 @@
                 <strong id="paperResultTitle">✓ วางบน A4 ได้</strong>
                 <p id="paperResultDetail">แบบจะมีขนาด 12 × 16 ซม. บนกระดาษ</p>
             </div>
+        </section>
+
+        <section id="interiorCalculator" class="scale-panel interior-calc-panel" hidden aria-labelledby="interiorCalculatorTitle">
+            <div class="scale-panel-heading">
+                <div class="scale-panel-icon">🛠️</div>
+                <div>
+                    <h3 id="interiorCalculatorTitle">คำนวณงานออกแบบภายใน</h3>
+                    <p>กรอกขนาดหน้างาน ระบบจะคำนวณและอธิบายคำตอบให้ทันที</p>
+                </div>
+            </div>
+
+            <div class="interior-tool-picker" role="tablist" aria-label="เลือกงานที่ต้องการคำนวณ">
+                <button class="active" type="button" data-interior-tool="ceilingCalc" role="tab">🏗️ ฝ้าและสลิง</button>
+                <button type="button" data-interior-tool="spacingCalc" role="tab">💡 แบ่งระยะ</button>
+                <button type="button" data-interior-tool="wallCalc" role="tab">🧱 พื้นที่ผนัง</button>
+                <button type="button" data-interior-tool="tileCalc" role="tab">◫ กระเบื้อง</button>
+            </div>
+
+            <section id="ceilingCalc" class="interior-tool active">
+                <div class="interior-guide">
+                    <div class="ceiling-guide-art" aria-hidden="true"><span>ท้องพื้น</span><i></i><b>ฝ้า</b><em>↕ ระยะดรอป</em></div>
+                    <p><strong>วัดอะไร?</strong> วัดขนาดห้อง ระดับท้องพื้น และระดับฝ้าจากพื้นสำเร็จ</p>
+                </div>
+                <div class="interior-input-grid">
+                    <label class="calculator-field"><span>กว้างห้อง</span><div class="field-with-unit"><input id="ceilingWidth" type="number" inputmode="decimal" min="0.1" step="0.1" value="4"><span>เมตร</span></div></label>
+                    <label class="calculator-field"><span>ยาวห้อง</span><div class="field-with-unit"><input id="ceilingLength" type="number" inputmode="decimal" min="0.1" step="0.1" value="6"><span>เมตร</span></div></label>
+                    <label class="calculator-field"><span>ท้องพื้นสูงจากพื้น</span><div class="field-with-unit"><input id="slabHeight" type="number" inputmode="decimal" min="0" step="1" value="320"><span>ซม.</span></div></label>
+                    <label class="calculator-field"><span>ระดับฝ้าที่ต้องการ</span><div class="field-with-unit"><input id="ceilingHeight" type="number" inputmode="decimal" min="0" step="1" value="270"><span>ซม.</span></div></label>
+                    <label class="calculator-field"><span>ระยะสลิงตามแนวกว้าง</span><div class="field-with-unit"><input id="hangerSpacingX" type="number" inputmode="decimal" min="0.1" step="0.05" value="1.2"><span>เมตร</span></div></label>
+                    <label class="calculator-field"><span>ระยะสลิงตามแนวยาว</span><div class="field-with-unit"><input id="hangerSpacingY" type="number" inputmode="decimal" min="0.1" step="0.05" value="1.2"><span>เมตร</span></div></label>
+                    <label class="calculator-field"><span>ขนาดแผ่นฝ้า</span><select id="ceilingBoardSize"><option value="1.2x2.4">1.20 × 2.40 ม.</option><option value="1.2x2.44">1.20 × 2.44 ม.</option><option value="0.6x1.2">0.60 × 1.20 ม.</option></select></label>
+                    <label class="calculator-field"><span>เผื่อเศษ</span><select id="ceilingWaste"><option value="5">5%</option><option value="10" selected>10%</option><option value="15">15%</option></select></label>
+                </div>
+                <div class="interior-results" id="ceilingResults" aria-live="polite"></div>
+                <p class="calculation-note">ตัวเลขสลิงและแผ่นเป็นค่าประมาณสำหรับวางแผนเบื้องต้น งานจริงให้ตรวจชนิดโครง น้ำหนัก และระยะติดตั้งจากผู้ผลิต</p>
+            </section>
+
+            <section id="spacingCalc" class="interior-tool" hidden>
+                <div class="interior-guide"><div class="spacing-guide-art" id="spacingPreview" aria-hidden="true"></div><p><strong>ใช้กับอะไร?</strong> ดาวน์ไลต์ สลิง ระแนง หรือจุดที่ต้องการแบ่งให้เท่ากัน</p></div>
+                <div class="interior-input-grid compact-grid">
+                    <label class="calculator-field"><span>ความยาวทั้งหมด</span><div class="field-with-unit"><input id="spacingLength" type="number" inputmode="decimal" min="1" step="1" value="400"><span>ซม.</span></div></label>
+                    <label class="calculator-field"><span>จำนวนจุด</span><div class="field-with-unit"><input id="spacingCount" type="number" inputmode="numeric" min="1" max="30" step="1" value="5"><span>จุด</span></div></label>
+                    <label class="calculator-field"><span>รูปแบบการวาง</span><select id="spacingMode"><option value="equalEdges">เว้นขอบเท่ากับช่อง</option><option value="customEdge">กำหนดระยะจากขอบ</option></select></label>
+                    <label class="calculator-field" id="spacingEdgeWrap" hidden><span>ระยะจากขอบแต่ละด้าน</span><div class="field-with-unit"><input id="spacingEdge" type="number" inputmode="decimal" min="0" step="1" value="30"><span>ซม.</span></div></label>
+                </div>
+                <div class="interior-results" id="spacingResults" aria-live="polite"></div>
+            </section>
+
+            <section id="wallCalc" class="interior-tool" hidden>
+                <div class="interior-guide"><div class="wall-guide-art" aria-hidden="true"><span>กว้าง × สูง</span><i></i><b></b></div><p><strong>หักช่องเปิดให้แล้ว</strong> รวมพื้นที่ประตูและหน้าต่างทุกบานใส่ในช่องเดียว</p></div>
+                <div class="interior-input-grid">
+                    <label class="calculator-field"><span>ความยาวผนังรวม</span><div class="field-with-unit"><input id="wallLength" type="number" inputmode="decimal" min="0" step="0.1" value="14"><span>เมตร</span></div></label>
+                    <label class="calculator-field"><span>ความสูงผนัง</span><div class="field-with-unit"><input id="wallHeight" type="number" inputmode="decimal" min="0" step="0.1" value="2.7"><span>เมตร</span></div></label>
+                    <label class="calculator-field"><span>พื้นที่ประตู/หน้าต่างรวม</span><div class="field-with-unit"><input id="wallOpenings" type="number" inputmode="decimal" min="0" step="0.1" value="5"><span>ตร.ม.</span></div></label>
+                    <label class="calculator-field"><span>ทาสีกี่เที่ยว</span><div class="field-with-unit"><input id="paintCoats" type="number" inputmode="numeric" min="1" max="6" step="1" value="2"><span>เที่ยว</span></div></label>
+                    <label class="calculator-field"><span>สี 1 ลิตรทาได้</span><div class="field-with-unit"><input id="paintCoverage" type="number" inputmode="decimal" min="0.1" step="0.1" value="10"><span>ตร.ม.</span></div></label>
+                    <label class="calculator-field"><span>เผื่อสี</span><select id="paintWaste"><option value="0">ไม่เผื่อ</option><option value="5">5%</option><option value="10" selected>10%</option></select></label>
+                </div>
+                <div class="interior-results" id="wallResults" aria-live="polite"></div>
+            </section>
+
+            <section id="tileCalc" class="interior-tool" hidden>
+                <div class="interior-guide"><div class="tile-guide-art" aria-hidden="true"></div><p><strong>ใช้ได้ทั้งพื้นและผนัง</strong> กรอกขนาดพื้นที่กับขนาดกระเบื้องจริง</p></div>
+                <div class="interior-input-grid">
+                    <label class="calculator-field"><span>กว้างพื้นที่</span><div class="field-with-unit"><input id="tileAreaWidth" type="number" inputmode="decimal" min="0" step="0.1" value="4"><span>เมตร</span></div></label>
+                    <label class="calculator-field"><span>ยาวพื้นที่</span><div class="field-with-unit"><input id="tileAreaLength" type="number" inputmode="decimal" min="0" step="0.1" value="6"><span>เมตร</span></div></label>
+                    <label class="calculator-field"><span>กว้างกระเบื้อง</span><div class="field-with-unit"><input id="tileWidth" type="number" inputmode="decimal" min="1" step="1" value="60"><span>ซม.</span></div></label>
+                    <label class="calculator-field"><span>ยาวกระเบื้อง</span><div class="field-with-unit"><input id="tileLength" type="number" inputmode="decimal" min="1" step="1" value="60"><span>ซม.</span></div></label>
+                    <label class="calculator-field"><span>จำนวนต่อกล่อง</span><div class="field-with-unit"><input id="tilesPerBox" type="number" inputmode="numeric" min="1" step="1" value="4"><span>แผ่น</span></div></label>
+                    <label class="calculator-field"><span>เผื่อตัด/แตก</span><select id="tileWaste"><option value="5">5%</option><option value="10" selected>10%</option><option value="15">15%</option><option value="20">20%</option></select></label>
+                </div>
+                <div class="interior-results" id="tileResults" aria-live="polite"></div>
+            </section>
         </section>
     </div>
 
