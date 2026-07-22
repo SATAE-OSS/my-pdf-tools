@@ -9,6 +9,8 @@
     let courses = [];
     let homework = [];
     let activeDay = todayDay;
+    let calendarCursor = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+    let selectedCalendarDate = formatDateInput(new Date());
     let activeHomeworkFilter = 'all';
     let editingCourseId = null;
     let editingHomeworkId = null;
@@ -18,6 +20,8 @@
     const byId = id => document.getElementById(id);
     const scheduleBoard = byId('scheduleBoard');
     const weekStrip = byId('weekStrip');
+    const calendarGrid = byId('calendarGrid');
+    const calendarAgendaList = byId('calendarAgendaList');
     const homeworkList = byId('homeworkList');
     const homeworkSummary = byId('homeworkSummary');
     const courseDialog = byId('courseDialog');
@@ -57,6 +61,38 @@
         return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
     }
 
+    const timePickers = {
+        courseStart: ['courseStartHour', 'courseStartMinute'],
+        courseEnd: ['courseEndHour', 'courseEndMinute'],
+        homeworkDue: ['homeworkDueHour', 'homeworkDueMinute'],
+        reschedule: ['rescheduleHour', 'rescheduleMinute']
+    };
+
+    function setupTimePicker(prefix, initialValue) {
+        const [hourId, minuteId] = timePickers[prefix];
+        const hourSelect = byId(hourId);
+        const minuteSelect = byId(minuteId);
+        hourSelect.innerHTML = Array.from({ length: 24 }, (_, hour) => `<option value="${String(hour).padStart(2, '0')}">${String(hour).padStart(2, '0')}</option>`).join('');
+        minuteSelect.innerHTML = Array.from({ length: 60 }, (_, minute) => `<option value="${String(minute).padStart(2, '0')}">${String(minute).padStart(2, '0')}</option>`).join('');
+        setTimePicker(prefix, initialValue);
+    }
+
+    function setTimePicker(prefix, value = '00:00') {
+        const [hourId, minuteId] = timePickers[prefix];
+        const [hour = '00', minute = '00'] = String(value).slice(0, 5).split(':');
+        byId(hourId).value = hour.padStart(2, '0');
+        byId(minuteId).value = minute.padStart(2, '0');
+    }
+
+    function getTimePicker(prefix) {
+        const [hourId, minuteId] = timePickers[prefix];
+        return `${byId(hourId).value}:${byId(minuteId).value}`;
+    }
+
+    function disableTimePicker(prefix, disabled) {
+        timePickers[prefix].forEach(id => { byId(id).disabled = disabled; });
+    }
+
     function localDateTimeToISO(dateValue, timeValue) {
         return new Date(`${dateValue}T${timeValue}:00`).toISOString();
     }
@@ -66,8 +102,13 @@
     }
 
     function formatCourseTime(course) {
-        return `${String(course.start_time).slice(0, 5)}–${String(course.end_time).slice(0, 5)}`;
+        return `${String(course.start_time).slice(0, 5)}–${String(course.end_time).slice(0, 5)} น.`;
     }
+
+    setupTimePicker('courseStart', '09:00');
+    setupTimePicker('courseEnd', '12:00');
+    setupTimePicker('homeworkDue', '23:59');
+    setupTimePicker('reschedule', '23:59');
 
     function courseById(id) {
         return courses.find(course => course.id === id);
@@ -86,36 +127,87 @@
         };
     }
 
+    function courseDayFromDate(date) {
+        return date.getDay() || 7;
+    }
+
+    function homeworkForDate(date) {
+        const key = formatDateInput(date);
+        return homework.filter(task => formatDateInput(new Date(task.due_at)) === key);
+    }
+
+    function renderCalendarAgenda(date) {
+        const dailyCourses = courses
+            .filter(course => Number(course.day_of_week) === courseDayFromDate(date))
+            .sort((a, b) => String(a.start_time).localeCompare(String(b.start_time)));
+        const dailyHomework = homeworkForDate(date)
+            .sort((a, b) => new Date(a.due_at) - new Date(b.due_at));
+        byId('calendarAgendaTitle').textContent = new Intl.DateTimeFormat('th-TH', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(date);
+        const courseItems = dailyCourses.map(course => `
+            <button class="calendar-agenda-item course-event" type="button" data-calendar-course="${course.id}" style="--event-color:${escapeHTML(course.color)}">
+                <i></i><div><span>วิชาเรียน</span><strong>${escapeHTML(course.name)}</strong><small>${course.room ? escapeHTML(course.room) : 'ยังไม่ระบุห้อง'}</small></div><time>${formatCourseTime(course)}</time>
+            </button>`);
+        const homeworkItems = dailyHomework.map(task => {
+            const course = courseById(task.course_id) || { name: 'ไม่พบวิชา', color: '#c88cac' };
+            const state = homeworkState(task);
+            return `<button class="calendar-agenda-item homework-event ${state.complete ? 'completed' : ''}" type="button" data-calendar-homework="${task.id}" style="--event-color:${escapeHTML(course.color)}">
+                <i></i><div><span>${state.complete ? 'การบ้านเสร็จแล้ว' : state.late ? 'การบ้านเลยกำหนด' : 'กำหนดส่งการบ้าน'}</span><strong>${escapeHTML(task.title)}</strong><small>${escapeHTML(course.name)}</small></div><time>${formatTimeInput(new Date(task.due_at))}</time>
+            </button>`;
+        });
+        calendarAgendaList.innerHTML = [...courseItems, ...homeworkItems].join('') || '<p class="calendar-empty">วันนี้ยังไม่มีเรียนหรือการบ้านกำหนดส่ง 🌿</p>';
+    }
+
+    function renderCalendar() {
+        const year = calendarCursor.getFullYear();
+        const month = calendarCursor.getMonth();
+        byId('calendarMonthTitle').textContent = new Intl.DateTimeFormat('th-TH', { month: 'long', year: 'numeric' }).format(calendarCursor);
+        const firstDay = new Date(year, month, 1);
+        const mondayOffset = (firstDay.getDay() + 6) % 7;
+        const gridStart = new Date(year, month, 1 - mondayOffset);
+        const todayKey = formatDateInput(new Date());
+        calendarGrid.innerHTML = Array.from({ length: 42 }, (_, index) => {
+            const date = new Date(gridStart.getFullYear(), gridStart.getMonth(), gridStart.getDate() + index);
+            const dateKey = formatDateInput(date);
+            const dailyCourses = courses.filter(course => Number(course.day_of_week) === courseDayFromDate(date));
+            const dailyHomework = homeworkForDate(date);
+            const homeworkLabels = dailyHomework.slice(0, 2).map(task => {
+                const state = homeworkState(task);
+                return `<span class="calendar-task-label ${state.complete ? 'completed' : state.late ? 'late' : ''}">📝 ${escapeHTML(task.title)}</span>`;
+            }).join('');
+            const extraCount = Math.max(0, dailyHomework.length - 2);
+            return `<button type="button" role="gridcell" data-calendar-date="${dateKey}" class="calendar-day ${date.getMonth() !== month ? 'outside-month' : ''} ${dateKey === todayKey ? 'today' : ''} ${dateKey === selectedCalendarDate ? 'selected' : ''}" aria-selected="${dateKey === selectedCalendarDate}">
+                <span class="calendar-day-number">${date.getDate()}</span>
+                <span class="calendar-event-summary">
+                    ${dailyCourses.length ? `<span class="calendar-class-count">📚 ${dailyCourses.length} วิชา</span>` : ''}
+                    ${homeworkLabels}${extraCount ? `<small>+${extraCount} งาน</small>` : ''}
+                </span>
+            </button>`;
+        }).join('');
+        renderCalendarAgenda(new Date(`${selectedCalendarDate}T12:00:00`));
+    }
+
     function renderWeekStrip() {
         weekStrip.innerHTML = dayNames.slice(1).map((day, index) => {
             const dayNumber = index + 1;
-            return `<button type="button" data-day="${dayNumber}" class="${dayNumber === activeDay ? 'active' : ''}" aria-pressed="${dayNumber === activeDay}">${shortDayNames[dayNumber]}<span class="sr-only"> ${day}</span></button>`;
+            return `<button type="button" data-day="${dayNumber}" class="${dayNumber === activeDay ? 'active' : ''}" aria-pressed="${dayNumber === activeDay}"><span class="day-full">${day}</span><span class="day-short">${shortDayNames[dayNumber]}</span></button>`;
         }).join('');
     }
 
     function renderSchedule() {
         renderWeekStrip();
-        if (!courses.length) {
-            scheduleBoard.innerHTML = '<div class="planner-empty-card"><span>📚</span><h3>ยังไม่มีวิชาในตาราง</h3><p>กด “เพิ่มวิชา” แล้วใส่วันกับเวลาเรียนได้เลย</p></div>';
+        const dailyCourses = courses.filter(course => Number(course.day_of_week) === activeDay)
+            .sort((first, second) => String(first.start_time).localeCompare(String(second.start_time)));
+        if (!dailyCourses.length) {
+            scheduleBoard.innerHTML = `<div class="planner-empty-card"><span>📚</span><h3>วัน${dayNames[activeDay]}ไม่มีเรียน</h3><p>เลือกวันอื่น หรือกด “เพิ่มวิชา” เพื่อสร้างตาราง</p></div>`;
             return;
         }
-        scheduleBoard.innerHTML = dayNames.slice(1).map((day, index) => {
-            const dayNumber = index + 1;
-            const dailyCourses = courses.filter(course => Number(course.day_of_week) === dayNumber)
-                .sort((first, second) => String(first.start_time).localeCompare(String(second.start_time)));
-            const cards = dailyCourses.length ? dailyCourses.map(course => `
-                <article class="course-card" style="--course-color:${escapeHTML(course.color)}">
-                    <strong>${escapeHTML(course.name)}</strong>
-                    <span>🕒 ${formatCourseTime(course)}</span>
-                    <small>${course.room ? `📍 ${escapeHTML(course.room)}` : 'ยังไม่ได้ใส่ห้องเรียน'}</small>
-                    ${course.code ? `<small>${escapeHTML(course.code)}</small>` : ''}
-                    <div class="course-actions">
-                        <button type="button" data-edit-course="${course.id}">แก้ไข</button>
-                        <button type="button" class="danger" data-delete-course="${course.id}">ลบ</button>
-                    </div>
-                </article>`).join('') : '<p class="day-empty">ไม่มีเรียน</p>';
-            return `<section class="schedule-day ${dayNumber === activeDay ? 'mobile-active' : ''}" data-schedule-day="${dayNumber}"><h3>${day}</h3><div class="schedule-day-list">${cards}</div></section>`;
-        }).join('');
+        scheduleBoard.innerHTML = `<section class="daily-schedule"><div class="daily-schedule-title"><span>ตารางวัน</span><h3>${dayNames[activeDay]}</h3></div><div class="daily-course-list">${dailyCourses.map(course => `
+            <article class="daily-course-card" style="--course-color:${escapeHTML(course.color)}">
+                <div class="daily-course-time"><strong>${String(course.start_time).slice(0, 5)}</strong><span>ถึง ${String(course.end_time).slice(0, 5)} น.</span></div>
+                <i></i>
+                <div class="daily-course-info"><strong>${escapeHTML(course.name)}</strong>${course.code ? `<small>${escapeHTML(course.code)}</small>` : ''}<span>${course.room ? `📍 ${escapeHTML(course.room)}` : '📍 ยังไม่ระบุห้อง'}${course.instructor ? ` · ${escapeHTML(course.instructor)}` : ''}</span></div>
+                <div class="course-actions"><button type="button" data-edit-course="${course.id}">แก้ไข</button><button type="button" class="danger" data-delete-course="${course.id}">ลบ</button></div>
+            </article>`).join('')}</div></section>`;
     }
 
     function populateHomeworkCourses(selectedId = '') {
@@ -215,6 +307,7 @@
     }
 
     function renderAll() {
+        renderCalendar();
         renderSchedule();
         populateHomeworkCourses();
         renderHomework();
@@ -251,8 +344,8 @@
         byId('courseInstructor').value = course?.instructor || '';
         byId('courseDay').value = String(course?.day_of_week || activeDay);
         byId('courseColor').value = course?.color || '#f08fb7';
-        byId('courseStartTime').value = course ? String(course.start_time).slice(0, 5) : '09:00';
-        byId('courseEndTime').value = course ? String(course.end_time).slice(0, 5) : '12:00';
+        setTimePicker('courseStart', course ? String(course.start_time).slice(0, 5) : '09:00');
+        setTimePicker('courseEnd', course ? String(course.end_time).slice(0, 5) : '12:00');
         byId('courseRoom').value = course?.room || '';
         setPlannerMessage('courseFormMessage');
     }
@@ -263,7 +356,7 @@
         window.setTimeout(() => byId('courseName').focus(), 50);
     }
 
-    function openHomeworkDialog(task = null) {
+    function openHomeworkDialog(task = null, dueDate = '') {
         if (!courses.length) {
             setPlannerMessage('homeworkMessage', 'เพิ่มวิชาในตารางเรียนก่อน แล้วจึงเพิ่มการบ้านได้', 'error');
             openTab('scheduleTab', byId('scheduleNavBtn'));
@@ -274,13 +367,13 @@
         byId('homeworkDialogTitle').textContent = task ? 'แก้ไขการบ้าน' : 'เพิ่มการบ้าน';
         byId('homeworkTitle').value = task?.title || '';
         populateHomeworkCourses(task?.course_id || courses[0].id);
-        const defaultDue = task ? new Date(task.due_at) : new Date(Date.now() + 86400000);
+        const defaultDue = task ? new Date(task.due_at) : dueDate ? new Date(`${dueDate}T23:59:00`) : new Date(Date.now() + 86400000);
         byId('homeworkDueDate').value = formatDateInput(defaultDue);
-        byId('homeworkDueTime').value = task ? formatTimeInput(defaultDue) : '23:59';
+        setTimePicker('homeworkDue', task ? formatTimeInput(defaultDue) : '23:59');
         byId('homeworkDueDate').disabled = Boolean(task);
-        byId('homeworkDueTime').disabled = Boolean(task);
+        disableTimePicker('homeworkDue', Boolean(task));
         byId('homeworkDueDate').title = task ? 'ใช้ปุ่มเปลี่ยนเวลาเพื่อบันทึกสถานะช้าหรือเลื่อน' : '';
-        byId('homeworkDueTime').title = byId('homeworkDueDate').title;
+        timePickers.homeworkDue.forEach(id => { byId(id).title = byId('homeworkDueDate').title; });
         byId('homeworkDetails').value = task?.details || '';
         setPlannerMessage('homeworkFormMessage');
         homeworkDialog.showModal();
@@ -293,7 +386,7 @@
         byId('rescheduleHomeworkName').textContent = task.title;
         byId('rescheduleType').value = new Date() > currentDue ? 'late' : 'postponed';
         byId('rescheduleDate').value = formatDateInput(currentDue);
-        byId('rescheduleTime').value = formatTimeInput(currentDue);
+        setTimePicker('reschedule', formatTimeInput(currentDue));
         setPlannerMessage('rescheduleFormMessage');
         rescheduleDialog.showModal();
     }
@@ -305,7 +398,9 @@
 
     courseForm.addEventListener('submit', async event => {
         event.preventDefault();
-        if (byId('courseEndTime').value <= byId('courseStartTime').value) {
+        const startTime = getTimePicker('courseStart');
+        const endTime = getTimePicker('courseEnd');
+        if (endTime <= startTime) {
             setPlannerMessage('courseFormMessage', 'เวลาเลิกเรียนต้องอยู่หลังเวลาเริ่มเรียน', 'error');
             return;
         }
@@ -315,8 +410,8 @@
             code: byId('courseCode').value.trim() || null,
             instructor: byId('courseInstructor').value.trim() || null,
             day_of_week: Number(byId('courseDay').value),
-            start_time: byId('courseStartTime').value,
-            end_time: byId('courseEndTime').value,
+            start_time: startTime,
+            end_time: endTime,
             room: byId('courseRoom').value.trim() || null,
             color: byId('courseColor').value
         };
@@ -337,7 +432,7 @@
 
     homeworkForm.addEventListener('submit', async event => {
         event.preventDefault();
-        const dueAt = localDateTimeToISO(byId('homeworkDueDate').value, byId('homeworkDueTime').value);
+        const dueAt = localDateTimeToISO(byId('homeworkDueDate').value, getTimePicker('homeworkDue'));
         const payload = {
             user_id: plannerUser.id,
             course_id: byId('homeworkCourse').value,
@@ -367,7 +462,7 @@
         event.preventDefault();
         const task = homework.find(item => item.id === reschedulingHomeworkId);
         if (!task) return;
-        const newDueAt = localDateTimeToISO(byId('rescheduleDate').value, byId('rescheduleTime').value);
+        const newDueAt = localDateTimeToISO(byId('rescheduleDate').value, getTimePicker('reschedule'));
         if (new Date(newDueAt).getTime() === new Date(task.due_at).getTime()) {
             setPlannerMessage('rescheduleFormMessage', 'กรุณาเลือกวันหรือเวลาใหม่ก่อนบันทึก', 'error');
             return;
@@ -411,6 +506,55 @@
             else await loadPlannerData();
         }
     });
+
+    document.querySelectorAll('[data-planner-view]').forEach(button => button.addEventListener('click', () => {
+        document.querySelectorAll('[data-planner-view]').forEach(item => {
+            const active = item === button;
+            item.classList.toggle('active', active);
+            item.setAttribute('aria-selected', String(active));
+        });
+        document.querySelectorAll('.planner-view-panel').forEach(panel => {
+            panel.hidden = panel.id !== button.dataset.plannerView;
+        });
+    }));
+
+    calendarGrid.addEventListener('click', event => {
+        const dayButton = event.target.closest('[data-calendar-date]');
+        if (!dayButton) return;
+        selectedCalendarDate = dayButton.dataset.calendarDate;
+        const selected = new Date(`${selectedCalendarDate}T12:00:00`);
+        activeDay = courseDayFromDate(selected);
+        calendarCursor = new Date(selected.getFullYear(), selected.getMonth(), 1);
+        renderCalendar();
+    });
+
+    calendarAgendaList.addEventListener('click', event => {
+        const courseButton = event.target.closest('[data-calendar-course]');
+        const homeworkButton = event.target.closest('[data-calendar-homework]');
+        if (courseButton) openCourseDialog(courses.find(course => course.id === courseButton.dataset.calendarCourse));
+        if (homeworkButton) openHomeworkDialog(homework.find(task => task.id === homeworkButton.dataset.calendarHomework));
+    });
+
+    byId('calendarPrevBtn').addEventListener('click', () => {
+        calendarCursor = new Date(calendarCursor.getFullYear(), calendarCursor.getMonth() - 1, 1);
+        selectedCalendarDate = formatDateInput(calendarCursor);
+        activeDay = courseDayFromDate(calendarCursor);
+        renderCalendar();
+    });
+    byId('calendarNextBtn').addEventListener('click', () => {
+        calendarCursor = new Date(calendarCursor.getFullYear(), calendarCursor.getMonth() + 1, 1);
+        selectedCalendarDate = formatDateInput(calendarCursor);
+        activeDay = courseDayFromDate(calendarCursor);
+        renderCalendar();
+    });
+    byId('calendarTodayBtn').addEventListener('click', () => {
+        const today = new Date();
+        calendarCursor = new Date(today.getFullYear(), today.getMonth(), 1);
+        selectedCalendarDate = formatDateInput(today);
+        activeDay = courseDayFromDate(today);
+        renderCalendar();
+    });
+    byId('calendarAddHomeworkBtn').addEventListener('click', () => openHomeworkDialog(null, selectedCalendarDate));
 
     homeworkList.addEventListener('click', async event => {
         const toggleButton = event.target.closest('[data-toggle-homework]');

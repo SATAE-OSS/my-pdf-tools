@@ -66,7 +66,7 @@
     </section>
 
     <div id="appShell" class="app-shell" hidden>
-    <span class="app-version" title="Jane Tools version 2.3.0">v2.3.0</span>
+    <span class="app-version" title="Jane Tools version 2.5.0">v2.5.0</span>
     <!-- ปุ่มโหมดกลางคืน (เพิ่มใหม่) -->
     <button id="darkModeBtn" class="dark-mode-btn" type="button" aria-label="เปิดโหมดกลางคืน" aria-pressed="false">🌙</button>
     <div class="app-connectivity" aria-live="polite">
@@ -88,7 +88,7 @@
     <!-- เมนูหลักของแอป -->
     <nav class="tabs app-main-nav" aria-label="เมนูหลัก">
         <button class="tab-btn active" id="dashboardNavBtn" onclick="openTab('dashboardTab', this)">🏠 วันนี้</button>
-        <button class="tab-btn" id="scheduleNavBtn" onclick="openTab('scheduleTab', this)">🗓️ ตารางเรียน</button>
+        <button class="tab-btn" id="scheduleNavBtn" onclick="openTab('scheduleTab', this)">🗓️ ปฏิทิน</button>
         <button class="tab-btn" id="homeworkNavBtn" onclick="openTab('homeworkTab', this)">✅ การบ้าน</button>
         <button class="tab-btn" id="toolsNavBtn" onclick="openTab('toolsTab', this)">🧰 เครื่องมือ</button>
     </nav>
@@ -124,11 +124,30 @@
 
     <div id="scheduleTab" class="container tab-content planner-page" style="display: none;">
         <div class="planner-page-header">
-            <div><span class="page-kicker">MY WEEK</span><h2>🗓️ ตารางเรียน</h2><p>เพิ่มวิชา เวลา และห้องเรียนของคุณเอง</p></div>
+            <div><span class="page-kicker">MY CALENDAR</span><h2>🗓️ ปฏิทินและตารางเรียน</h2><p>ดูวิชาเรียนกับกำหนดส่งการบ้านในที่เดียว</p></div>
             <button class="btn planner-add-btn" id="addCourseBtn" type="button">＋ เพิ่มวิชา</button>
         </div>
-        <div class="week-strip" id="weekStrip" aria-label="เลือกวันในตารางเรียน"></div>
-        <div id="scheduleBoard" class="schedule-board" aria-live="polite"></div>
+        <div class="planner-view-switch" role="tablist" aria-label="เลือกรูปแบบปฏิทิน">
+            <button class="active" type="button" data-planner-view="calendarView" role="tab" aria-selected="true">📅 รายเดือน</button>
+            <button type="button" data-planner-view="weekView" role="tab" aria-selected="false">📚 ตารางรายสัปดาห์</button>
+        </div>
+        <section id="calendarView" class="planner-view-panel">
+            <div class="calendar-toolbar">
+                <button id="calendarPrevBtn" type="button" aria-label="เดือนก่อนหน้า">‹</button>
+                <div><strong id="calendarMonthTitle"></strong><button id="calendarTodayBtn" type="button">วันนี้</button></div>
+                <button id="calendarNextBtn" type="button" aria-label="เดือนถัดไป">›</button>
+            </div>
+            <div class="calendar-weekdays" aria-hidden="true"><span>จ.</span><span>อ.</span><span>พ.</span><span>พฤ.</span><span>ศ.</span><span>ส.</span><span>อา.</span></div>
+            <div id="calendarGrid" class="calendar-grid" role="grid" aria-label="ปฏิทินรายเดือน"></div>
+            <section class="calendar-agenda">
+                <div class="calendar-agenda-heading"><div><span>รายการของวันที่เลือก</span><h3 id="calendarAgendaTitle"></h3></div><button id="calendarAddHomeworkBtn" type="button">＋ การบ้าน</button></div>
+                <div id="calendarAgendaList" class="calendar-agenda-list"></div>
+            </section>
+        </section>
+        <section id="weekView" class="planner-view-panel" hidden>
+            <div class="week-strip" id="weekStrip" aria-label="เลือกวันในตารางเรียน"></div>
+            <div id="scheduleBoard" class="schedule-board" aria-live="polite"></div>
+        </section>
         <p id="scheduleMessage" class="planner-message" role="status"></p>
     </div>
 
@@ -752,8 +771,8 @@
                 <label>อาจารย์<input id="courseInstructor" name="instructor" type="text" maxlength="80" placeholder="ไม่ใส่ก็ได้"></label>
                 <label>วันเรียน<select id="courseDay" name="day" required><option value="1">จันทร์</option><option value="2">อังคาร</option><option value="3">พุธ</option><option value="4">พฤหัสบดี</option><option value="5">ศุกร์</option><option value="6">เสาร์</option><option value="7">อาทิตย์</option></select></label>
                 <label>สีประจำวิชา<select id="courseColor" name="color"><option value="#f08fb7">ชมพู</option><option value="#9b7de5">ม่วง</option><option value="#61bfa2">เขียวมิ้นต์</option><option value="#5e9ee8">ฟ้า</option><option value="#f1a653">ส้ม</option><option value="#e16f74">แดงอิฐ</option></select></label>
-                <label>เริ่มเรียน<input id="courseStartTime" name="start_time" type="time" required value="09:00"></label>
-                <label>เลิกเรียน<input id="courseEndTime" name="end_time" type="time" required value="12:00"></label>
+                <label>เริ่มเรียน<div class="planner-time-select"><select id="courseStartHour" aria-label="ชั่วโมงเริ่มเรียน"></select><span>:</span><select id="courseStartMinute" aria-label="นาทีเริ่มเรียน"></select><small>น.</small></div></label>
+                <label>เลิกเรียน<div class="planner-time-select"><select id="courseEndHour" aria-label="ชั่วโมงเลิกเรียน"></select><span>:</span><select id="courseEndMinute" aria-label="นาทีเลิกเรียน"></select><small>น.</small></div></label>
                 <label class="span-two">ห้องเรียน/อาคาร<input id="courseRoom" name="room" type="text" maxlength="80" placeholder="เช่น ห้อง 402 อาคาร A"></label>
             </div>
             <p id="courseFormMessage" class="planner-message" role="status"></p>
@@ -768,7 +787,7 @@
                 <label class="span-two">ชื่องาน<input id="homeworkTitle" type="text" maxlength="120" required placeholder="เช่น แก้แปลนชั้น 1"></label>
                 <label class="span-two">รายวิชา<select id="homeworkCourse" required></select></label>
                 <label>วันที่ส่ง<input id="homeworkDueDate" type="date" required></label>
-                <label>เวลาส่ง<input id="homeworkDueTime" type="time" required value="23:59"></label>
+                <label>เวลาส่ง<div class="planner-time-select"><select id="homeworkDueHour" aria-label="ชั่วโมงกำหนดส่ง"></select><span>:</span><select id="homeworkDueMinute" aria-label="นาทีกำหนดส่ง"></select><small>น.</small></div></label>
                 <label class="span-two">รายละเอียด<textarea id="homeworkDetails" maxlength="500" rows="3" placeholder="โน้ตเพิ่มเติมหรือสิ่งที่ต้องส่ง"></textarea></label>
             </div>
             <p id="homeworkFormMessage" class="planner-message" role="status"></p>
@@ -782,7 +801,7 @@
             <div class="planner-form-grid">
                 <label class="span-two">เหตุผล<select id="rescheduleType"><option value="postponed">อาจารย์เลื่อนกำหนด</option><option value="late">ส่งไม่ทัน/ส่งช้า</option></select></label>
                 <label>วันที่ใหม่<input id="rescheduleDate" type="date" required></label>
-                <label>เวลาใหม่<input id="rescheduleTime" type="time" required></label>
+                <label>เวลาใหม่<div class="planner-time-select"><select id="rescheduleHour" aria-label="ชั่วโมงกำหนดใหม่"></select><span>:</span><select id="rescheduleMinute" aria-label="นาทีกำหนดใหม่"></select><small>น.</small></div></label>
             </div>
             <p id="rescheduleFormMessage" class="planner-message" role="status"></p>
             <div class="dialog-actions"><button class="btn btn-outline" id="cancelRescheduleBtn" type="button">ยกเลิก</button><button class="btn" id="saveRescheduleBtn" type="submit">บันทึกกำหนดใหม่</button></div>
