@@ -1,7 +1,7 @@
 {
-  "name": "Sweet PDF Magic",
-  "short_name": "PDF Magic",
-  "description": "เครื่องมือจัดการเอกสาร PDF น่ารักๆ",
+  "name": "Jane Tools · Study & Create",
+  "short_name": "Jane Tools",
+  "description": "ตารางเรียน การบ้าน งานเอกสาร และพื้นที่สร้างสรรค์ส่วนตัว",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#fff5f7",

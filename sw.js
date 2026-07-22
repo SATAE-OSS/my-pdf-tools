@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pdf-magic-v27';
+const CACHE_NAME = 'jane-tools-v28';
 const urlsToCache = [
   './',
   './index.html',
@@ -6,6 +6,8 @@ const urlsToCache = [
   './script.js',
   './scale-tools.js',
   './cloud-drawings.js',
+  './planner.js',
+  './planner.css',
   './pwa-ui.js',
   './supabase-config.js',
   './manifest.json',

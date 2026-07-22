@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <!-- ตั้งค่า Viewport ให้พอดีกับหน้าจอมือถือ โดยยังอนุญาตให้ผู้ใช้ซูมได้ -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PDF Magic Tools</title>
+    <title>Jane Tools · Study & Create</title>
     
     <!-- ========================================== -->
     <!-- ตั้งค่า PWA สำหรับทำเป็นแอปพลิเคชันบนมือถือ -->
@@ -15,13 +15,14 @@
     <!-- รองรับระบบ iOS (iPhone/iPad) ให้แสดงผลเต็มจอสวยงาม -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="PDF Magic">
+    <meta name="apple-mobile-web-app-title" content="Jane Tools">
     <link rel="apple-touch-icon" href="icon-192.png">
     
     <!-- ========================================== -->
     <!-- ดึงไฟล์ CSS และไลบรารีต่างๆ มาใช้งาน -->
     <!-- ========================================== -->
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="planner.css">
     
     <!-- ไลบรารีสำหรับ Drag & Drop, สร้าง PDF, อ่าน PDF และทำไฟล์ ZIP -->
     <script src="vendor/Sortable.min.js"></script>
@@ -32,8 +33,40 @@
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'vendor/pdf.worker.min.js';
     </script>
 </head>
-<body>
-    <span class="app-version" title="PDF Magic version 1.6.2">v1.6.2</span>
+<body class="auth-pending">
+    <section id="signedOutPanel" class="auth-gate" aria-labelledby="authGateTitle">
+        <div class="auth-card">
+            <div class="auth-art" aria-hidden="true">
+                <span>📚</span><i></i><b></b>
+            </div>
+            <div class="auth-copy">
+                <span class="auth-eyebrow">JANE TOOLS</span>
+                <h1 id="authGateTitle">พื้นที่เรียนของเรา</h1>
+                <p>ล็อกอินครั้งเดียว ตารางเรียน การบ้าน และภาพวาดจะเปิดต่อได้จากทุกอุปกรณ์</p>
+            </div>
+            <div id="emailLoginStep" class="auth-step">
+                <label for="authEmail">อีเมลของคุณ</label>
+                <div class="auth-inline-form">
+                    <input type="email" id="authEmail" autocomplete="email" inputmode="email" placeholder="name@example.com">
+                    <button class="btn" id="sendLoginLinkBtn" type="button">รับรหัส OTP</button>
+                </div>
+                <small>เราจะส่งรหัส 6 หลักให้ทางอีเมล ไม่ต้องจำรหัสผ่าน</small>
+            </div>
+            <div id="otpLoginStep" class="auth-step" hidden>
+                <label for="otpCode">รหัส OTP จากอีเมล</label>
+                <div class="auth-inline-form otp-form">
+                    <input type="text" id="otpCode" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" placeholder="000000">
+                    <button class="btn" id="verifyOtpBtn" type="button">เข้าใช้งาน</button>
+                </div>
+                <button class="text-btn" id="changeLoginEmailBtn" type="button">เปลี่ยนอีเมลหรือส่งรหัสใหม่</button>
+            </div>
+            <p id="authGateMessage" class="cloud-message" role="status" aria-live="polite"></p>
+            <div class="auth-privacy"><span>🔒</span> ข้อมูลของแต่ละบัญชีแยกจากกัน</div>
+        </div>
+    </section>
+
+    <div id="appShell" class="app-shell" hidden>
+    <span class="app-version" title="Jane Tools version 2.0.0">v2.0.0</span>
     <!-- ปุ่มโหมดกลางคืน (เพิ่มใหม่) -->
     <button id="darkModeBtn" class="dark-mode-btn" type="button" aria-label="เปิดโหมดกลางคืน" aria-pressed="false">🌙</button>
     <div class="app-connectivity" aria-live="polite">
@@ -41,18 +74,95 @@
         <button id="installAppBtn" class="mini-app-btn" type="button" hidden>ติดตั้งแอป</button>
     </div>
 
-    <!-- เมนูหลัก -->
-    <div class="tabs" aria-label="เมนูเครื่องมือทั้งหมด">
-        <button class="tab-btn active" onclick="openTab('mergeTab', this)">✨ รวมรูป PDF</button>
-        <button class="tab-btn" onclick="openTab('extractTab', this)">🔄 แยกรูป</button>
-        <button class="tab-btn" onclick="openTab('sketchTab', this)">🎨 สเก็ตช์</button>
-        <button class="tab-btn" onclick="openTab('scaleTab', this)">📐 สเกล/หน่วย</button>
-        <button class="tab-btn" onclick="openTab('bubbleTab', this)">🫧 บีบบับเบิ้ล</button>
-        <button class="tab-btn" onclick="openTab('squishyTab', this)">🫠 สไลม์</button>
+    <header class="app-header">
+        <div class="brand-lockup">
+            <div class="brand-mark">🌷</div>
+            <div><strong>Jane Tools</strong><span>Study & Create</span></div>
+        </div>
+        <div class="header-account">
+            <span id="headerUserEmail"></span>
+            <button id="appSignOutBtn" class="header-signout" type="button" aria-label="ออกจากระบบ">ออกจากระบบ</button>
+        </div>
+    </header>
+
+    <!-- เมนูหลักของแอป -->
+    <nav class="tabs app-main-nav" aria-label="เมนูหลัก">
+        <button class="tab-btn active" id="dashboardNavBtn" onclick="openTab('dashboardTab', this)">🏠 วันนี้</button>
+        <button class="tab-btn" id="scheduleNavBtn" onclick="openTab('scheduleTab', this)">🗓️ ตารางเรียน</button>
+        <button class="tab-btn" id="homeworkNavBtn" onclick="openTab('homeworkTab', this)">✅ การบ้าน</button>
+        <button class="tab-btn" id="toolsNavBtn" onclick="openTab('toolsTab', this)">🧰 เครื่องมือ</button>
+    </nav>
+
+    <main>
+    <div id="dashboardTab" class="container tab-content dashboard-page" style="display: block;">
+        <section class="dashboard-hero">
+            <div>
+                <span class="dashboard-date" id="dashboardDate"></span>
+                <h2 id="dashboardGreeting">สวัสดี 👋</h2>
+                <p>วันนี้มีอะไรต้องทำบ้าง มาดูกันเลย</p>
+            </div>
+            <div class="hero-flower" aria-hidden="true">🌸</div>
+        </section>
+        <section class="dashboard-stats" aria-label="สรุปวันนี้">
+            <article><span>📚</span><div><strong id="todayClassCount">0</strong><small>วิชาวันนี้</small></div></article>
+            <article><span>📝</span><div><strong id="pendingHomeworkCount">0</strong><small>งานที่ยังไม่เสร็จ</small></div></article>
+            <article><span>⏰</span><div><strong id="dueSoonCount">0</strong><small>ใกล้ถึงกำหนด</small></div></article>
+        </section>
+        <div class="dashboard-grid">
+            <section class="dashboard-card">
+                <div class="section-heading"><div><span>วันนี้</span><h3>ตารางเรียน</h3></div><button type="button" onclick="openTab('scheduleTab', document.getElementById('scheduleNavBtn'))">ดูทั้งหมด</button></div>
+                <div id="dashboardTodayClasses" class="dashboard-list"><p class="empty-state">วันนี้ยังไม่มีวิชาเรียน</p></div>
+                <button class="soft-action-btn" id="quickAddCourseBtn" type="button">＋ เพิ่มวิชา</button>
+            </section>
+            <section class="dashboard-card">
+                <div class="section-heading"><div><span>กำลังจะถึง</span><h3>การบ้าน</h3></div><button type="button" onclick="openTab('homeworkTab', document.getElementById('homeworkNavBtn'))">ดูทั้งหมด</button></div>
+                <div id="dashboardUpcomingHomework" class="dashboard-list"><p class="empty-state">ยังไม่มีการบ้านใกล้ส่ง</p></div>
+                <button class="soft-action-btn" id="quickAddHomeworkBtn" type="button">＋ เพิ่มการบ้าน</button>
+            </section>
+        </div>
+    </div>
+
+    <div id="scheduleTab" class="container tab-content planner-page" style="display: none;">
+        <div class="planner-page-header">
+            <div><span class="page-kicker">MY WEEK</span><h2>🗓️ ตารางเรียน</h2><p>เพิ่มวิชา เวลา และห้องเรียนของคุณเอง</p></div>
+            <button class="btn planner-add-btn" id="addCourseBtn" type="button">＋ เพิ่มวิชา</button>
+        </div>
+        <div class="week-strip" id="weekStrip" aria-label="เลือกวันในตารางเรียน"></div>
+        <div id="scheduleBoard" class="schedule-board" aria-live="polite"></div>
+        <p id="scheduleMessage" class="planner-message" role="status"></p>
+    </div>
+
+    <div id="homeworkTab" class="container tab-content planner-page" style="display: none;">
+        <div class="planner-page-header">
+            <div><span class="page-kicker">ASSIGNMENTS</span><h2>✅ การบ้านของฉัน</h2><p>ผูกงานกับรายวิชาและติดตามกำหนดส่งได้ง่าย ๆ</p></div>
+            <button class="btn planner-add-btn" id="addHomeworkBtn" type="button">＋ เพิ่มการบ้าน</button>
+        </div>
+        <div class="homework-summary" id="homeworkSummary"></div>
+        <div class="homework-filters" role="group" aria-label="กรองสถานะการบ้าน">
+            <button class="active" type="button" data-homework-filter="all">ทั้งหมด</button>
+            <button type="button" data-homework-filter="pending">กำลังทำ</button>
+            <button type="button" data-homework-filter="completed">เสร็จแล้ว</button>
+            <button type="button" data-homework-filter="late">ช้า</button>
+            <button type="button" data-homework-filter="postponed">เลื่อน</button>
+        </div>
+        <div id="homeworkList" class="homework-list" aria-live="polite"></div>
+        <p id="homeworkMessage" class="planner-message" role="status"></p>
+    </div>
+
+    <div id="toolsTab" class="container tab-content tools-hub" style="display: none;">
+        <div class="planner-page-header"><div><span class="page-kicker">TOOLBOX</span><h2>🧰 เครื่องมือทั้งหมด</h2><p>งานเอกสาร วาดรูป คำนวณ และพักสมอง รวมไว้ที่เดียว</p></div></div>
+        <div class="tool-hub-grid">
+            <button type="button" onclick="openTab('mergeTab', document.getElementById('toolsNavBtn'))"><span>✨</span><strong>รวมรูปเป็น PDF</strong><small>เรียงรูปแล้วสร้างไฟล์เดียว</small></button>
+            <button type="button" onclick="openTab('extractTab', document.getElementById('toolsNavBtn'))"><span>🔄</span><strong>แยกรูปจาก PDF</strong><small>เลือกโหลดทีละหน้า</small></button>
+            <button type="button" onclick="openTab('sketchTab', document.getElementById('toolsNavBtn'))"><span>🎨</span><strong>สเก็ตช์ภาพ</strong><small>วาดและบันทึกบนคลาวด์</small></button>
+            <button type="button" onclick="openTab('scaleTab', document.getElementById('toolsNavBtn'))"><span>📐</span><strong>สเกลและหน่วย</strong><small>คำนวณแบบและกระดาษ</small></button>
+            <button type="button" onclick="openTab('bubbleTab', document.getElementById('toolsNavBtn'))"><span>🫧</span><strong>บับเบิล</strong><small>พักสมองแป๊บหนึ่ง</small></button>
+            <button type="button" onclick="openTab('squishyTab', document.getElementById('toolsNavBtn'))"><span>🫠</span><strong>สไลม์</strong><small>ดึง บีบ และฟังเสียงนุ่ม ๆ</small></button>
+        </div>
     </div>
 
     <!-- หน้าที่ 1: รวมรูปเป็น PDF -->
-    <div id="mergeTab" class="container tab-content" style="display: block;">
+    <div id="mergeTab" class="container tab-content" style="display: none;">
         <h2>✨ รวมรูปภาพเป็น PDF</h2>
         <div class="subtitle">อัปโหลดรูป แล้วใช้นิ้วลากสลับตำแหน่งได้เลย</div>
         
@@ -441,25 +551,6 @@
 
             <div class="collapsible-panel-body">
 
-            <div id="signedOutPanel">
-                <div id="emailLoginStep">
-                    <label class="cloud-field" for="authEmail">อีเมล</label>
-                    <div class="cloud-inline-form">
-                        <input type="email" id="authEmail" autocomplete="email" placeholder="name@example.com">
-                        <button class="btn" id="sendLoginLinkBtn" type="button">ส่งรหัส OTP</button>
-                    </div>
-                    <p class="cloud-help">รับรหัส 6 หลักทางอีเมลแล้วกรอกในหน้าเดิม ภาพที่วาดจะไม่หาย</p>
-                </div>
-                <div id="otpLoginStep" hidden>
-                    <label class="cloud-field" for="otpCode">รหัส OTP จากอีเมล</label>
-                    <div class="cloud-inline-form otp-form">
-                        <input type="text" id="otpCode" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" placeholder="000000">
-                        <button class="btn" id="verifyOtpBtn" type="button">ยืนยันรหัส</button>
-                    </div>
-                    <button class="text-btn" id="changeLoginEmailBtn" type="button">เปลี่ยนอีเมลหรือส่งรหัสใหม่</button>
-                </div>
-            </div>
-
             <div id="signedInPanel" hidden>
                 <div class="cloud-user-row">
                     <span id="currentUserEmail"></span>
@@ -492,6 +583,54 @@
             </div>
         </details>
     </div>
+    </main>
+    </div>
+
+    <dialog id="courseDialog" class="app-dialog planner-dialog" aria-labelledby="courseDialogTitle">
+        <form id="courseForm" method="dialog">
+            <div class="dialog-title-row"><div class="dialog-icon">📚</div><div><h3 id="courseDialogTitle">เพิ่มวิชา</h3><p>ใส่รายละเอียดที่ใช้ดูในตารางเรียน</p></div></div>
+            <div class="planner-form-grid">
+                <label class="span-two">ชื่อวิชา<input id="courseName" name="name" type="text" maxlength="80" required placeholder="เช่น Interior Design Studio"></label>
+                <label>รหัสวิชา<input id="courseCode" name="code" type="text" maxlength="30" placeholder="เช่น INT201"></label>
+                <label>อาจารย์<input id="courseInstructor" name="instructor" type="text" maxlength="80" placeholder="ไม่ใส่ก็ได้"></label>
+                <label>วันเรียน<select id="courseDay" name="day" required><option value="1">จันทร์</option><option value="2">อังคาร</option><option value="3">พุธ</option><option value="4">พฤหัสบดี</option><option value="5">ศุกร์</option><option value="6">เสาร์</option><option value="7">อาทิตย์</option></select></label>
+                <label>สีประจำวิชา<select id="courseColor" name="color"><option value="#f08fb7">ชมพู</option><option value="#9b7de5">ม่วง</option><option value="#61bfa2">เขียวมิ้นต์</option><option value="#5e9ee8">ฟ้า</option><option value="#f1a653">ส้ม</option><option value="#e16f74">แดงอิฐ</option></select></label>
+                <label>เริ่มเรียน<input id="courseStartTime" name="start_time" type="time" required value="09:00"></label>
+                <label>เลิกเรียน<input id="courseEndTime" name="end_time" type="time" required value="12:00"></label>
+                <label class="span-two">ห้องเรียน/อาคาร<input id="courseRoom" name="room" type="text" maxlength="80" placeholder="เช่น ห้อง 402 อาคาร A"></label>
+            </div>
+            <p id="courseFormMessage" class="planner-message" role="status"></p>
+            <div class="dialog-actions"><button class="btn btn-outline" id="cancelCourseBtn" type="button">ยกเลิก</button><button class="btn" id="saveCourseBtn" type="submit">บันทึกวิชา</button></div>
+        </form>
+    </dialog>
+
+    <dialog id="homeworkDialog" class="app-dialog planner-dialog" aria-labelledby="homeworkDialogTitle">
+        <form id="homeworkForm" method="dialog">
+            <div class="dialog-title-row"><div class="dialog-icon">📝</div><div><h3 id="homeworkDialogTitle">เพิ่มการบ้าน</h3><p>เลือกวิชาจากตารางและตั้งกำหนดส่ง</p></div></div>
+            <div class="planner-form-grid">
+                <label class="span-two">ชื่องาน<input id="homeworkTitle" type="text" maxlength="120" required placeholder="เช่น แก้แปลนชั้น 1"></label>
+                <label class="span-two">รายวิชา<select id="homeworkCourse" required></select></label>
+                <label>วันที่ส่ง<input id="homeworkDueDate" type="date" required></label>
+                <label>เวลาส่ง<input id="homeworkDueTime" type="time" required value="23:59"></label>
+                <label class="span-two">รายละเอียด<textarea id="homeworkDetails" maxlength="500" rows="3" placeholder="โน้ตเพิ่มเติมหรือสิ่งที่ต้องส่ง"></textarea></label>
+            </div>
+            <p id="homeworkFormMessage" class="planner-message" role="status"></p>
+            <div class="dialog-actions"><button class="btn btn-outline" id="cancelHomeworkBtn" type="button">ยกเลิก</button><button class="btn" id="saveHomeworkBtn" type="submit">บันทึกการบ้าน</button></div>
+        </form>
+    </dialog>
+
+    <dialog id="rescheduleDialog" class="app-dialog planner-dialog compact-dialog" aria-labelledby="rescheduleDialogTitle">
+        <form id="rescheduleForm" method="dialog">
+            <div class="dialog-title-row"><div class="dialog-icon">⏰</div><div><h3 id="rescheduleDialogTitle">เปลี่ยนกำหนดส่ง</h3><p id="rescheduleHomeworkName"></p></div></div>
+            <div class="planner-form-grid">
+                <label class="span-two">เหตุผล<select id="rescheduleType"><option value="postponed">อาจารย์เลื่อนกำหนด</option><option value="late">ส่งไม่ทัน/ส่งช้า</option></select></label>
+                <label>วันที่ใหม่<input id="rescheduleDate" type="date" required></label>
+                <label>เวลาใหม่<input id="rescheduleTime" type="time" required></label>
+            </div>
+            <p id="rescheduleFormMessage" class="planner-message" role="status"></p>
+            <div class="dialog-actions"><button class="btn btn-outline" id="cancelRescheduleBtn" type="button">ยกเลิก</button><button class="btn" id="saveRescheduleBtn" type="submit">บันทึกกำหนดใหม่</button></div>
+        </form>
+    </dialog>
 
     <dialog id="confirmDialog" class="app-dialog" aria-labelledby="confirmDialogTitle">
         <div class="dialog-icon">🗑️</div>
@@ -534,6 +673,7 @@
     <script src="script.js"></script>
     <script src="scale-tools.js"></script>
     <script src="cloud-drawings.js"></script>
+    <script src="planner.js"></script>
     <script src="pwa-ui.js"></script>
     
 </body>

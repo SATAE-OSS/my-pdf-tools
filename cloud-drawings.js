@@ -1,5 +1,6 @@
 const cloudConfig = window.PDF_MAGIC_SUPABASE;
 const supabaseClient = window.supabase.createClient(cloudConfig.url, cloudConfig.publishableKey);
+window.pdfMagicSupabase = supabaseClient;
 
 const signedOutPanel = document.getElementById('signedOutPanel');
 const signedInPanel = document.getElementById('signedInPanel');
@@ -33,6 +34,9 @@ const downloadSharedViewBtn = document.getElementById('downloadSharedViewBtn');
 const closeSharedViewBtn = document.getElementById('closeSharedViewBtn');
 const cloudSavePanel = document.getElementById('cloudSavePanel');
 const saveCloudShortcutBtn = document.getElementById('saveCloudShortcutBtn');
+const authGateMessage = document.getElementById('authGateMessage');
+const appShell = document.getElementById('appShell');
+const headerUserEmail = document.getElementById('headerUserEmail');
 
 let cloudUser = null;
 let pendingLoginEmail = sessionStorage.getItem('pdf-magic-login-email') || '';
@@ -40,6 +44,10 @@ let pendingLoginEmail = sessionStorage.getItem('pdf-magic-login-email') || '';
 function setCloudMessage(message = '', type = '') {
     cloudMessage.textContent = message;
     cloudMessage.className = `cloud-message ${type}`.trim();
+    if (authGateMessage) {
+        authGateMessage.textContent = message;
+        authGateMessage.className = `cloud-message ${type}`.trim();
+    }
 }
 
 function setButtonBusy(button, busy, busyText) {
@@ -53,12 +61,22 @@ function updateAuthUI(user) {
     const signedIn = Boolean(user);
     signedOutPanel.hidden = signedIn;
     signedInPanel.hidden = !signedIn;
+    if (appShell) appShell.hidden = !signedIn;
+    document.body.classList.toggle('auth-pending', !signedIn);
+    if (headerUserEmail) headerUserEmail.textContent = user?.email || '';
     cloudStatus.textContent = signedIn ? 'เชื่อมต่อแล้ว' : 'ยังไม่ได้เข้าสู่ระบบ';
     cloudStatus.classList.toggle('connected', signedIn);
     currentUserEmail.textContent = user?.email || '';
+    if (!signedIn) {
+        const waitingForOtp = Boolean(pendingLoginEmail);
+        emailLoginStep.hidden = waitingForOtp;
+        otpLoginStep.hidden = !waitingForOtp;
+        if (waitingForOtp) authEmail.value = pendingLoginEmail;
+    }
     const savedTitle = localStorage.getItem('pdf-magic-drawing-title');
     if (signedIn && savedTitle) drawingTitle.value = savedTitle;
     if (!signedIn) savedDrawings.innerHTML = '';
+    window.dispatchEvent(new CustomEvent('pdfmagic:auth', { detail: { user } }));
 }
 
 sendLoginLinkBtn.addEventListener('click', async () => {
@@ -118,6 +136,7 @@ verifyOtpBtn.addEventListener('click', async () => {
         return;
     }
     sessionStorage.removeItem('pdf-magic-login-email');
+    pendingLoginEmail = '';
     otpCode.value = '';
     setCloudMessage('เข้าสู่ระบบเรียบร้อยแล้ว', 'success');
 });
