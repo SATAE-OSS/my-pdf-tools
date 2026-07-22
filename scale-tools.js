@@ -286,7 +286,7 @@
         return Number.isFinite(value) && value > 0 ? value : fallback;
     }
 
-    const ceilingControlIds = ['ceilingWidth', 'ceilingLength', 'slabHeight', 'ceilingHeight', 'hangerSpacingX', 'hangerSpacingY', 'ceilingBoardSize', 'ceilingWaste'];
+    const ceilingControlIds = ['ceilingWidth', 'ceilingLength', 'slabHeight', 'ceilingHeight', 'hangerSpacingX', 'hangerSpacingY', 'furringSpacing', 'trayBorderWidth', 'ceilingBoardSize', 'ceilingWaste'];
     function updateCeilingCalculator() {
         const width = positiveNumber('ceilingWidth');
         const length = positiveNumber('ceilingLength');
@@ -294,25 +294,38 @@
         const finishHeight = positiveNumber('ceilingHeight');
         const spacingX = positiveNumber('hangerSpacingX');
         const spacingY = positiveNumber('hangerSpacingY');
+        const furringSpacing = positiveNumber('furringSpacing');
+        const trayBorder = Math.max(0, Number(document.getElementById('trayBorderWidth').value) || 0) / 100;
         const result = document.getElementById('ceilingResults');
-        if (!width || !length || !slabHeight || !finishHeight || !spacingX || !spacingY || finishHeight >= slabHeight) {
-            result.innerHTML = resultCard('ตรวจข้อมูล', 'กรอกระดับให้ถูกต้อง', 'ระดับฝ้าต้องต่ำกว่าระดับท้องพื้น', true);
+        const invalidTray = trayBorder > 0 && trayBorder * 2 >= Math.min(width, length);
+        if (!width || !length || !slabHeight || !finishHeight || !spacingX || !spacingY || !furringSpacing || finishHeight >= slabHeight || invalidTray) {
+            result.innerHTML = resultCard('ตรวจข้อมูล', 'กรอกขนาดให้ถูกต้อง', invalidTray ? 'ขอบฝ้าหลุมต้องไม่เกินครึ่งหนึ่งของด้านสั้น' : 'ระดับฝ้าต้องต่ำกว่าระดับท้องพื้น', true);
             return;
         }
         const [boardWidth, boardLength] = document.getElementById('ceilingBoardSize').value.split('x').map(Number);
         const waste = Number(document.getElementById('ceilingWaste').value) / 100;
         const area = width * length;
         const drop = slabHeight - finishHeight;
+        const trayWidth = Math.max(0, width - trayBorder * 2);
+        const trayLength = Math.max(0, length - trayBorder * 2);
+        const fasciaArea = trayBorder > 0 ? (trayWidth + trayLength) * 2 * drop / 100 : 0;
+        const boardSurfaceArea = area + fasciaArea;
         const acrossCount = Math.ceil(width / spacingX) + 1;
         const alongCount = Math.ceil(length / spacingY) + 1;
         const hangerCount = acrossCount * alongCount;
-        const boards = Math.ceil(area / (boardWidth * boardLength) * (1 + waste));
+        const boards = Math.ceil(boardSurfaceArea / (boardWidth * boardLength) * (1 + waste));
         const totalHangerLength = hangerCount * drop / 100;
+        const mainFrameLength = acrossCount * length;
+        const furringRows = Math.ceil(length / furringSpacing) + 1;
+        const furringLength = furringRows * width;
         result.innerHTML = [
             resultCard('พื้นที่ฝ้า', `${formatNumber(area)} ตร.ม.`, `รอบห้อง ${formatNumber((width + length) * 2)} เมตร`),
             resultCard('ระยะดรอป/สลิงต่อเส้น', `${formatNumber(drop)} ซม.`, `จาก ${formatNumber(slabHeight)} เหลือ ${formatNumber(finishHeight)} ซม.`),
             resultCard('จุดสลิงโดยประมาณ', `${formatNumber(hangerCount)} จุด`, `ตารางประมาณ ${acrossCount} × ${alongCount} จุด`),
             resultCard('แผ่นฝ้าโดยประมาณ', `${formatNumber(boards)} แผ่น`, `รวมเผื่อเศษ ${formatNumber(waste * 100)}%`),
+            resultCard('ช่องกลางฝ้าหลุม', trayBorder > 0 ? `${formatNumber(trayWidth)} × ${formatNumber(trayLength)} ม.` : 'ฝ้าเรียบ', trayBorder > 0 ? `หน้าตั้งเพิ่มประมาณ ${formatNumber(fasciaArea)} ตร.ม.` : 'ไม่ได้กำหนดขอบฝ้าหลุม'),
+            resultCard('โครงหลักโดยประมาณ', `${formatNumber(mainFrameLength)} เมตร`, `${acrossCount} แนวตามความยาวห้อง`),
+            resultCard('โครงซอยโดยประมาณ', `${formatNumber(furringLength)} เมตร`, `${furringRows} แนว ระยะประมาณ ${formatNumber(furringSpacing)} ม.`),
             resultCard('ความยาวสลิงรวมขั้นต่ำ', `${formatNumber(totalHangerLength)} เมตร`, 'ยังไม่รวมระยะผูก ยึด และเศษหน้างาน', true)
         ].join('');
     }
@@ -396,6 +409,120 @@
         ].join('');
     }
 
+    const wallpaperControlIds = ['wallpaperWallLength', 'wallpaperWallHeight', 'wallpaperRollWidth', 'wallpaperRollLength', 'wallpaperPatternWaste', 'baseboardDoors', 'baseboardWaste'];
+    function updateWallpaperCalculator() {
+        const wallLength = positiveNumber('wallpaperWallLength');
+        const wallHeight = positiveNumber('wallpaperWallHeight');
+        const rollWidth = positiveNumber('wallpaperRollWidth') / 100;
+        const rollLength = positiveNumber('wallpaperRollLength');
+        const patternWaste = Math.max(0, Number(document.getElementById('wallpaperPatternWaste').value) || 0) / 100;
+        const doorWidth = Math.max(0, Number(document.getElementById('baseboardDoors').value) || 0);
+        const baseboardWaste = Number(document.getElementById('baseboardWaste').value) / 100;
+        const stripLength = wallHeight + patternWaste;
+        const stripsNeeded = rollWidth ? Math.ceil(wallLength / rollWidth) : 0;
+        const stripsPerRoll = stripLength ? Math.floor(rollLength / stripLength) : 0;
+        const rolls = stripsPerRoll ? Math.ceil(stripsNeeded / stripsPerRoll) : 0;
+        const baseboardNet = Math.max(0, wallLength - doorWidth);
+        const baseboardPurchase = baseboardNet * (1 + baseboardWaste);
+        document.getElementById('wallpaperResults').innerHTML = [
+            resultCard('แถบวอลเปเปอร์ที่ต้องใช้', `${formatNumber(stripsNeeded)} แถบ`, `แถบละ ${formatNumber(stripLength)} เมตร`),
+            resultCard('ตัดได้ต่อม้วน', stripsPerRoll ? `${formatNumber(stripsPerRoll)} แถบ` : 'ม้วนสั้นเกินไป', `ม้วนยาว ${formatNumber(rollLength)} เมตร`),
+            resultCard('จำนวนวอลเปเปอร์', stripsPerRoll ? `${formatNumber(rolls)} ม้วน` : 'ตรวจขนาดม้วน', 'ควรซื้อรุ่นและล็อตสีเดียวกัน'),
+            resultCard('ความยาวบัวสุทธิ', `${formatNumber(baseboardNet)} เมตร`, `หักช่องประตู ${formatNumber(doorWidth)} เมตร`),
+            resultCard('บัวที่ควรเตรียม', `${formatNumber(baseboardPurchase)} เมตร`, `รวมเผื่อตัด ${formatNumber(baseboardWaste * 100)}%`, true)
+        ].join('');
+    }
+
+    const sheetControlIds = ['sheetArea', 'sheetWidth', 'sheetLength', 'sheetLayers', 'sheetWaste'];
+    function updateSheetCalculator() {
+        const area = positiveNumber('sheetArea');
+        const sheetWidth = positiveNumber('sheetWidth') / 1000;
+        const sheetLength = positiveNumber('sheetLength') / 1000;
+        const layers = Math.max(1, Math.round(positiveNumber('sheetLayers', 1)));
+        const waste = Number(document.getElementById('sheetWaste').value) / 100;
+        const oneSheetArea = sheetWidth * sheetLength;
+        const workingArea = area * layers;
+        const sheets = oneSheetArea ? Math.ceil(workingArea / oneSheetArea * (1 + waste)) : 0;
+        const purchasedArea = sheets * oneSheetArea;
+        document.getElementById('sheetResults').innerHTML = [
+            resultCard('พื้นที่งานรวมทุกชั้น', `${formatNumber(workingArea)} ตร.ม.`, `${layers} ชั้น`),
+            resultCard('พื้นที่ต่อแผ่น', `${formatNumber(oneSheetArea)} ตร.ม.`, `${formatNumber(sheetWidth)} × ${formatNumber(sheetLength)} เมตร`),
+            resultCard('จำนวนที่ควรซื้อ', `${formatNumber(sheets)} แผ่น`, `รวมเผื่อตัด ${formatNumber(waste * 100)}%`),
+            resultCard('พื้นที่วัสดุที่ซื้อ', `${formatNumber(purchasedArea)} ตร.ม.`, `เหลือจากพื้นที่คำนวณประมาณ ${formatNumber(Math.max(0, purchasedArea - workingArea))} ตร.ม.`)
+        ].join('');
+    }
+
+    const lightingControlIds = ['lightRoomWidth', 'lightRoomLength', 'targetLux', 'lampLumens', 'lightFactor'];
+    function updateLightingCalculator() {
+        const width = positiveNumber('lightRoomWidth');
+        const length = positiveNumber('lightRoomLength');
+        const lux = positiveNumber('targetLux');
+        const lampLumens = positiveNumber('lampLumens');
+        const factor = positiveNumber('lightFactor');
+        const area = width * length;
+        const requiredLumens = factor ? area * lux / factor : 0;
+        const lamps = lampLumens ? Math.max(1, Math.ceil(requiredLumens / lampLumens)) : 0;
+        const columns = lamps ? Math.max(1, Math.ceil(Math.sqrt(lamps * width / Math.max(length, .01)))) : 0;
+        const rows = columns ? Math.ceil(lamps / columns) : 0;
+        const spacingX = columns ? width / (columns + 1) : 0;
+        const spacingY = rows ? length / (rows + 1) : 0;
+        const estimatedLux = area ? lamps * lampLumens * factor / area : 0;
+        const preview = document.getElementById('lightingPreview');
+        preview.style.setProperty('--light-cols', columns || 1);
+        preview.innerHTML = Array.from({ length: Math.min(lamps, 48) }, () => '<i></i>').join('');
+        document.getElementById('lightingResults').innerHTML = [
+            resultCard('พื้นที่ห้อง', `${formatNumber(area)} ตร.ม.`),
+            resultCard('แสงที่ต้องใช้', `${formatNumber(requiredLumens)} ลูเมน`, `เป้าหมาย ${formatNumber(lux)} lux`),
+            resultCard('จำนวนโคมประมาณ', `${formatNumber(lamps)} โคม`, `โคมละ ${formatNumber(lampLumens)} ลูเมน`),
+            resultCard('จัดผังเริ่มต้น', `${columns} × ${rows} จุด`, `ระยะคร่าว ๆ ${formatNumber(spacingX)} × ${formatNumber(spacingY)} ม.`),
+            resultCard('ความสว่างที่ได้ประมาณ', `${formatNumber(estimatedLux)} lux`, 'ก่อนพิจารณาความสูงและการกระจายแสงจริง', true)
+        ].join('');
+    }
+
+    const furnitureControlIds = ['furnitureWidth', 'furnitureDepth', 'furnitureHeight', 'doorClearWidth', 'doorClearHeight', 'furnitureClearance'];
+    function updateFurnitureCalculator() {
+        const width = positiveNumber('furnitureWidth');
+        const depth = positiveNumber('furnitureDepth');
+        const height = positiveNumber('furnitureHeight');
+        const doorWidth = positiveNumber('doorClearWidth');
+        const doorHeight = positiveNumber('doorClearHeight');
+        const clearance = Math.max(0, Number(document.getElementById('furnitureClearance').value) || 0);
+        const usableWidth = Math.max(0, doorWidth - clearance * 2);
+        const usableHeight = Math.max(0, doorHeight - clearance * 2);
+        const orientations = [
+            ['ตั้งตรงด้านหน้า', width, height],
+            ['ตั้งตรงด้านข้าง', depth, height],
+            ['นอนชิ้นงาน', width, depth]
+        ];
+        const fitting = orientations.find(([, first, second]) =>
+            (first <= usableWidth && second <= usableHeight) || (second <= usableWidth && first <= usableHeight));
+        const smallestSide = Math.min(width, depth, height);
+        const verdict = fitting ? 'มีแนวที่น่าจะผ่าน ✓' : 'ขนาดตรง ๆ ยังไม่ผ่าน ✕';
+        document.getElementById('furnitureResults').innerHTML = [
+            resultCard('ช่องใช้งานหลังเผื่อ', `${formatNumber(usableWidth)} × ${formatNumber(usableHeight)} ซม.`, `เผื่อรอบด้าน ${formatNumber(clearance)} ซม.`),
+            resultCard('ด้านเล็กสุดของชิ้นงาน', `${formatNumber(smallestSide)} ซม.`),
+            resultCard('ผลตรวจเบื้องต้น', verdict, fitting ? `ลองขนแบบ “${fitting[0]}”` : 'ลองถอดชิ้นส่วนหรือใช้ช่องเปิดที่ใหญ่กว่า', true)
+        ].join('');
+    }
+
+    const tableControlIds = ['tableLength', 'tableWidth', 'seatWidth', 'tableEndSeats', 'tableClearance'];
+    function updateTableCalculator() {
+        const length = positiveNumber('tableLength');
+        const width = positiveNumber('tableWidth');
+        const seatWidth = positiveNumber('seatWidth');
+        const endSeats = Number(document.getElementById('tableEndSeats').value);
+        const clearance = Math.max(0, Number(document.getElementById('tableClearance').value) || 0);
+        const eachLongSide = seatWidth ? Math.floor(length / seatWidth) : 0;
+        const totalSeats = eachLongSide * 2 + endSeats;
+        const footprintLength = length + clearance * 2;
+        const footprintWidth = width + clearance * 2;
+        document.getElementById('tableResults').innerHTML = [
+            resultCard('ที่นั่งด้านยาว', `${formatNumber(eachLongSide)} คน/ด้าน`),
+            resultCard('จำนวนที่นั่งรวม', `${formatNumber(totalSeats)} คน`, `รวมหัวโต๊ะ ${endSeats} คน`),
+            resultCard('พื้นที่ใช้งานที่ควรมี', `${formatNumber(footprintLength)} × ${formatNumber(footprintWidth)} ซม.`, `รวมทางใช้งานรอบโต๊ะ ${formatNumber(clearance)} ซม.`, true)
+        ].join('');
+    }
+
     function listenToCalculator(ids, update) {
         ids.forEach(id => {
             const control = document.getElementById(id);
@@ -407,6 +534,11 @@
     listenToCalculator(spacingControlIds, updateSpacingCalculator);
     listenToCalculator(wallControlIds, updateWallCalculator);
     listenToCalculator(tileControlIds, updateTileCalculator);
+    listenToCalculator(wallpaperControlIds, updateWallpaperCalculator);
+    listenToCalculator(sheetControlIds, updateSheetCalculator);
+    listenToCalculator(lightingControlIds, updateLightingCalculator);
+    listenToCalculator(furnitureControlIds, updateFurnitureCalculator);
+    listenToCalculator(tableControlIds, updateTableCalculator);
 
     updateScaleCalculator();
     updatePaperChecker();

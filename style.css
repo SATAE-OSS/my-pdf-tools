@@ -600,6 +600,7 @@ body.dark-mode .squishy-controls button { background: #251d2e; color: #ffe4f0; b
 .interior-result-card small { color: #aa8f9c; font-size: 9px; line-height: 1.5; }
 .interior-result-card.wide { grid-column: 1/-1; min-height: auto; }
 .calculation-note { margin: -4px 0 0; padding: 11px 13px; border-radius: 12px; background: #fff8e8; color: #8c7655; font-size: 10px; line-height: 1.6; }
+.interior-subheading { margin: 5px 0 -4px; padding-top: 16px; border-top: 1px solid #ecd8e2; color: #694b59; font-size: 14px; }
 
 .ceiling-guide-art { position: relative; height: 112px; overflow: hidden; border-radius: 13px; background: linear-gradient(#e8dff0 0 15px,#fff 15px 87px,#f2d7e3 87px); color: #735966; font-size: 9px; }
 .ceiling-guide-art > span { position: absolute; left: 9px; top: 2px; }.ceiling-guide-art > b { position: absolute; left: 9px; bottom: 10px; }
@@ -613,6 +614,10 @@ body.dark-mode .squishy-controls button { background: #251d2e; color: #ffe4f0; b
 .wall-guide-art { position: relative; height: 100px; border: 5px solid #dfb8ca; border-bottom-width: 9px; border-radius: 6px 6px 2px 2px; background: repeating-linear-gradient(90deg,#fff 0 22px,#fff8fb 22px 23px); color: #9b7084; font-size: 9px; }
 .wall-guide-art span { position: absolute; left: 8px; top: 7px; }.wall-guide-art i { position: absolute; left: 23%; bottom: 0; width: 24%; height: 62%; background: #b893a5; }.wall-guide-art b { position: absolute; right: 13%; top: 23%; width: 25%; height: 32%; border: 4px solid #a9bfd7; background: #e3f1fa; }
 .tile-guide-art { min-height: 100px; border-radius: 10px; background: repeating-linear-gradient(0deg,transparent 0 27px,#e4bfd1 27px 29px),repeating-linear-gradient(90deg,#fff8fb 0 42px,#e4bfd1 42px 44px); box-shadow: inset 0 0 0 1px #e7cad8; }
+.wallpaper-guide-art { min-height:100px; border-radius:10px; background:repeating-linear-gradient(90deg,#fff8fb 0 35px,#e7bfd2 35px 37px); box-shadow:inset 0 0 0 1px #e9cedb; }.wallpaper-guide-art::after{content:'⌇  ⌇  ⌇';display:grid;height:100%;place-items:center;color:#d480aa;font-size:28px;letter-spacing:10px}
+.sheet-guide-art { position:relative; min-height:105px; }.sheet-guide-art i,.sheet-guide-art b{position:absolute;width:105px;height:65px;border:2px solid #c786a4;border-radius:5px;background:#f6dce8;box-shadow:7px 7px 0 #e9bfd2}.sheet-guide-art i{left:26%;top:10px;transform:rotate(-5deg)}.sheet-guide-art b{left:38%;top:25px;transform:rotate(4deg);background:#eadcf7;border-color:#a987c5}.sheet-guide-art span{position:absolute;left:50%;bottom:0;transform:translateX(-50%);color:#8f7280;font-size:9px;white-space:nowrap}
+.lighting-guide-art { display:grid; grid-template-columns:repeat(var(--light-cols,3),1fr); gap:12px; min-height:95px; padding:12px; box-sizing:border-box; place-items:center; border-radius:11px; background:#30293a; }.lighting-guide-art i{width:18px;height:18px;border-radius:50%;background:#fff4b8;box-shadow:0 0 5px #fff,0 0 17px #ffd96a}
+.furniture-guide-art { position:relative; min-height:105px; border-radius:10px; background:#f6eaf0; }.furniture-guide-art i{position:absolute;left:18%;bottom:0;width:58px;height:92px;border:5px solid #be8aa2;border-bottom:0;border-radius:5px 5px 0 0;color:#927281;font:normal 8px 'Prompt',sans-serif;text-align:center}.furniture-guide-art b{position:absolute;right:18%;bottom:0;width:68px;height:70px;border-radius:6px 6px 2px 2px;background:#b99bd6;color:#fff;font:600 9px 'Prompt',sans-serif;display:grid;place-items:center;box-shadow:inset 0 -12px rgba(91,61,112,.12)}
 
 body.dark-mode .scale-section-nav,
 body.dark-mode .scale-mode-switch,
@@ -654,6 +659,7 @@ body.dark-mode .interior-result-card small { color: #bda7b4; }
 body.dark-mode .interior-guide p strong,
 body.dark-mode .interior-result-card strong { color: #ffe1ed; }
 body.dark-mode .calculation-note { background: #382f20; color: #e2cc9b; }
+body.dark-mode .interior-subheading { color:#f3d5e2; border-color:#503b57; }
 @media (max-width:680px) {
     .scale-section-nav { grid-template-columns: repeat(2,minmax(0,1fr)); }
     .scale-section-nav button { min-height: 42px; }

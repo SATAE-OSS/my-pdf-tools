@@ -66,7 +66,7 @@
     </section>
 
     <div id="appShell" class="app-shell" hidden>
-    <span class="app-version" title="Jane Tools version 2.1.0">v2.1.0</span>
+    <span class="app-version" title="Jane Tools version 2.2.0">v2.2.0</span>
     <!-- ปุ่มโหมดกลางคืน (เพิ่มใหม่) -->
     <button id="darkModeBtn" class="dark-mode-btn" type="button" aria-label="เปิดโหมดกลางคืน" aria-pressed="false">🌙</button>
     <div class="app-connectivity" aria-live="polite">
@@ -462,7 +462,11 @@
                 <button class="active" type="button" data-interior-tool="ceilingCalc" role="tab">🏗️ ฝ้าและสลิง</button>
                 <button type="button" data-interior-tool="spacingCalc" role="tab">💡 แบ่งระยะ</button>
                 <button type="button" data-interior-tool="wallCalc" role="tab">🧱 พื้นที่ผนัง</button>
-                <button type="button" data-interior-tool="tileCalc" role="tab">◫ กระเบื้อง</button>
+                <button type="button" data-interior-tool="tileCalc" role="tab">◫ พื้น/กระเบื้อง</button>
+                <button type="button" data-interior-tool="wallpaperCalc" role="tab">🧻 วอลล์/บัว</button>
+                <button type="button" data-interior-tool="sheetCalc" role="tab">🪵 วัสดุแผ่น</button>
+                <button type="button" data-interior-tool="lightingCalc" role="tab">💡 แสงสว่าง</button>
+                <button type="button" data-interior-tool="furnitureCalc" role="tab">🛋️ เฟอร์นิเจอร์</button>
             </div>
 
             <section id="ceilingCalc" class="interior-tool active">
@@ -477,6 +481,8 @@
                     <label class="calculator-field"><span>ระดับฝ้าที่ต้องการ</span><div class="field-with-unit"><input id="ceilingHeight" type="number" inputmode="decimal" min="0" step="1" value="270"><span>ซม.</span></div></label>
                     <label class="calculator-field"><span>ระยะสลิงตามแนวกว้าง</span><div class="field-with-unit"><input id="hangerSpacingX" type="number" inputmode="decimal" min="0.1" step="0.05" value="1.2"><span>เมตร</span></div></label>
                     <label class="calculator-field"><span>ระยะสลิงตามแนวยาว</span><div class="field-with-unit"><input id="hangerSpacingY" type="number" inputmode="decimal" min="0.1" step="0.05" value="1.2"><span>เมตร</span></div></label>
+                    <label class="calculator-field"><span>ระยะโครงซอย</span><div class="field-with-unit"><input id="furringSpacing" type="number" inputmode="decimal" min="0.1" step="0.05" value="0.4"><span>เมตร</span></div></label>
+                    <label class="calculator-field"><span>ขอบฝ้าหลุม (ใส่ 0 หากฝ้าเรียบ)</span><div class="field-with-unit"><input id="trayBorderWidth" type="number" inputmode="decimal" min="0" step="5" value="40"><span>ซม.</span></div></label>
                     <label class="calculator-field"><span>ขนาดแผ่นฝ้า</span><select id="ceilingBoardSize"><option value="1.2x2.4">1.20 × 2.40 ม.</option><option value="1.2x2.44">1.20 × 2.44 ม.</option><option value="0.6x1.2">0.60 × 1.20 ม.</option></select></label>
                     <label class="calculator-field"><span>เผื่อเศษ</span><select id="ceilingWaste"><option value="5">5%</option><option value="10" selected>10%</option><option value="15">15%</option></select></label>
                 </div>
@@ -519,6 +525,69 @@
                     <label class="calculator-field"><span>เผื่อตัด/แตก</span><select id="tileWaste"><option value="5">5%</option><option value="10" selected>10%</option><option value="15">15%</option><option value="20">20%</option></select></label>
                 </div>
                 <div class="interior-results" id="tileResults" aria-live="polite"></div>
+            </section>
+
+            <section id="wallpaperCalc" class="interior-tool" hidden>
+                <div class="interior-guide"><div class="wallpaper-guide-art" aria-hidden="true"></div><p><strong>คำนวณสองอย่างพร้อมกัน</strong> จำนวนม้วนวอลเปเปอร์และความยาวบัวรอบห้อง โดยหักช่องประตูออกได้</p></div>
+                <div class="interior-input-grid">
+                    <label class="calculator-field"><span>ความยาวผนังรวม</span><div class="field-with-unit"><input id="wallpaperWallLength" type="number" inputmode="decimal" min="0" step="0.1" value="14"><span>เมตร</span></div></label>
+                    <label class="calculator-field"><span>ความสูงผนัง</span><div class="field-with-unit"><input id="wallpaperWallHeight" type="number" inputmode="decimal" min="0" step="0.1" value="2.7"><span>เมตร</span></div></label>
+                    <label class="calculator-field"><span>ความกว้างม้วน</span><div class="field-with-unit"><input id="wallpaperRollWidth" type="number" inputmode="decimal" min="1" step="1" value="53"><span>ซม.</span></div></label>
+                    <label class="calculator-field"><span>ความยาวม้วน</span><div class="field-with-unit"><input id="wallpaperRollLength" type="number" inputmode="decimal" min="0.1" step="0.1" value="10"><span>เมตร</span></div></label>
+                    <label class="calculator-field"><span>เผื่อตัดต่อลายต่อแถบ</span><div class="field-with-unit"><input id="wallpaperPatternWaste" type="number" inputmode="decimal" min="0" step="1" value="20"><span>ซม.</span></div></label>
+                    <label class="calculator-field"><span>ความกว้างประตูรวม</span><div class="field-with-unit"><input id="baseboardDoors" type="number" inputmode="decimal" min="0" step="0.1" value="0.9"><span>เมตร</span></div></label>
+                    <label class="calculator-field"><span>เผื่อบัว</span><select id="baseboardWaste"><option value="5">5%</option><option value="10" selected>10%</option><option value="15">15%</option></select></label>
+                </div>
+                <div class="interior-results" id="wallpaperResults" aria-live="polite"></div>
+                <p class="calculation-note">วอลเปเปอร์ที่มีลายซ้ำมากอาจใช้เพิ่ม ควรตรวจค่า pattern repeat บนฉลากจริง</p>
+            </section>
+
+            <section id="sheetCalc" class="interior-tool" hidden>
+                <div class="interior-guide"><div class="sheet-guide-art" aria-hidden="true"><i></i><b></b><span>แผ่นมาตรฐาน</span></div><p><strong>ใช้กับไม้อัด MDF ลามิเนต และยิปซัม</strong> คำนวณจากพื้นที่สุทธิและขนาดแผ่นที่ร้านขาย</p></div>
+                <div class="interior-input-grid">
+                    <label class="calculator-field"><span>พื้นที่งานสุทธิ</span><div class="field-with-unit"><input id="sheetArea" type="number" inputmode="decimal" min="0" step="0.1" value="18"><span>ตร.ม.</span></div></label>
+                    <label class="calculator-field"><span>กว้างแผ่น</span><div class="field-with-unit"><input id="sheetWidth" type="number" inputmode="decimal" min="1" step="1" value="1220"><span>มม.</span></div></label>
+                    <label class="calculator-field"><span>ยาวแผ่น</span><div class="field-with-unit"><input id="sheetLength" type="number" inputmode="decimal" min="1" step="1" value="2440"><span>มม.</span></div></label>
+                    <label class="calculator-field"><span>ใช้กี่ชั้น</span><div class="field-with-unit"><input id="sheetLayers" type="number" inputmode="numeric" min="1" max="5" step="1" value="1"><span>ชั้น</span></div></label>
+                    <label class="calculator-field"><span>เผื่อตัด</span><select id="sheetWaste"><option value="5">5%</option><option value="10" selected>10%</option><option value="15">15%</option><option value="20">20%</option></select></label>
+                </div>
+                <div class="interior-results" id="sheetResults" aria-live="polite"></div>
+            </section>
+
+            <section id="lightingCalc" class="interior-tool" hidden>
+                <div class="interior-guide"><div class="lighting-guide-art" id="lightingPreview" aria-hidden="true"></div><p><strong>ประมาณจำนวนโคมเบื้องต้น</strong> จากพื้นที่ ค่าความสว่างที่ต้องการ และลูเมนของโคม</p></div>
+                <div class="interior-input-grid">
+                    <label class="calculator-field"><span>กว้างห้อง</span><div class="field-with-unit"><input id="lightRoomWidth" type="number" inputmode="decimal" min="0" step="0.1" value="4"><span>เมตร</span></div></label>
+                    <label class="calculator-field"><span>ยาวห้อง</span><div class="field-with-unit"><input id="lightRoomLength" type="number" inputmode="decimal" min="0" step="0.1" value="6"><span>เมตร</span></div></label>
+                    <label class="calculator-field"><span>ลักษณะพื้นที่</span><select id="targetLux"><option value="100">ทางเดิน/พักผ่อน · 100 lux</option><option value="200" selected>ห้องทั่วไป · 200 lux</option><option value="300">โต๊ะทำงาน/ครัว · 300 lux</option><option value="500">เขียนแบบ/งานละเอียด · 500 lux</option></select></label>
+                    <label class="calculator-field"><span>ความสว่างต่อโคม</span><div class="field-with-unit"><input id="lampLumens" type="number" inputmode="numeric" min="1" step="50" value="800"><span>ลูเมน</span></div></label>
+                    <label class="calculator-field"><span>ตัวคูณการสูญเสีย</span><select id="lightFactor"><option value="0.8">ห้องสว่าง · 0.80</option><option value="0.7" selected>ทั่วไป · 0.70</option><option value="0.6">ผิวสีเข้ม · 0.60</option></select></label>
+                </div>
+                <div class="interior-results" id="lightingResults" aria-live="polite"></div>
+                <p class="calculation-note">เป็นค่าประมาณเพื่อจัดผังเบื้องต้น ยังไม่แทนการคำนวณแสงจริงซึ่งต้องดูชนิดโคม ความสูง และไฟล์ photometric</p>
+            </section>
+
+            <section id="furnitureCalc" class="interior-tool" hidden>
+                <div class="interior-guide"><div class="furniture-guide-art" aria-hidden="true"><i>ประตู</i><b>ตู้</b></div><p><strong>เช็กก่อนสั่งหรือขนเข้า</strong> ระบบลองทั้งการตั้งตรง ตะแคง และนอนชิ้นงานผ่านช่องเปิด</p></div>
+                <div class="interior-input-grid">
+                    <label class="calculator-field"><span>กว้างเฟอร์นิเจอร์</span><div class="field-with-unit"><input id="furnitureWidth" type="number" inputmode="decimal" min="1" step="1" value="90"><span>ซม.</span></div></label>
+                    <label class="calculator-field"><span>ลึกเฟอร์นิเจอร์</span><div class="field-with-unit"><input id="furnitureDepth" type="number" inputmode="decimal" min="1" step="1" value="55"><span>ซม.</span></div></label>
+                    <label class="calculator-field"><span>สูงเฟอร์นิเจอร์</span><div class="field-with-unit"><input id="furnitureHeight" type="number" inputmode="decimal" min="1" step="1" value="200"><span>ซม.</span></div></label>
+                    <label class="calculator-field"><span>กว้างช่องประตูจริง</span><div class="field-with-unit"><input id="doorClearWidth" type="number" inputmode="decimal" min="1" step="1" value="80"><span>ซม.</span></div></label>
+                    <label class="calculator-field"><span>สูงช่องประตูจริง</span><div class="field-with-unit"><input id="doorClearHeight" type="number" inputmode="decimal" min="1" step="1" value="200"><span>ซม.</span></div></label>
+                    <label class="calculator-field"><span>เผื่อจับและกันชน</span><div class="field-with-unit"><input id="furnitureClearance" type="number" inputmode="decimal" min="0" step="1" value="3"><span>ซม.</span></div></label>
+                </div>
+                <div class="interior-results" id="furnitureResults" aria-live="polite"></div>
+                <h4 class="interior-subheading">🍽️ โต๊ะ จำนวนที่นั่ง และพื้นที่ใช้งาน</h4>
+                <div class="interior-input-grid">
+                    <label class="calculator-field"><span>ยาวโต๊ะ</span><div class="field-with-unit"><input id="tableLength" type="number" inputmode="decimal" min="1" step="1" value="180"><span>ซม.</span></div></label>
+                    <label class="calculator-field"><span>กว้างโต๊ะ</span><div class="field-with-unit"><input id="tableWidth" type="number" inputmode="decimal" min="1" step="1" value="90"><span>ซม.</span></div></label>
+                    <label class="calculator-field"><span>พื้นที่ต่อคนนั่ง</span><div class="field-with-unit"><input id="seatWidth" type="number" inputmode="decimal" min="1" step="1" value="60"><span>ซม.</span></div></label>
+                    <label class="calculator-field"><span>นั่งหัวโต๊ะ</span><select id="tableEndSeats"><option value="2" selected>สองด้าน</option><option value="1">ด้านเดียว</option><option value="0">ไม่นั่งหัวโต๊ะ</option></select></label>
+                    <label class="calculator-field"><span>ระยะใช้งานรอบโต๊ะ</span><div class="field-with-unit"><input id="tableClearance" type="number" inputmode="decimal" min="0" step="1" value="90"><span>ซม.</span></div></label>
+                </div>
+                <div class="interior-results" id="tableResults" aria-live="polite"></div>
+                <p class="calculation-note">ผลนี้เช็กเฉพาะขนาดช่องตรง ๆ ยังต้องดูมุมเลี้ยว โถง บันได มือจับ และชิ้นส่วนที่ยื่นออกมาหน้างาน</p>
             </section>
         </section>
     </div>
