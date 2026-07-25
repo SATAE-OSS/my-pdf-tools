@@ -23,6 +23,7 @@
     <!-- ========================================== -->
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="planner.css">
+    <link rel="stylesheet" href="play-tools.css">
     
     <!-- ไลบรารีสำหรับ Drag & Drop, สร้าง PDF, อ่าน PDF และทำไฟล์ ZIP -->
     <script src="vendor/Sortable.min.js"></script>
@@ -84,7 +85,7 @@
     </section>
 
     <div id="appShell" class="app-shell" hidden>
-    <span class="app-version" title="Jane Tools version 2.9.0">v2.9.0</span>
+    <span class="app-version" title="Jane Tools version 3.0.0">v3.0.0</span>
     <!-- ปุ่มโหมดกลางคืน (เพิ่มใหม่) -->
     <button id="darkModeBtn" class="dark-mode-btn" type="button" aria-label="เปิดโหมดกลางคืน" aria-pressed="false">🌙</button>
     <div class="app-connectivity" aria-live="polite">
@@ -191,7 +192,7 @@
             <button class="featured-tool-card" type="button" onclick="openScaleTool('interiorCalculator')"><span>📐</span><strong>คำนวณงานภายใน</strong><small>ฝ้า สลิง วัสดุ แสง ระยะ และเฟอร์นิเจอร์</small><em>8 เครื่องมือพร้อมใช้ →</em></button>
             <button type="button" onclick="openTab('documentToolsTab', document.getElementById('toolsNavBtn'))"><span>📄</span><strong>งานเอกสาร</strong><small>รวมและแยกไฟล์ PDF</small><em>2 เครื่องมือ →</em></button>
             <button type="button" onclick="openTab('sketchTab', document.getElementById('toolsNavBtn'))"><span>🎨</span><strong>วาดและสเก็ตช์</strong><small>วาดภาพและบันทึกบนคลาวด์</small><em>เปิดกระดาน →</em></button>
-            <button type="button" onclick="openTab('playToolsTab', document.getElementById('toolsNavBtn'))"><span>🧸</span><strong>พักสมอง</strong><small>บับเบิลและสไลม์นุ่ม ๆ</small><em>2 ของเล่น →</em></button>
+            <button type="button" onclick="openTab('playToolsTab', document.getElementById('toolsNavBtn'))"><span>🧸</span><strong>พักสมอง</strong><small>เล่น จัดห้อง และทดลองสี</small><em>4 ของเล่น →</em></button>
         </div>
     </div>
 
@@ -208,6 +209,8 @@
         <div class="tool-hub-grid category-choice-grid">
             <button type="button" onclick="openTab('bubbleTab', document.getElementById('toolsNavBtn'))"><span>🫧</span><strong>บีบบับเบิล</strong><small>กดให้ครบแล้วกระดานจะเริ่มใหม่ให้อัตโนมัติ</small><em>ไปเล่นบับเบิล →</em></button>
             <button type="button" onclick="openTab('squishyTab', document.getElementById('toolsNavBtn'))"><span>🫠</span><strong>เล่นสไลม์</strong><small>ดึง บีบ ยืด และฟังเสียงนุ่ม ๆ</small><em>ไปเล่นสไลม์ →</em></button>
+            <button type="button" onclick="openTab('miniRoomTab', document.getElementById('toolsNavBtn'))"><span>🛋️</span><strong>ห้องจิ๋วจัดเฟอร์</strong><small>ลาก หมุน และจัดแปลนห้องในแบบของตัวเอง</small><em>เริ่มจัดห้อง →</em></button>
+            <button type="button" onclick="openTab('gelMixerTab', document.getElementById('toolsNavBtn'))"><span>🎨</span><strong>เครื่องผสมสีเจล</strong><small>หยดสี ใช้นิ้วคน แล้วเก็บสีที่ชอบไว้</small><em>เริ่มผสมสี →</em></button>
         </div>
     </div>
 
@@ -289,6 +292,103 @@
             <button type="button" data-slime-color="purple" class="active" aria-label="สีม่วง">💜</button>
             <button type="button" data-slime-color="mint" aria-label="สีเขียว">💚</button>
             <button type="button" id="resetSquishyBtn">คืนรูป</button>
+        </div>
+    </div>
+
+    <div id="miniRoomTab" class="container tab-content play-experience" style="display: none;">
+        <div class="play-page-heading">
+            <button class="category-back" type="button" onclick="openTab('playToolsTab', document.getElementById('toolsNavBtn'))">← ของเล่น</button>
+            <div><span class="page-kicker">MINI INTERIOR</span><h2>🛋️ ห้องจิ๋วจัดเฟอร์</h2><p>มองจากด้านบนเหมือนวางแปลนจริง ลากด้วยนิ้วเดียวและใช้สองนิ้วหมุนหรือย่อขยาย</p></div>
+        </div>
+        <div class="mini-room-layout">
+            <aside class="room-toolbox">
+                <section>
+                    <div class="play-section-title"><strong>เพิ่มเฟอร์นิเจอร์</strong><small>แตะเพื่อวางกลางห้อง</small></div>
+                    <div class="furniture-picker" id="furniturePicker">
+                        <button type="button" data-furniture-type="sofa"><span>🛋️</span>โซฟา</button>
+                        <button type="button" data-furniture-type="chair"><span>🪑</span>เก้าอี้</button>
+                        <button type="button" data-furniture-type="table"><span>◯</span>โต๊ะ</button>
+                        <button type="button" data-furniture-type="bed"><span>🛏️</span>เตียง</button>
+                        <button type="button" data-furniture-type="rug"><span>▰</span>พรม</button>
+                        <button type="button" data-furniture-type="plant"><span>🪴</span>ต้นไม้</button>
+                        <button type="button" data-furniture-type="lamp"><span>💡</span>โคมไฟ</button>
+                        <button type="button" data-furniture-type="shelf"><span>▥</span>ชั้นวาง</button>
+                    </div>
+                </section>
+                <section>
+                    <div class="play-section-title"><strong>บรรยากาศห้อง</strong><small>เลือกพื้นและผนัง</small></div>
+                    <div class="room-color-row"><span>พื้น</span><div id="roomFloorColors" class="toy-color-swatches">
+                        <button class="active" type="button" data-room-floor="#eadbc7" style="--swatch:#eadbc7" aria-label="พื้นสีไม้ครีม"></button>
+                        <button type="button" data-room-floor="#d8c5aa" style="--swatch:#d8c5aa" aria-label="พื้นสีไม้เข้ม"></button>
+                        <button type="button" data-room-floor="#d9d7d2" style="--swatch:#d9d7d2" aria-label="พื้นสีเทา"></button>
+                        <button type="button" data-room-floor="#c8dfd4" style="--swatch:#c8dfd4" aria-label="พื้นสีมิ้นต์"></button>
+                    </div></div>
+                    <div class="room-color-row"><span>ผนัง</span><div id="roomWallColors" class="toy-color-swatches">
+                        <button class="active" type="button" data-room-wall="#fff8f2" style="--swatch:#fff8f2" aria-label="ผนังสีขาวครีม"></button>
+                        <button type="button" data-room-wall="#f5dbe4" style="--swatch:#f5dbe4" aria-label="ผนังสีชมพู"></button>
+                        <button type="button" data-room-wall="#e3daf2" style="--swatch:#e3daf2" aria-label="ผนังสีม่วง"></button>
+                        <button type="button" data-room-wall="#dce8ef" style="--swatch:#dce8ef" aria-label="ผนังสีฟ้า"></button>
+                    </div></div>
+                </section>
+            </aside>
+            <section class="room-workspace">
+                <div class="room-canvas-wrap">
+                    <canvas id="miniRoomCanvas" width="900" height="620" aria-label="พื้นที่จัดห้องจิ๋ว"></canvas>
+                    <span class="room-canvas-badge">แปลนมุมบน · แตะของเพื่อเลือก</span>
+                </div>
+                <div class="selected-furniture-controls" aria-label="จัดการเฟอร์นิเจอร์ที่เลือก">
+                    <button id="roomRotateLeftBtn" type="button">↶ หมุน</button>
+                    <button id="roomShrinkBtn" type="button">− ย่อ</button>
+                    <button id="roomGrowBtn" type="button">＋ ขยาย</button>
+                    <button id="roomDuplicateBtn" type="button">⧉ ทำซ้ำ</button>
+                    <button id="roomDeleteBtn" class="danger-soft" type="button">✕ ลบ</button>
+                </div>
+                <div class="play-action-row">
+                    <button class="btn btn-outline" id="roomResetBtn" type="button">↺ จัดห้องใหม่</button>
+                    <button class="btn" id="roomDownloadBtn" type="button">⬇ บันทึกภาพห้อง</button>
+                </div>
+                <p class="play-live-message" id="roomBuilderMessage" aria-live="polite">เลือกเฟอร์นิเจอร์แล้วลองลากวางดูได้เลย</p>
+            </section>
+        </div>
+    </div>
+
+    <div id="gelMixerTab" class="container tab-content play-experience" style="display: none;">
+        <div class="play-page-heading">
+            <button class="category-back" type="button" onclick="openTab('playToolsTab', document.getElementById('toolsNavBtn'))">← ของเล่น</button>
+            <div><span class="page-kicker">COLOR LAB</span><h2>🎨 เครื่องผสมสีเจล</h2><p>เลือกสีแล้วแตะหยดลงไป ลากนิ้ววนเพื่อให้เจลค่อย ๆ ผสมกัน</p></div>
+        </div>
+        <div class="gel-mixer-layout">
+            <section class="gel-lab">
+                <div class="gel-canvas-wrap">
+                    <canvas id="gelMixerCanvas" width="900" height="560" aria-label="ถาดผสมสีเจล"></canvas>
+                    <div class="gel-glass-shine" aria-hidden="true"></div>
+                    <span class="gel-canvas-hint">แตะเพื่อหยด · ลากเพื่อคนสี</span>
+                </div>
+                <div class="gel-controls">
+                    <div class="gel-color-picker" id="gelColorPicker" aria-label="เลือกสีเจล">
+                        <button class="active" type="button" data-gel-color="#ff6f9f" style="--gel-color:#ff6f9f" aria-label="สีชมพู"></button>
+                        <button type="button" data-gel-color="#8b6df2" style="--gel-color:#8b6df2" aria-label="สีม่วง"></button>
+                        <button type="button" data-gel-color="#4f91ed" style="--gel-color:#4f91ed" aria-label="สีฟ้า"></button>
+                        <button type="button" data-gel-color="#40c99b" style="--gel-color:#40c99b" aria-label="สีเขียว"></button>
+                        <button type="button" data-gel-color="#ffd166" style="--gel-color:#ffd166" aria-label="สีเหลือง"></button>
+                        <button type="button" data-gel-color="#ff8c42" style="--gel-color:#ff8c42" aria-label="สีส้ม"></button>
+                        <button type="button" data-gel-color="#f24f4f" style="--gel-color:#f24f4f" aria-label="สีแดง"></button>
+                        <button type="button" data-gel-color="#f7f2ee" style="--gel-color:#f7f2ee" aria-label="สีขาว"></button>
+                    </div>
+                    <label class="gel-drop-size">ขนาดหยด<input id="gelDropSize" type="range" min="26" max="86" value="56"></label>
+                    <button class="gel-clear-btn" id="gelClearBtn" type="button">ล้างถาด</button>
+                </div>
+            </section>
+            <aside class="gel-result-panel">
+                <div class="play-section-title"><strong>สีที่ผสมได้</strong><small>คำนวณจากสีที่หยดลงไป</small></div>
+                <div class="mixed-color-card">
+                    <div id="gelMixedSwatch" class="mixed-color-swatch"></div>
+                    <div><span id="gelMixedHex">ยังไม่ได้หยดสี</span><small id="gelMixDescription">เลือกสองสีขึ้นไปแล้วลองคนดู</small></div>
+                </div>
+                <button class="btn" id="saveGelColorBtn" type="button" disabled>♡ เก็บสีนี้ไว้</button>
+                <div class="saved-gel-heading"><strong>พาเลตที่เก็บไว้</strong><button id="clearGelPaletteBtn" type="button">ล้าง</button></div>
+                <div class="saved-gel-palette" id="savedGelPalette"><p>ยังไม่มีสีที่บันทึกไว้</p></div>
+            </aside>
         </div>
     </div>
 
@@ -864,6 +964,7 @@
     <script src="vendor/supabase.js"></script>
     <script src="supabase-config.js"></script>
     <script src="script.js"></script>
+    <script src="play-tools.js"></script>
     <script src="scale-tools.js"></script>
     <script src="cloud-drawings.js"></script>
     <script src="planner.js"></script>

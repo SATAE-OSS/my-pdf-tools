@@ -1,9 +1,11 @@
-const CACHE_NAME = 'jane-tools-v37';
+const CACHE_NAME = 'jane-tools-v38';
 const urlsToCache = [
   './',
   './index.html',
   './style.css',
+  './play-tools.css',
   './script.js',
+  './play-tools.js',
   './scale-tools.js',
   './cloud-drawings.js',
   './planner.js',
