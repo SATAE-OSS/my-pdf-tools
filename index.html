@@ -50,23 +50,30 @@
                     <input type="email" id="authEmail" autocomplete="email" inputmode="email" placeholder="name@example.com">
                     <button class="btn" id="sendLoginLinkBtn" type="button">รับรหัส OTP</button>
                 </div>
-                <small>เราจะส่งรหัส 6 หลักให้ทางอีเมล ไม่ต้องจำรหัสผ่าน</small>
+                <small>กดครั้งเดียวแล้วรออีเมลสักครู่ เราจะส่งรหัส 6 หลักให้โดยไม่ต้องใช้รหัสผ่าน</small>
             </div>
             <div id="otpLoginStep" class="auth-step" hidden>
-                <label for="otpCode">รหัส OTP จากอีเมล</label>
+                <div class="auth-step-heading">
+                    <label for="otpCode">รหัส OTP จากอีเมล</label>
+                    <span id="otpEmailLabel"></span>
+                </div>
                 <div class="auth-inline-form otp-form">
                     <input type="text" id="otpCode" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" placeholder="000000">
                     <button class="btn" id="verifyOtpBtn" type="button">เข้าใช้งาน</button>
                 </div>
-                <button class="text-btn" id="changeLoginEmailBtn" type="button">เปลี่ยนอีเมลหรือส่งรหัสใหม่</button>
+                <div class="auth-secondary-actions">
+                    <button class="text-btn" id="resendOtpBtn" type="button">ส่งรหัสอีกครั้ง</button>
+                    <button class="text-btn" id="changeLoginEmailBtn" type="button">ใช้อีเมลอื่น</button>
+                </div>
             </div>
+            <p id="authCooldownNote" class="auth-cooldown-note" role="status" hidden></p>
             <p id="authGateMessage" class="cloud-message" role="status" aria-live="polite"></p>
             <div class="auth-privacy"><span>🔒</span> ข้อมูลของแต่ละบัญชีแยกจากกัน</div>
         </div>
     </section>
 
     <div id="appShell" class="app-shell" hidden>
-    <span class="app-version" title="Jane Tools version 2.7.0">v2.7.0</span>
+    <span class="app-version" title="Jane Tools version 2.8.0">v2.8.0</span>
     <!-- ปุ่มโหมดกลางคืน (เพิ่มใหม่) -->
     <button id="darkModeBtn" class="dark-mode-btn" type="button" aria-label="เปิดโหมดกลางคืน" aria-pressed="false">🌙</button>
     <div class="app-connectivity" aria-live="polite">

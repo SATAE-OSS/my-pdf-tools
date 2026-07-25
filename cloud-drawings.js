@@ -10,7 +10,10 @@ const emailLoginStep = document.getElementById('emailLoginStep');
 const otpLoginStep = document.getElementById('otpLoginStep');
 const otpCode = document.getElementById('otpCode');
 const verifyOtpBtn = document.getElementById('verifyOtpBtn');
+const resendOtpBtn = document.getElementById('resendOtpBtn');
 const changeLoginEmailBtn = document.getElementById('changeLoginEmailBtn');
+const otpEmailLabel = document.getElementById('otpEmailLabel');
+const authCooldownNote = document.getElementById('authCooldownNote');
 const signOutBtn = document.getElementById('signOutBtn');
 const currentUserEmail = document.getElementById('currentUserEmail');
 const cloudStatus = document.getElementById('cloudStatus');
@@ -40,6 +43,8 @@ const headerUserEmail = document.getElementById('headerUserEmail');
 
 let cloudUser = null;
 let pendingLoginEmail = sessionStorage.getItem('pdf-magic-login-email') || '';
+const AUTH_RESEND_AT_KEY = 'jane-auth-resend-at';
+let authCooldownTimer = null;
 
 function setCloudMessage(message = '', type = '') {
     cloudMessage.textContent = message;
@@ -54,6 +59,100 @@ function setButtonBusy(button, busy, busyText) {
     if (busy) button.dataset.originalText = button.textContent;
     button.disabled = busy;
     button.textContent = busy ? busyText : button.dataset.originalText;
+}
+
+function getAuthCooldownSeconds() {
+    const resendAt = Number(sessionStorage.getItem(AUTH_RESEND_AT_KEY) || 0);
+    return Math.max(0, Math.ceil((resendAt - Date.now()) / 1000));
+}
+
+function formatAuthCooldown(totalSeconds) {
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+}
+
+function updateAuthCooldownUI() {
+    const remaining = getAuthCooldownSeconds();
+    if (remaining > 0) {
+        const countdown = formatAuthCooldown(remaining);
+        sendLoginLinkBtn.disabled = true;
+        resendOtpBtn.disabled = true;
+        sendLoginLinkBtn.textContent = `ส่งใหม่ได้ใน ${countdown}`;
+        resendOtpBtn.textContent = `ส่งใหม่ได้ใน ${countdown}`;
+        authCooldownNote.hidden = false;
+        authCooldownNote.textContent = 'ใช้รหัสล่าสุดในอีเมลได้เลย ระบบพักปุ่มส่งใหม่ชั่วคราวเพื่อป้องกันการขอรหัสถี่เกินไป';
+        return;
+    }
+
+    sessionStorage.removeItem(AUTH_RESEND_AT_KEY);
+    sendLoginLinkBtn.disabled = false;
+    resendOtpBtn.disabled = false;
+    sendLoginLinkBtn.textContent = 'รับรหัส OTP';
+    resendOtpBtn.textContent = 'ส่งรหัสอีกครั้ง';
+    authCooldownNote.hidden = true;
+    if (authCooldownTimer) {
+        clearInterval(authCooldownTimer);
+        authCooldownTimer = null;
+    }
+}
+
+function startAuthCooldown(seconds) {
+    sessionStorage.setItem(AUTH_RESEND_AT_KEY, String(Date.now() + (seconds * 1000)));
+    updateAuthCooldownUI();
+    if (authCooldownTimer) clearInterval(authCooldownTimer);
+    authCooldownTimer = setInterval(updateAuthCooldownUI, 1000);
+}
+
+function isEmailRateLimitError(error) {
+    const detail = `${error?.code || ''} ${error?.message || ''}`;
+    return error?.status === 429 || /rate.?limit|too many|over_email_send_rate_limit/i.test(detail);
+}
+
+function friendlyAuthError(error, action = 'send') {
+    const detail = `${error?.code || ''} ${error?.message || ''}`;
+    if (isEmailRateLimitError(error)) {
+        return 'ขอรหัสทางอีเมลถี่เกินไป ใช้รหัสล่าสุดที่ได้รับก่อน หรือรอให้เวลานับถอยหลังหมดแล้วลองใหม่ หากยังขึ้นข้อความเดิมอาจต้องรอระบบประมาณ 1 ชั่วโมง';
+    }
+    if (/invalid.*email|email.*invalid/i.test(detail)) return 'รูปแบบอีเมลไม่ถูกต้อง กรุณาตรวจอีเมลอีกครั้ง';
+    if (/expired|invalid.*token|token.*invalid|otp/i.test(detail) && action === 'verify') {
+        return 'รหัสไม่ถูกต้องหรือหมดอายุ ลองตรวจรหัสล่าสุดในอีเมลอีกครั้ง';
+    }
+    if (/network|fetch|offline/i.test(detail)) return 'เชื่อมต่ออินเทอร์เน็ตไม่ได้ กรุณาตรวจสัญญาณแล้วลองใหม่';
+    return action === 'verify'
+        ? 'ตรวจรหัสไม่สำเร็จ กรุณาลองกรอกรหัสล่าสุดอีกครั้ง'
+        : 'ส่งรหัสไม่สำเร็จ กรุณารอสักครู่แล้วลองใหม่';
+}
+
+function showOtpStep(email) {
+    pendingLoginEmail = email;
+    sessionStorage.setItem('pdf-magic-login-email', email);
+    authEmail.value = email;
+    otpEmailLabel.textContent = email;
+    emailLoginStep.hidden = true;
+    otpLoginStep.hidden = false;
+}
+
+async function requestLoginCode(email, button) {
+    setButtonBusy(button, true, 'กำลังส่ง...');
+    setCloudMessage('');
+    const { error } = await supabaseClient.auth.signInWithOtp({ email });
+    setButtonBusy(button, false);
+
+    if (error) {
+        if (isEmailRateLimitError(error)) {
+            showOtpStep(email);
+            startAuthCooldown(300);
+        }
+        setCloudMessage(friendlyAuthError(error, 'send'), 'error');
+        return false;
+    }
+
+    showOtpStep(email);
+    startAuthCooldown(60);
+    otpCode.focus();
+    setCloudMessage('ส่งรหัสแล้ว กรุณาตรวจกล่องจดหมายหรืออีเมลขยะ แล้วกรอกรหัส 6 หลัก', 'success');
+    return true;
 }
 
 function updateAuthUI(user) {
@@ -71,7 +170,11 @@ function updateAuthUI(user) {
         const waitingForOtp = Boolean(pendingLoginEmail);
         emailLoginStep.hidden = waitingForOtp;
         otpLoginStep.hidden = !waitingForOtp;
-        if (waitingForOtp) authEmail.value = pendingLoginEmail;
+        if (waitingForOtp) {
+            authEmail.value = pendingLoginEmail;
+            otpEmailLabel.textContent = pendingLoginEmail;
+        }
+        updateAuthCooldownUI();
     }
     const savedTitle = localStorage.getItem('pdf-magic-drawing-title');
     if (signedIn && savedTitle) drawingTitle.value = savedTitle;
@@ -90,21 +193,7 @@ sendLoginLinkBtn.addEventListener('click', async () => {
     // เก็บงานไว้ก่อน เพราะลิงก์อีเมลอาจเปิดเว็บในแท็บใหม่
     saveCanvasDraft();
     localStorage.setItem('pdf-magic-drawing-title', drawingTitle.value.trim());
-    setButtonBusy(sendLoginLinkBtn, true, 'กำลังส่ง...');
-    setCloudMessage('');
-    const { error } = await supabaseClient.auth.signInWithOtp({ email });
-    setButtonBusy(sendLoginLinkBtn, false);
-
-    if (error) {
-        setCloudMessage(`ส่งอีเมลไม่สำเร็จ: ${error.message}`, 'error');
-        return;
-    }
-    pendingLoginEmail = email;
-    sessionStorage.setItem('pdf-magic-login-email', email);
-    emailLoginStep.hidden = true;
-    otpLoginStep.hidden = false;
-    otpCode.focus();
-    setCloudMessage('ส่งรหัสแล้ว กรุณาตรวจอีเมลและกรอกรหัส 6 หลัก', 'success');
+    await requestLoginCode(email, sendLoginLinkBtn);
 });
 
 authEmail.addEventListener('keydown', event => {
@@ -132,7 +221,7 @@ verifyOtpBtn.addEventListener('click', async () => {
     });
     setButtonBusy(verifyOtpBtn, false);
     if (error) {
-        setCloudMessage(`รหัสไม่ถูกต้องหรือหมดอายุ: ${error.message}`, 'error');
+        setCloudMessage(friendlyAuthError(error, 'verify'), 'error');
         return;
     }
     sessionStorage.removeItem('pdf-magic-login-email');
@@ -141,11 +230,19 @@ verifyOtpBtn.addEventListener('click', async () => {
     setCloudMessage('เข้าสู่ระบบเรียบร้อยแล้ว', 'success');
 });
 
+resendOtpBtn.addEventListener('click', async () => {
+    if (!pendingLoginEmail || getAuthCooldownSeconds() > 0) return;
+    await requestLoginCode(pendingLoginEmail, resendOtpBtn);
+});
+
 changeLoginEmailBtn.addEventListener('click', () => {
+    pendingLoginEmail = '';
+    sessionStorage.removeItem('pdf-magic-login-email');
+    otpCode.value = '';
     otpLoginStep.hidden = true;
     emailLoginStep.hidden = false;
-    authEmail.value = pendingLoginEmail;
     authEmail.focus();
+    setCloudMessage('');
 });
 
 signOutBtn.addEventListener('click', async () => {
@@ -528,9 +625,11 @@ async function showSharedDrawingFromUrl() {
 
 if (pendingLoginEmail) {
     authEmail.value = pendingLoginEmail;
+    otpEmailLabel.textContent = pendingLoginEmail;
     emailLoginStep.hidden = true;
     otpLoginStep.hidden = false;
 }
+updateAuthCooldownUI();
 
 showSharedDrawingFromUrl();
 
