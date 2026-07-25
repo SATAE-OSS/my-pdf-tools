@@ -438,3 +438,94 @@ create policy "Users can delete their material images"
         bucket_id = 'material-images'
         and (storage.foldername(name))[1] = (select auth.uid())::text
     );
+
+-- สัตว์เลี้ยงคู่เรียนของแต่ละบัญชี
+create table if not exists public.study_pets (
+    user_id uuid primary key default auth.uid() references auth.users(id) on delete cascade,
+    species text not null default 'pig' check (species in ('pig', 'dog', 'cat', 'rabbit', 'capybara')),
+    name text not null default 'โมจิ' check (char_length(name) between 1 and 30),
+    petals integer not null default 10 check (petals >= 0),
+    happiness integer not null default 75 check (happiness between 0 and 100),
+    owned_accessories text[] not null default '{}',
+    equipped_accessory text not null default '' check (equipped_accessory in ('', 'ribbon', 'glasses', 'hat')),
+    fed_at timestamptz,
+    petted_at timestamptz,
+    created_at timestamptz not null default now(),
+    updated_at timestamptz not null default now()
+);
+
+alter table public.study_pets enable row level security;
+
+drop policy if exists "Users can read their study pet" on public.study_pets;
+create policy "Users can read their study pet"
+    on public.study_pets for select to authenticated
+    using ((select auth.uid()) = user_id);
+
+drop policy if exists "Users can create their study pet" on public.study_pets;
+create policy "Users can create their study pet"
+    on public.study_pets for insert to authenticated
+    with check ((select auth.uid()) = user_id);
+
+drop policy if exists "Users can update their study pet" on public.study_pets;
+create policy "Users can update their study pet"
+    on public.study_pets for update to authenticated
+    using ((select auth.uid()) = user_id)
+    with check ((select auth.uid()) = user_id);
+
+drop policy if exists "Users can delete their study pet" on public.study_pets;
+create policy "Users can delete their study pet"
+    on public.study_pets for delete to authenticated
+    using ((select auth.uid()) = user_id);
+
+grant select, insert, update, delete on public.study_pets to authenticated;
+
+drop trigger if exists set_study_pets_updated_at on public.study_pets;
+create trigger set_study_pets_updated_at
+    before update on public.study_pets
+    for each row execute function public.set_updated_at();
+
+alter table public.homework_tasks
+    add column if not exists pet_rewarded boolean not null default false;
+
+create or replace function public.reward_pet_for_homework(p_task_id uuid)
+returns boolean
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+    rewarded boolean := false;
+begin
+    if exists (
+        select 1
+        from public.homework_tasks
+        where id = p_task_id
+          and user_id = auth.uid()
+          and status = 'completed'
+          and pet_rewarded = false
+    ) and exists (
+        select 1
+        from public.study_pets
+        where user_id = auth.uid()
+    ) then
+        update public.homework_tasks
+        set pet_rewarded = true
+        where id = p_task_id
+          and user_id = auth.uid()
+          and pet_rewarded = false;
+
+        if found then
+            update public.study_pets
+            set petals = petals + 3,
+                happiness = least(100, happiness + 5),
+                updated_at = now()
+            where user_id = auth.uid();
+            rewarded := true;
+        end if;
+    end if;
+    return rewarded;
+end;
+$$;
+
+revoke all on function public.reward_pet_for_homework(uuid) from public;
+grant execute on function public.reward_pet_for_homework(uuid) to authenticated;

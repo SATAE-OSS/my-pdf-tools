@@ -45,6 +45,9 @@
         if (/relation.*(student_courses|homework_tasks).*does not exist/i.test(message)) {
             return 'ยังไม่ได้ติดตั้งตารางเรียนใน Supabase กรุณารันไฟล์ supabase-setup.sql รุ่นล่าสุดก่อน';
         }
+        if (/pet_rewarded|reward_pet_for_homework/i.test(message)) {
+            return 'ต้องอัปเดตระบบสัตว์เลี้ยง กรุณารันไฟล์ supabase-setup.sql รุ่นล่าสุดใน Supabase';
+        }
         if (/row-level security|permission denied|policy/i.test(message)) return 'สิทธิ์ฐานข้อมูลยังตั้งค่าไม่ครบ กรุณารัน SQL ตั้งค่า RLS อีกครั้ง';
         return message || 'เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ';
     }
@@ -307,7 +310,7 @@
         setPlannerMessage('homeworkMessage', 'กำลังโหลด...');
         const [courseResult, homeworkResult] = await Promise.all([
             supabase.from('student_courses').select('id,user_id,name,code,instructor,day_of_week,start_time,end_time,room,color,created_at').order('day_of_week').order('start_time'),
-            supabase.from('homework_tasks').select('id,user_id,course_id,title,details,due_at,original_due_at,status,timing_status,completed_at,created_at,updated_at').order('due_at')
+            supabase.from('homework_tasks').select('id,user_id,course_id,title,details,due_at,original_due_at,status,timing_status,pet_rewarded,completed_at,created_at,updated_at').order('due_at')
         ]);
         if (courseResult.error || homeworkResult.error) {
             const message = friendlyPlannerError(courseResult.error || homeworkResult.error);
@@ -549,7 +552,18 @@
             const task = homework.find(item => item.id === toggleButton.dataset.toggleHomework);
             const complete = task.status !== 'completed';
             const { error } = await supabase.from('homework_tasks').update({ status: complete ? 'completed' : 'pending', completed_at: complete ? new Date().toISOString() : null }).eq('id', task.id);
-            if (error) setPlannerMessage('homeworkMessage', friendlyPlannerError(error), 'error'); else await loadPlannerData();
+            if (error) {
+                setPlannerMessage('homeworkMessage', friendlyPlannerError(error), 'error');
+            } else {
+                if (complete && !task.pet_rewarded) {
+                    const rewardResult = await supabase.rpc('reward_pet_for_homework', { p_task_id: task.id });
+                    if (!rewardResult.error && rewardResult.data) {
+                        setPlannerMessage('homeworkMessage', 'ทำงานสำเร็จแล้ว รับ 3 กลีบดอกไม้ให้น้อง 🌸', 'success');
+                        window.dispatchEvent(new CustomEvent('jane:pet-updated'));
+                    }
+                }
+                await loadPlannerData();
+            }
         }
         if (editButton) openHomeworkDialog(homework.find(task => task.id === editButton.dataset.editHomework));
         if (rescheduleButton) openRescheduleDialog(homework.find(task => task.id === rescheduleButton.dataset.rescheduleHomework));

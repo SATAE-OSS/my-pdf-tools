@@ -1,16 +1,18 @@
-const CACHE_NAME = 'jane-tools-v41';
+const CACHE_NAME = 'jane-tools-v42';
 const urlsToCache = [
   './',
   './index.html',
   './style.css',
   './play-tools.css',
   './field-tools.css',
+  './pet.css',
   './script.js',
   './play-tools.js',
   './scale-tools.js',
   './cloud-drawings.js',
   './planner.js',
   './field-tools.js',
+  './pet.js',
   './planner.css',
   './pwa-ui.js',
   './supabase-config.js',

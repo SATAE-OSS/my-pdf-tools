@@ -25,6 +25,7 @@
     <link rel="stylesheet" href="planner.css">
     <link rel="stylesheet" href="play-tools.css">
     <link rel="stylesheet" href="field-tools.css">
+    <link rel="stylesheet" href="pet.css">
     
     <!-- ไลบรารีสำหรับ Drag & Drop, สร้าง PDF, อ่าน PDF และทำไฟล์ ZIP -->
     <script src="vendor/Sortable.min.js"></script>
@@ -86,7 +87,7 @@
     </section>
 
     <div id="appShell" class="app-shell" hidden>
-    <span class="app-version" title="Jane Tools version 3.2.0">v3.2.0</span>
+    <span class="app-version" title="Jane Tools version 3.3.0">v3.3.0</span>
     <!-- ปุ่มโหมดกลางคืน (เพิ่มใหม่) -->
     <button id="darkModeBtn" class="dark-mode-btn" type="button" aria-label="เปิดโหมดกลางคืน" aria-pressed="false">🌙</button>
     <div class="app-connectivity" aria-live="polite">
@@ -127,6 +128,32 @@
             <article><span>📚</span><div><strong id="todayClassCount">0</strong><small>วิชาวันนี้</small></div></article>
             <article><span>📝</span><div><strong id="pendingHomeworkCount">0</strong><small>งานที่ยังไม่เสร็จ</small></div></article>
             <article><span>⏰</span><div><strong id="dueSoonCount">0</strong><small>ใกล้ถึงกำหนด</small></div></article>
+        </section>
+        <section class="study-pet-card" id="studyPetCard" aria-live="polite">
+            <div class="pet-home-scene">
+                <div class="pet-sparkles" aria-hidden="true">✦　·　✧</div>
+                <div id="dashboardPetAvatar" class="pet-avatar pet-empty" aria-label="ยังไม่ได้เลือกสัตว์เลี้ยง">
+                    <span class="pet-ear pet-ear-left"></span><span class="pet-ear pet-ear-right"></span>
+                    <span class="pet-head"><i class="pet-eye pet-eye-left"></i><i class="pet-eye pet-eye-right"></i><b class="pet-muzzle"></b><em class="pet-mouth"></em></span>
+                    <span class="pet-accessory" aria-hidden="true"></span>
+                </div>
+                <span class="pet-shadow" aria-hidden="true"></span>
+            </div>
+            <div class="pet-card-content">
+                <span class="page-kicker">STUDY BUDDY</span>
+                <h3 id="studyPetName">รับสัตว์เลี้ยงคู่เรียนกันไหม?</h3>
+                <p id="studyPetMessage">ทำการบ้านสำเร็จเพื่อรับกลีบดอกไม้ แล้วนำมาให้อาหารหรือปลดล็อกของแต่ง</p>
+                <div class="pet-status-row" id="petStatusRow" hidden>
+                    <span>🌸 <strong id="petPetals">0</strong> กลีบ</span>
+                    <span>💗 ความสุข <strong id="petHappiness">0</strong>%</span>
+                </div>
+                <div class="pet-actions">
+                    <button class="btn" id="choosePetBtn" type="button">เลือกสัตว์เลี้ยง</button>
+                    <button class="pet-action-btn" id="petPetBtn" type="button" hidden>🫳 ลูบหัว</button>
+                    <button class="pet-action-btn" id="feedPetBtn" type="button" hidden>🥕 ให้อาหาร · 2 🌸</button>
+                    <button class="pet-action-btn" id="petClosetBtn" type="button" hidden>🎀 ของแต่ง</button>
+                </div>
+            </div>
         </section>
         <div class="dashboard-grid">
             <section class="dashboard-card">
@@ -1020,6 +1047,29 @@
         </form>
     </dialog>
 
+    <dialog id="petDialog" class="app-dialog planner-dialog pet-dialog" aria-labelledby="petDialogTitle">
+        <form id="petForm" method="dialog">
+            <div class="dialog-title-row"><div class="dialog-icon">🐾</div><div><h3 id="petDialogTitle">เลือกเพื่อนคู่เรียน</h3><p>เปลี่ยนตัวภายหลังได้ ของและกลีบดอกไม้ยังอยู่เหมือนเดิม</p></div></div>
+            <div class="pet-choice-grid" role="radiogroup" aria-label="เลือกชนิดสัตว์เลี้ยง">
+                <button class="active" type="button" data-pet-species="pig"><span>🐷</span><strong>หมู</strong></button>
+                <button type="button" data-pet-species="dog"><span>🐶</span><strong>หมา</strong></button>
+                <button type="button" data-pet-species="cat"><span>🐱</span><strong>แมว</strong></button>
+                <button type="button" data-pet-species="rabbit"><span>🐰</span><strong>กระต่าย</strong></button>
+                <button type="button" data-pet-species="capybara"><span>🟤</span><strong>คาปิบาร่า</strong></button>
+            </div>
+            <div class="planner-form-grid"><label class="span-two">ชื่อสัตว์เลี้ยง<input id="petNameInput" type="text" maxlength="30" required placeholder="ตั้งชื่อให้น้อง"></label></div>
+            <p id="petFormMessage" class="planner-message" role="status"></p>
+            <div class="dialog-actions"><button class="btn btn-outline" id="cancelPetBtn" type="button">ยกเลิก</button><button class="btn" id="savePetBtn" type="submit">รับน้องมาอยู่ด้วย</button></div>
+        </form>
+    </dialog>
+
+    <dialog id="petClosetDialog" class="app-dialog planner-dialog pet-dialog" aria-labelledby="petClosetTitle">
+        <div class="dialog-title-row"><div class="dialog-icon">🎀</div><div><h3 id="petClosetTitle">ตู้ของแต่ง</h3><p>ใช้กลีบดอกไม้ปลดล็อก แล้วแตะเพื่อสวมใส่</p></div></div>
+        <div id="petClosetGrid" class="pet-closet-grid"></div>
+        <p id="petClosetMessage" class="planner-message" role="status"></p>
+        <div class="dialog-actions"><button class="btn btn-outline" id="closePetClosetBtn" type="button">ปิด</button></div>
+    </dialog>
+
     <dialog id="confirmDialog" class="app-dialog" aria-labelledby="confirmDialogTitle">
         <div class="dialog-icon">🗑️</div>
         <h3 id="confirmDialogTitle">ยืนยันการลบ</h3>
@@ -1064,6 +1114,7 @@
     <script src="cloud-drawings.js"></script>
     <script src="planner.js"></script>
     <script src="field-tools.js"></script>
+    <script src="pet.js"></script>
     <script src="pwa-ui.js"></script>
     
 </body>
