@@ -288,3 +288,153 @@ drop trigger if exists set_homework_tasks_updated_at on public.homework_tasks;
 create trigger set_homework_tasks_updated_at
     before update on public.homework_tasks
     for each row execute function public.set_updated_at();
+
+-- แบบสำรวจพื้นที่ของแต่ละบัญชี
+create table if not exists public.site_surveys (
+    id uuid primary key default gen_random_uuid(),
+    user_id uuid not null default auth.uid() references auth.users(id) on delete cascade,
+    name text not null check (char_length(name) between 1 and 120),
+    surveyed_on date not null default current_date,
+    location text check (location is null or char_length(location) <= 100),
+    room_width numeric(10,2) check (room_width is null or room_width >= 0),
+    room_length numeric(10,2) check (room_length is null or room_length >= 0),
+    room_height numeric(10,2) check (room_height is null or room_height >= 0),
+    door_count integer not null default 0 check (door_count >= 0),
+    door_details text check (door_details is null or char_length(door_details) <= 300),
+    window_count integer not null default 0 check (window_count >= 0),
+    window_details text check (window_details is null or char_length(window_details) <= 300),
+    lighting text check (lighting is null or char_length(lighting) <= 600),
+    noise text check (noise is null or char_length(noise) <= 600),
+    issues text check (issues is null or char_length(issues) <= 1200),
+    notes text check (notes is null or char_length(notes) <= 1200),
+    created_at timestamptz not null default now(),
+    updated_at timestamptz not null default now()
+);
+
+create index if not exists site_surveys_user_date_idx
+    on public.site_surveys (user_id, surveyed_on desc);
+
+alter table public.site_surveys enable row level security;
+
+drop policy if exists "Users can read their site surveys" on public.site_surveys;
+create policy "Users can read their site surveys"
+    on public.site_surveys for select to authenticated
+    using ((select auth.uid()) = user_id);
+
+drop policy if exists "Users can create their site surveys" on public.site_surveys;
+create policy "Users can create their site surveys"
+    on public.site_surveys for insert to authenticated
+    with check ((select auth.uid()) = user_id);
+
+drop policy if exists "Users can update their site surveys" on public.site_surveys;
+create policy "Users can update their site surveys"
+    on public.site_surveys for update to authenticated
+    using ((select auth.uid()) = user_id)
+    with check ((select auth.uid()) = user_id);
+
+drop policy if exists "Users can delete their site surveys" on public.site_surveys;
+create policy "Users can delete their site surveys"
+    on public.site_surveys for delete to authenticated
+    using ((select auth.uid()) = user_id);
+
+grant select, insert, update, delete on public.site_surveys to authenticated;
+
+drop trigger if exists set_site_surveys_updated_at on public.site_surveys;
+create trigger set_site_surveys_updated_at
+    before update on public.site_surveys
+    for each row execute function public.set_updated_at();
+
+-- คลังวัสดุส่วนตัว
+create table if not exists public.material_library (
+    id uuid primary key default gen_random_uuid(),
+    user_id uuid not null default auth.uid() references auth.users(id) on delete cascade,
+    name text not null check (char_length(name) between 1 and 120),
+    category text not null default 'อื่น ๆ',
+    brand_model text check (brand_model is null or char_length(brand_model) <= 120),
+    price numeric(12,2) check (price is null or price >= 0),
+    price_unit text not null default 'ชิ้น' check (price_unit in ('ชิ้น', 'ตร.ม.', 'เมตร', 'ชุด', 'ม้วน', 'กล่อง')),
+    store text check (store is null or char_length(store) <= 160),
+    dimensions text check (dimensions is null or char_length(dimensions) <= 160),
+    image_path text,
+    notes text check (notes is null or char_length(notes) <= 1000),
+    created_at timestamptz not null default now(),
+    updated_at timestamptz not null default now()
+);
+
+create index if not exists material_library_user_created_idx
+    on public.material_library (user_id, created_at desc);
+create index if not exists material_library_user_category_idx
+    on public.material_library (user_id, category);
+
+alter table public.material_library enable row level security;
+
+drop policy if exists "Users can read their materials" on public.material_library;
+create policy "Users can read their materials"
+    on public.material_library for select to authenticated
+    using ((select auth.uid()) = user_id);
+
+drop policy if exists "Users can create their materials" on public.material_library;
+create policy "Users can create their materials"
+    on public.material_library for insert to authenticated
+    with check ((select auth.uid()) = user_id);
+
+drop policy if exists "Users can update their materials" on public.material_library;
+create policy "Users can update their materials"
+    on public.material_library for update to authenticated
+    using ((select auth.uid()) = user_id)
+    with check ((select auth.uid()) = user_id);
+
+drop policy if exists "Users can delete their materials" on public.material_library;
+create policy "Users can delete their materials"
+    on public.material_library for delete to authenticated
+    using ((select auth.uid()) = user_id);
+
+grant select, insert, update, delete on public.material_library to authenticated;
+
+drop trigger if exists set_material_library_updated_at on public.material_library;
+create trigger set_material_library_updated_at
+    before update on public.material_library
+    for each row execute function public.set_updated_at();
+
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('material-images', 'material-images', false, 5242880, array['image/png', 'image/jpeg', 'image/webp'])
+on conflict (id) do update set
+    public = excluded.public,
+    file_size_limit = excluded.file_size_limit,
+    allowed_mime_types = excluded.allowed_mime_types;
+
+drop policy if exists "Users can view their material images" on storage.objects;
+create policy "Users can view their material images"
+    on storage.objects for select to authenticated
+    using (
+        bucket_id = 'material-images'
+        and (storage.foldername(name))[1] = (select auth.uid())::text
+    );
+
+drop policy if exists "Users can upload their material images" on storage.objects;
+create policy "Users can upload their material images"
+    on storage.objects for insert to authenticated
+    with check (
+        bucket_id = 'material-images'
+        and (storage.foldername(name))[1] = (select auth.uid())::text
+    );
+
+drop policy if exists "Users can update their material images" on storage.objects;
+create policy "Users can update their material images"
+    on storage.objects for update to authenticated
+    using (
+        bucket_id = 'material-images'
+        and (storage.foldername(name))[1] = (select auth.uid())::text
+    )
+    with check (
+        bucket_id = 'material-images'
+        and (storage.foldername(name))[1] = (select auth.uid())::text
+    );
+
+drop policy if exists "Users can delete their material images" on storage.objects;
+create policy "Users can delete their material images"
+    on storage.objects for delete to authenticated
+    using (
+        bucket_id = 'material-images'
+        and (storage.foldername(name))[1] = (select auth.uid())::text
+    );

@@ -24,6 +24,7 @@
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="planner.css">
     <link rel="stylesheet" href="play-tools.css">
+    <link rel="stylesheet" href="field-tools.css">
     
     <!-- ไลบรารีสำหรับ Drag & Drop, สร้าง PDF, อ่าน PDF และทำไฟล์ ZIP -->
     <script src="vendor/Sortable.min.js"></script>
@@ -85,7 +86,7 @@
     </section>
 
     <div id="appShell" class="app-shell" hidden>
-    <span class="app-version" title="Jane Tools version 3.1.1">v3.1.1</span>
+    <span class="app-version" title="Jane Tools version 3.2.0">v3.2.0</span>
     <!-- ปุ่มโหมดกลางคืน (เพิ่มใหม่) -->
     <button id="darkModeBtn" class="dark-mode-btn" type="button" aria-label="เปิดโหมดกลางคืน" aria-pressed="false">🌙</button>
     <div class="app-connectivity" aria-live="polite">
@@ -190,10 +191,44 @@
         <div class="planner-page-header"><div><span class="page-kicker">TOOLBOX</span><h2>🧰 เลือกหมวดเครื่องมือ</h2><p>จัดกลุ่มใหม่ให้หาเจอเร็ว ไม่ต้องไล่ดูทีละเครื่องมือ</p></div></div>
         <div class="tool-hub-grid category-tool-grid">
             <button class="featured-tool-card" type="button" onclick="openScaleTool('interiorCalculator')"><span>📐</span><strong>คำนวณงานภายใน</strong><small>ฝ้า สลิง วัสดุ แสง ระยะ และเฟอร์นิเจอร์</small><em>8 เครื่องมือพร้อมใช้ →</em></button>
+            <button class="practical-tool-card" type="button" onclick="openTab('siteSurveyTab', document.getElementById('toolsNavBtn'))"><span>📍</span><strong>สำรวจพื้นที่</strong><small>เก็บขนาด ประตู หน้าต่าง แสง เสียง และปัญหาหน้างาน</small><em>เปิดแบบสำรวจ →</em></button>
+            <button class="practical-tool-card" type="button" onclick="openTab('materialLibraryTab', document.getElementById('toolsNavBtn'))"><span>🧱</span><strong>คลังวัสดุ</strong><small>เก็บรูป รุ่น ราคา ร้านค้า และขนาด แยกตามบัญชี</small><em>เปิดคลังวัสดุ →</em></button>
             <button type="button" onclick="openTab('documentToolsTab', document.getElementById('toolsNavBtn'))"><span>📄</span><strong>งานเอกสาร</strong><small>รวมและแยกไฟล์ PDF</small><em>2 เครื่องมือ →</em></button>
             <button type="button" onclick="openTab('sketchTab', document.getElementById('toolsNavBtn'))"><span>🎨</span><strong>วาดและสเก็ตช์</strong><small>วาดภาพและบันทึกบนคลาวด์</small><em>เปิดกระดาน →</em></button>
             <button type="button" onclick="openTab('playToolsTab', document.getElementById('toolsNavBtn'))"><span>🧸</span><strong>พักสมอง</strong><small>เล่นสบาย ๆ และลองจัดห้องในฝัน</small><em>3 ของเล่น →</em></button>
         </div>
+    </div>
+
+    <div id="siteSurveyTab" class="container tab-content field-page" style="display:none;">
+        <div class="planner-page-header">
+            <div><span class="page-kicker">SITE NOTES</span><h2>📍 สำรวจพื้นที่</h2><p>เก็บข้อมูลหน้างานเป็นรายห้อง เปิดดูต่อได้จากทุกอุปกรณ์</p></div>
+            <button class="btn planner-add-btn" id="addSiteSurveyBtn" type="button">＋ เพิ่มพื้นที่</button>
+        </div>
+        <div class="field-summary-strip" id="siteSurveySummary"></div>
+        <div class="field-toolbar">
+            <label class="field-search"><span>⌕</span><input id="siteSurveySearch" type="search" placeholder="ค้นหาชื่อสถานที่หรือปัญหา"></label>
+        </div>
+        <div id="siteSurveyList" class="site-survey-list" aria-live="polite"></div>
+        <p id="siteSurveyMessage" class="planner-message" role="status"></p>
+    </div>
+
+    <div id="materialLibraryTab" class="container tab-content field-page" style="display:none;">
+        <div class="planner-page-header">
+            <div><span class="page-kicker">MATERIAL LIBRARY</span><h2>🧱 คลังวัสดุส่วนตัว</h2><p>รวบรวมตัวอย่างวัสดุ ราคา และแหล่งซื้อไว้ค้นหาง่ายในที่เดียว</p></div>
+            <button class="btn planner-add-btn" id="addMaterialBtn" type="button">＋ เพิ่มวัสดุ</button>
+        </div>
+        <div class="field-summary-strip" id="materialSummary"></div>
+        <div class="field-toolbar material-toolbar">
+            <label class="field-search"><span>⌕</span><input id="materialSearch" type="search" placeholder="ค้นหาชื่อ รุ่น หรือร้านค้า"></label>
+            <select id="materialCategoryFilter" aria-label="กรองหมวดวัสดุ">
+                <option value="all">ทุกหมวด</option>
+                <option value="พื้น">พื้น</option><option value="ผนัง">ผนัง</option><option value="ฝ้า">ฝ้า</option>
+                <option value="ไม้">ไม้</option><option value="ผ้า">ผ้า</option><option value="โลหะ">โลหะ</option>
+                <option value="กระจก">กระจก</option><option value="แสงสว่าง">แสงสว่าง</option><option value="อื่น ๆ">อื่น ๆ</option>
+            </select>
+        </div>
+        <div id="materialList" class="material-card-grid" aria-live="polite"></div>
+        <p id="materialMessage" class="planner-message" role="status"></p>
     </div>
 
     <div id="documentToolsTab" class="container tab-content tools-hub category-page" style="display: none;">
@@ -939,6 +974,52 @@
         </form>
     </dialog>
 
+    <dialog id="siteSurveyDialog" class="app-dialog planner-dialog field-dialog" aria-labelledby="siteSurveyDialogTitle">
+        <form id="siteSurveyForm" method="dialog">
+            <div class="dialog-title-row"><div class="dialog-icon">📍</div><div><h3 id="siteSurveyDialogTitle">เพิ่มพื้นที่สำรวจ</h3><p>บันทึกสิ่งที่ต้องใช้กลับมาออกแบบต่อ</p></div></div>
+            <div class="planner-form-grid">
+                <label class="span-two">ชื่อสถานที่/ห้อง<input id="surveyName" type="text" maxlength="120" required placeholder="เช่น ห้องนั่งเล่น บ้านคุณเอ"></label>
+                <label>วันที่สำรวจ<input id="surveyDate" type="date" required></label>
+                <label>ชั้น/ตำแหน่ง<input id="surveyLocation" type="text" maxlength="100" placeholder="เช่น ชั้น 2 ฝั่งทิศตะวันตก"></label>
+                <label>กว้าง (เมตร)<input id="surveyWidth" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0.00"></label>
+                <label>ยาว (เมตร)<input id="surveyLength" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0.00"></label>
+                <label>สูง (เมตร)<input id="surveyHeight" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0.00"></label>
+                <label>จำนวนประตู<input id="surveyDoorCount" type="number" inputmode="numeric" min="0" step="1" value="0"></label>
+                <label class="span-two">รายละเอียดประตู<input id="surveyDoorDetails" type="text" maxlength="300" placeholder="เช่น 0.90 × 2.00 ม. เปิดเข้าด้านใน"></label>
+                <label>จำนวนหน้าต่าง<input id="surveyWindowCount" type="number" inputmode="numeric" min="0" step="1" value="0"></label>
+                <label class="span-two">รายละเอียดหน้าต่าง<input id="surveyWindowDetails" type="text" maxlength="300" placeholder="เช่น 1.20 × 1.10 ม. รับแดดช่วงบ่าย"></label>
+                <label class="span-two">แสง<textarea id="surveyLighting" maxlength="600" rows="2" placeholder="แสงธรรมชาติ ทิศทางแดด จุดที่มืด หรือโคมเดิม"></textarea></label>
+                <label class="span-two">เสียง<textarea id="surveyNoise" maxlength="600" rows="2" placeholder="แหล่งกำเนิดเสียง ช่วงเวลาที่ดัง หรือความเงียบที่ต้องการ"></textarea></label>
+                <label class="span-two">ปัญหาที่พบ<textarea id="surveyIssues" maxlength="1200" rows="3" placeholder="เช่น ผนังชื้น ทางเดินแคบ ปลั๊กไม่พอ"></textarea></label>
+                <label class="span-two">หมายเหตุเพิ่มเติม<textarea id="surveyNotes" maxlength="1200" rows="3" placeholder="สิ่งที่ต้องกลับมาวัดซ้ำหรือคุยกับผู้ใช้"></textarea></label>
+            </div>
+            <p id="siteSurveyFormMessage" class="planner-message" role="status"></p>
+            <div class="dialog-actions"><button class="btn btn-outline" id="cancelSiteSurveyBtn" type="button">ยกเลิก</button><button class="btn" id="saveSiteSurveyBtn" type="submit">บันทึกพื้นที่</button></div>
+        </form>
+    </dialog>
+
+    <dialog id="materialDialog" class="app-dialog planner-dialog field-dialog" aria-labelledby="materialDialogTitle">
+        <form id="materialForm" method="dialog">
+            <div class="dialog-title-row"><div class="dialog-icon">🧱</div><div><h3 id="materialDialogTitle">เพิ่มวัสดุ</h3><p>ข้อมูลและรูปจะเก็บในบัญชีของคุณ</p></div></div>
+            <div class="material-image-field span-two">
+                <input id="materialImage" type="file" accept="image/png,image/jpeg,image/webp">
+                <label for="materialImage"><img id="materialImagePreview" alt="" hidden><span id="materialImagePrompt">📷<strong>เพิ่มรูปวัสดุ</strong><small>PNG, JPG หรือ WebP ไม่เกิน 5 MB</small></span></label>
+            </div>
+            <div class="planner-form-grid">
+                <label class="span-two">ชื่อวัสดุ<input id="materialName" type="text" maxlength="120" required placeholder="เช่น กระเบื้องลายหินอ่อนสีครีม"></label>
+                <label>หมวด<select id="materialCategory"><option>พื้น</option><option>ผนัง</option><option>ฝ้า</option><option>ไม้</option><option>ผ้า</option><option>โลหะ</option><option>กระจก</option><option>แสงสว่าง</option><option>อื่น ๆ</option></select></label>
+                <label>ยี่ห้อ/รุ่น<input id="materialModel" type="text" maxlength="120" placeholder="เช่น COTTO รุ่น ABC01"></label>
+                <label>ราคา (บาท)<input id="materialPrice" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0.00"></label>
+                <label>หน่วยราคา<select id="materialPriceUnit"><option value="ชิ้น">ต่อชิ้น</option><option value="ตร.ม.">ต่อตร.ม.</option><option value="เมตร">ต่อเมตร</option><option value="ชุด">ต่อชุด</option><option value="ม้วน">ต่อม้วน</option><option value="กล่อง">ต่อกล่อง</option></select></label>
+                <label class="span-two">ร้านค้า/แหล่งซื้อ<input id="materialStore" type="text" maxlength="160" placeholder="ชื่อร้าน สาขา หรือลิงก์เว็บไซต์"></label>
+                <label class="span-two">ขนาด<input id="materialDimensions" type="text" maxlength="160" placeholder="เช่น 60 × 60 ซม. หนา 9 มม."></label>
+                <label class="span-two">หมายเหตุ<textarea id="materialNotes" maxlength="1000" rows="3" placeholder="สี ผิวสัมผัส ระยะเวลาสั่ง หรือรายละเอียดเพิ่มเติม"></textarea></label>
+            </div>
+            <p id="materialFormMessage" class="planner-message" role="status"></p>
+            <div class="dialog-actions"><button class="btn btn-outline" id="cancelMaterialBtn" type="button">ยกเลิก</button><button class="btn" id="saveMaterialBtn" type="submit">บันทึกวัสดุ</button></div>
+        </form>
+    </dialog>
+
     <dialog id="confirmDialog" class="app-dialog" aria-labelledby="confirmDialogTitle">
         <div class="dialog-icon">🗑️</div>
         <h3 id="confirmDialogTitle">ยืนยันการลบ</h3>
@@ -982,6 +1063,7 @@
     <script src="scale-tools.js"></script>
     <script src="cloud-drawings.js"></script>
     <script src="planner.js"></script>
+    <script src="field-tools.js"></script>
     <script src="pwa-ui.js"></script>
     
 </body>
