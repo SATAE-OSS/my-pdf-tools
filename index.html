@@ -87,7 +87,7 @@
     </section>
 
     <div id="appShell" class="app-shell" hidden>
-    <span class="app-version" title="Jane Tools version 3.3.2">v3.3.2</span>
+    <span class="app-version" title="Jane Tools version 3.4.0">v3.4.0</span>
     <!-- ปุ่มโหมดกลางคืน (เพิ่มใหม่) -->
     <button id="darkModeBtn" class="dark-mode-btn" type="button" aria-label="เปิดโหมดกลางคืน" aria-pressed="false">🌙</button>
     <div class="app-connectivity" aria-live="polite">
@@ -147,12 +147,14 @@
                 <div class="pet-status-row" id="petStatusRow" hidden>
                     <span>🌸 <strong id="petPetals">0</strong> กลีบ</span>
                     <span>💗 ความสุข <strong id="petHappiness">0</strong>%</span>
+                    <span title="รับอัตโนมัติเมื่อเข้าเว็บ">🎁 ของขวัญรายวัน +3</span>
+                    <span title="ได้เมื่อกดว่างานสำเร็จ">✅ การบ้านสำเร็จ +5</span>
                 </div>
                 <div class="pet-actions">
                     <button class="btn" id="choosePetBtn" type="button">เลือกสัตว์เลี้ยง</button>
                     <button class="pet-action-btn" id="petPetBtn" type="button" hidden>🫳 ลูบหัว</button>
-                    <button class="pet-action-btn" id="feedPetBtn" type="button" hidden>🥕 ให้อาหาร · 2 🌸</button>
-                    <button class="pet-action-btn" id="petClosetBtn" type="button" hidden>🎀 ของแต่ง</button>
+                    <button class="pet-action-btn" id="feedPetBtn" type="button" hidden>🥕 ให้อาหาร · 1 🌸</button>
+                    <button class="pet-action-btn" id="petClosetBtn" type="button" hidden>🎀 แต่งตัว · โบว์ แว่น หมวก</button>
                 </div>
             </div>
         </section>
@@ -1065,7 +1067,7 @@
     </dialog>
 
     <dialog id="petClosetDialog" class="app-dialog planner-dialog pet-dialog" aria-labelledby="petClosetTitle">
-        <div class="dialog-title-row"><div class="dialog-icon">🎀</div><div><h3 id="petClosetTitle">ตู้ของแต่ง</h3><p>ใช้กลีบดอกไม้ปลดล็อก แล้วแตะเพื่อสวมใส่</p></div></div>
+        <div class="dialog-title-row"><div class="dialog-icon">🎀</div><div><h3 id="petClosetTitle">ตู้แต่งตัว</h3><p>มีโบว์ แว่น และหมวกรับปริญญา ปลดล็อกครั้งเดียวแล้วสลับใส่ได้ตลอด</p></div></div>
         <div id="petClosetGrid" class="pet-closet-grid"></div>
         <p id="petClosetMessage" class="planner-message" role="status"></p>
         <div class="dialog-actions"><button class="btn btn-outline" id="closePetClosetBtn" type="button">ปิด</button></div>

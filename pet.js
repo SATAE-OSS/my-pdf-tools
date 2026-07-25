@@ -16,9 +16,9 @@
     const defaultNames = { pig: 'โมจิ', dog: 'บ๊อบบี้', cat: 'มีตังค์', rabbit: 'ปุยเมฆ', capybara: 'กะปิ' };
     const closetItems = [
         { id: '', icon: '✨', name: 'ไม่ใส่ของแต่ง', price: 0 },
-        { id: 'ribbon', icon: '🎀', name: 'โบว์ชมพู', price: 8 },
-        { id: 'glasses', icon: '🕶️', name: 'แว่นเท่', price: 12 },
-        { id: 'hat', icon: '🎓', name: 'หมวกรับปริญญา', price: 15 }
+        { id: 'ribbon', icon: '🎀', name: 'โบว์ชมพู', price: 3 },
+        { id: 'glasses', icon: '🕶️', name: 'แว่นเท่', price: 5 },
+        { id: 'hat', icon: '🎓', name: 'หมวกรับปริญญา', price: 7 }
     ];
     let user = null;
     let pet = null;
@@ -34,7 +34,7 @@
 
     function friendlyError(error) {
         const detail = error?.message || '';
-        if (/relation.*study_pets.*does not exist|function.*reward_pet_for_homework.*does not exist/i.test(detail)) {
+        if (/relation.*study_pets.*does not exist|function.*(reward_pet_for_homework|claim_daily_petals).*does not exist/i.test(detail)) {
             return 'ต้องอัปเดตฐานข้อมูลสัตว์เลี้ยงก่อน กรุณารัน supabase-setup.sql รุ่นล่าสุด';
         }
         return detail || 'บันทึกไม่สำเร็จ กรุณาลองอีกครั้ง';
@@ -160,6 +160,7 @@
 
     async function loadPet() {
         if (!user) return;
+        const { data: dailyReward } = await supabase.rpc('claim_daily_petals');
         const { data, error } = await supabase.from('study_pets').select('*').maybeSingle();
         if (error) {
             byId('studyPetMessage').textContent = friendlyError(error);
@@ -167,6 +168,11 @@
         }
         pet = data || null;
         renderPet();
+        if (pet && Number(dailyReward) > 0) {
+            byId('studyPetMessage').textContent = `ของขวัญวันนี้! ${pet.name} ได้รับ ${dailyReward} กลีบดอกไม้ 🌸`;
+            showPetEffect('pet', `ได้ของขวัญ ${dailyReward} กลีบ ขอบคุณนะ!`);
+            playPetSound(680);
+        }
     }
 
     async function updatePet(changes) {
@@ -194,7 +200,7 @@
             user_id: user.id,
             species: selectedSpecies,
             name: byId('petNameInput').value.trim(),
-            petals: pet?.petals ?? 10,
+            petals: pet?.petals ?? 15,
             happiness: pet?.happiness ?? 75,
             owned_accessories: pet?.owned_accessories || [],
             equipped_accessory: pet?.equipped_accessory || ''
@@ -232,7 +238,7 @@
 
     async function feedThePet() {
         if (!pet || petActionBusy) return;
-        if (pet.petals < 2) {
+        if (pet.petals < 1) {
             byId('studyPetMessage').textContent = 'กลีบดอกไม้ยังไม่พอ ทำการบ้านสำเร็จแล้วจะได้รับเพิ่มนะ';
             showSpeech('หิวจัง แต่กลีบยังไม่พอ 🥺');
             return;
@@ -240,7 +246,7 @@
         showPetEffect('feed', 'อร่อยมาก! ง่ำ ๆ');
         playPetSound(460);
         petActionBusy = true;
-        if (await updatePet({ petals: pet.petals - 2, happiness: Math.min(100, pet.happiness + 10), fed_at: new Date().toISOString() })) {
+        if (await updatePet({ petals: pet.petals - 1, happiness: Math.min(100, pet.happiness + 10), fed_at: new Date().toISOString() })) {
             byId('studyPetMessage').textContent = `${pet.name} อิ่มแล้วและมีความสุขขึ้น`;
         }
         petActionBusy = false;

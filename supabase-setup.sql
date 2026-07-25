@@ -444,15 +444,22 @@ create table if not exists public.study_pets (
     user_id uuid primary key default auth.uid() references auth.users(id) on delete cascade,
     species text not null default 'pig' check (species in ('pig', 'dog', 'cat', 'rabbit', 'capybara')),
     name text not null default 'โมจิ' check (char_length(name) between 1 and 30),
-    petals integer not null default 10 check (petals >= 0),
+    petals integer not null default 15 check (petals >= 0),
     happiness integer not null default 75 check (happiness between 0 and 100),
     owned_accessories text[] not null default '{}',
     equipped_accessory text not null default '' check (equipped_accessory in ('', 'ribbon', 'glasses', 'hat')),
     fed_at timestamptz,
     petted_at timestamptz,
+    daily_reward_on date,
     created_at timestamptz not null default now(),
     updated_at timestamptz not null default now()
 );
+
+alter table public.study_pets
+    add column if not exists daily_reward_on date;
+
+alter table public.study_pets
+    alter column petals set default 15;
 
 alter table public.study_pets enable row level security;
 
@@ -478,6 +485,33 @@ create policy "Users can delete their study pet"
     using ((select auth.uid()) = user_id);
 
 grant select, insert, update, delete on public.study_pets to authenticated;
+
+create or replace function public.claim_daily_petals()
+returns integer
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+    reward_amount integer := 0;
+begin
+    update public.study_pets
+    set petals = petals + 3,
+        daily_reward_on = current_date,
+        updated_at = now()
+    where user_id = auth.uid()
+      and (daily_reward_on is null or daily_reward_on < current_date);
+
+    if found then
+        reward_amount := 3;
+    end if;
+
+    return reward_amount;
+end;
+$$;
+
+revoke all on function public.claim_daily_petals() from public;
+grant execute on function public.claim_daily_petals() to authenticated;
 
 drop trigger if exists set_study_pets_updated_at on public.study_pets;
 create trigger set_study_pets_updated_at
@@ -516,7 +550,7 @@ begin
 
         if found then
             update public.study_pets
-            set petals = petals + 3,
+            set petals = petals + 5,
                 happiness = least(100, happiness + 5),
                 updated_at = now()
             where user_id = auth.uid();

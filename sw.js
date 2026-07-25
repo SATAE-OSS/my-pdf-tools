@@ -1,4 +1,4 @@
-const CACHE_NAME = 'jane-tools-v44';
+const CACHE_NAME = 'jane-tools-v45';
 const urlsToCache = [
   './',
   './index.html',

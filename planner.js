@@ -558,7 +558,7 @@
                 if (complete && !task.pet_rewarded) {
                     const rewardResult = await supabase.rpc('reward_pet_for_homework', { p_task_id: task.id });
                     if (!rewardResult.error && rewardResult.data) {
-                        setPlannerMessage('homeworkMessage', 'ทำงานสำเร็จแล้ว รับ 3 กลีบดอกไม้ให้น้อง 🌸', 'success');
+                        setPlannerMessage('homeworkMessage', 'ทำงานสำเร็จแล้ว รับ 5 กลีบดอกไม้ให้น้อง 🌸', 'success');
                         window.dispatchEvent(new CustomEvent('jane:pet-updated'));
                     }
                 }
