@@ -85,7 +85,7 @@
     </section>
 
     <div id="appShell" class="app-shell" hidden>
-    <span class="app-version" title="Jane Tools version 3.0.0">v3.0.0</span>
+    <span class="app-version" title="Jane Tools version 3.1.0">v3.1.0</span>
     <!-- ปุ่มโหมดกลางคืน (เพิ่มใหม่) -->
     <button id="darkModeBtn" class="dark-mode-btn" type="button" aria-label="เปิดโหมดกลางคืน" aria-pressed="false">🌙</button>
     <div class="app-connectivity" aria-live="polite">
@@ -192,7 +192,7 @@
             <button class="featured-tool-card" type="button" onclick="openScaleTool('interiorCalculator')"><span>📐</span><strong>คำนวณงานภายใน</strong><small>ฝ้า สลิง วัสดุ แสง ระยะ และเฟอร์นิเจอร์</small><em>8 เครื่องมือพร้อมใช้ →</em></button>
             <button type="button" onclick="openTab('documentToolsTab', document.getElementById('toolsNavBtn'))"><span>📄</span><strong>งานเอกสาร</strong><small>รวมและแยกไฟล์ PDF</small><em>2 เครื่องมือ →</em></button>
             <button type="button" onclick="openTab('sketchTab', document.getElementById('toolsNavBtn'))"><span>🎨</span><strong>วาดและสเก็ตช์</strong><small>วาดภาพและบันทึกบนคลาวด์</small><em>เปิดกระดาน →</em></button>
-            <button type="button" onclick="openTab('playToolsTab', document.getElementById('toolsNavBtn'))"><span>🧸</span><strong>พักสมอง</strong><small>เล่น จัดห้อง และทดลองสี</small><em>4 ของเล่น →</em></button>
+            <button type="button" onclick="openTab('playToolsTab', document.getElementById('toolsNavBtn'))"><span>🧸</span><strong>พักสมอง</strong><small>เล่นสบาย ๆ และลองจัดห้องในฝัน</small><em>3 ของเล่น →</em></button>
         </div>
     </div>
 
@@ -209,8 +209,7 @@
         <div class="tool-hub-grid category-choice-grid">
             <button type="button" onclick="openTab('bubbleTab', document.getElementById('toolsNavBtn'))"><span>🫧</span><strong>บีบบับเบิล</strong><small>กดให้ครบแล้วกระดานจะเริ่มใหม่ให้อัตโนมัติ</small><em>ไปเล่นบับเบิล →</em></button>
             <button type="button" onclick="openTab('squishyTab', document.getElementById('toolsNavBtn'))"><span>🫠</span><strong>เล่นสไลม์</strong><small>ดึง บีบ ยืด และฟังเสียงนุ่ม ๆ</small><em>ไปเล่นสไลม์ →</em></button>
-            <button type="button" onclick="openTab('miniRoomTab', document.getElementById('toolsNavBtn'))"><span>🛋️</span><strong>ห้องจิ๋วจัดเฟอร์</strong><small>ลาก หมุน และจัดแปลนห้องในแบบของตัวเอง</small><em>เริ่มจัดห้อง →</em></button>
-            <button type="button" onclick="openTab('gelMixerTab', document.getElementById('toolsNavBtn'))"><span>🎨</span><strong>เครื่องผสมสีเจล</strong><small>หยดสี ใช้นิ้วคน แล้วเก็บสีที่ชอบไว้</small><em>เริ่มผสมสี →</em></button>
+            <button class="featured-toy-card" type="button" onclick="openTab('miniRoomTab', document.getElementById('toolsNavBtn'))"><span>🛋️</span><strong>ห้องจิ๋วจัดเฟอร์</strong><small>เฟอร์นิเจอร์และของแต่งกว่า 30 แบบ พร้อมชุดห้องสำเร็จรูป</small><em>เริ่มจัดห้อง →</em></button>
         </div>
     </div>
 
@@ -298,21 +297,72 @@
     <div id="miniRoomTab" class="container tab-content play-experience" style="display: none;">
         <div class="play-page-heading">
             <button class="category-back" type="button" onclick="openTab('playToolsTab', document.getElementById('toolsNavBtn'))">← ของเล่น</button>
-            <div><span class="page-kicker">MINI INTERIOR</span><h2>🛋️ ห้องจิ๋วจัดเฟอร์</h2><p>มองจากด้านบนเหมือนวางแปลนจริง ลากด้วยนิ้วเดียวและใช้สองนิ้วหมุนหรือย่อขยาย</p></div>
+            <div><span class="page-kicker">MINI INTERIOR</span><h2>🛋️ ห้องจิ๋วจัดเฟอร์</h2><p>เริ่มจากชุดห้องหรือเลือกของเอง ลากหนึ่งนิ้วเพื่อย้าย ใช้สองนิ้วหมุนและย่อขยาย</p></div>
         </div>
         <div class="mini-room-layout">
             <aside class="room-toolbox">
                 <section>
-                    <div class="play-section-title"><strong>เพิ่มเฟอร์นิเจอร์</strong><small>แตะเพื่อวางกลางห้อง</small></div>
-                    <div class="furniture-picker" id="furniturePicker">
-                        <button type="button" data-furniture-type="sofa"><span>🛋️</span>โซฟา</button>
-                        <button type="button" data-furniture-type="chair"><span>🪑</span>เก้าอี้</button>
-                        <button type="button" data-furniture-type="table"><span>◯</span>โต๊ะ</button>
-                        <button type="button" data-furniture-type="bed"><span>🛏️</span>เตียง</button>
-                        <button type="button" data-furniture-type="rug"><span>▰</span>พรม</button>
-                        <button type="button" data-furniture-type="plant"><span>🪴</span>ต้นไม้</button>
-                        <button type="button" data-furniture-type="lamp"><span>💡</span>โคมไฟ</button>
-                        <button type="button" data-furniture-type="shelf"><span>▥</span>ชั้นวาง</button>
+                    <div class="play-section-title"><strong>เริ่มแบบเร็ว</strong><small>เลือกชุดแล้วค่อยย้ายหรือแต่งเพิ่ม</small></div>
+                    <div class="room-preset-grid">
+                        <button type="button" data-room-preset="blank">▢ ห้องเปล่า</button>
+                        <button type="button" data-room-preset="living">🛋️ นั่งเล่น</button>
+                        <button type="button" data-room-preset="bedroom">🛏️ ห้องนอน</button>
+                        <button type="button" data-room-preset="studio">🖥️ ห้องทำงาน</button>
+                    </div>
+                </section>
+                <section>
+                    <div class="play-section-title"><strong>คลังของแต่ง</strong><small>แตะชื่อหมวดเพื่อเปิดดูทั้งหมด</small></div>
+                    <div class="room-tool-groups" id="furniturePicker">
+                        <details open><summary>🛋️ นั่งเล่น <span>8 ชิ้น</span></summary><div class="furniture-picker">
+                            <button type="button" data-furniture-type="sofa"><span>🛋️</span>โซฟา</button>
+                            <button type="button" data-furniture-type="loveseat"><span>🛋️</span>โซฟาเล็ก</button>
+                            <button type="button" data-furniture-type="armchair"><span>🪑</span>อาร์มแชร์</button>
+                            <button type="button" data-furniture-type="chair"><span>🪑</span>เก้าอี้</button>
+                            <button type="button" data-furniture-type="bench"><span>▰</span>ม้านั่ง</button>
+                            <button type="button" data-furniture-type="stool"><span>◉</span>สตูล</button>
+                            <button type="button" data-furniture-type="coffeeTable"><span>◯</span>โต๊ะกลาง</button>
+                            <button type="button" data-furniture-type="sideTable"><span>◉</span>โต๊ะข้าง</button>
+                        </div></details>
+                        <details><summary>🛏️ ห้องนอน <span>6 ชิ้น</span></summary><div class="furniture-picker">
+                            <button type="button" data-furniture-type="bed"><span>🛏️</span>เตียงคู่</button>
+                            <button type="button" data-furniture-type="singleBed"><span>🛏️</span>เตียงเดี่ยว</button>
+                            <button type="button" data-furniture-type="nightstand"><span>▣</span>โต๊ะหัวเตียง</button>
+                            <button type="button" data-furniture-type="wardrobe"><span>🚪</span>ตู้เสื้อผ้า</button>
+                            <button type="button" data-furniture-type="dresser"><span>▤</span>ตู้ลิ้นชัก</button>
+                            <button type="button" data-furniture-type="vanity"><span>🪞</span>โต๊ะเครื่องแป้ง</button>
+                        </div></details>
+                        <details><summary>🖥️ ทำงานและเก็บของ <span>7 ชิ้น</span></summary><div class="furniture-picker">
+                            <button type="button" data-furniture-type="desk"><span>🖥️</span>โต๊ะทำงาน</button>
+                            <button type="button" data-furniture-type="officeChair"><span>💺</span>เก้าอี้ทำงาน</button>
+                            <button type="button" data-furniture-type="diningTable"><span>🍽️</span>โต๊ะอาหาร</button>
+                            <button type="button" data-furniture-type="shelf"><span>▥</span>ชั้นวาง</button>
+                            <button type="button" data-furniture-type="bookcase"><span>📚</span>ตู้หนังสือ</button>
+                            <button type="button" data-furniture-type="cabinet"><span>▥</span>ตู้เก็บของ</button>
+                            <button type="button" data-furniture-type="tvConsole"><span>▰</span>ชั้นทีวี</button>
+                        </div></details>
+                        <details><summary>🪴 ตกแต่งและโครงห้อง <span>10 ชิ้น</span></summary><div class="furniture-picker">
+                            <button type="button" data-furniture-type="rug"><span>▰</span>พรม</button>
+                            <button type="button" data-furniture-type="plant"><span>🪴</span>ต้นไม้</button>
+                            <button type="button" data-furniture-type="lamp"><span>💡</span>โคมไฟ</button>
+                            <button type="button" data-furniture-type="mirror"><span>🪞</span>กระจก</button>
+                            <button type="button" data-furniture-type="tv"><span>📺</span>ทีวี</button>
+                            <button type="button" data-furniture-type="art"><span>🖼️</span>รูปติดผนัง</button>
+                            <button type="button" data-furniture-type="door"><span>🚪</span>ประตู</button>
+                            <button type="button" data-furniture-type="window"><span>🪟</span>หน้าต่าง</button>
+                            <button type="button" data-furniture-type="partition"><span>▯</span>ฉากกั้น</button>
+                            <button type="button" data-furniture-type="floorLamp"><span>🏮</span>โคมตั้งพื้น</button>
+                        </div></details>
+                    </div>
+                </section>
+                <section>
+                    <div class="play-section-title"><strong>สีของชิ้นที่เลือก</strong><small>เลือกของในห้องก่อน แล้วเปลี่ยนโทนได้</small></div>
+                    <div id="roomFurnitureColors" class="toy-color-swatches selected-color-swatches">
+                        <button type="button" data-furniture-color="#ef9fbd" style="--swatch:#ef9fbd" aria-label="สีชมพู"></button>
+                        <button type="button" data-furniture-color="#b99be5" style="--swatch:#b99be5" aria-label="สีม่วง"></button>
+                        <button type="button" data-furniture-color="#83cdb2" style="--swatch:#83cdb2" aria-label="สีเขียว"></button>
+                        <button type="button" data-furniture-color="#88b9e8" style="--swatch:#88b9e8" aria-label="สีฟ้า"></button>
+                        <button type="button" data-furniture-color="#e1b783" style="--swatch:#e1b783" aria-label="สีไม้"></button>
+                        <button type="button" data-furniture-color="#eee8e2" style="--swatch:#eee8e2" aria-label="สีขาว"></button>
                     </div>
                 </section>
                 <section>
@@ -334,12 +384,15 @@
             <section class="room-workspace">
                 <div class="room-canvas-wrap">
                     <canvas id="miniRoomCanvas" width="900" height="620" aria-label="พื้นที่จัดห้องจิ๋ว"></canvas>
-                    <span class="room-canvas-badge">แปลนมุมบน · แตะของเพื่อเลือก</span>
+                    <span class="room-canvas-badge">แปลนมุมบน · <b id="roomItemCount">0 ชิ้น</b></span>
                 </div>
                 <div class="selected-furniture-controls" aria-label="จัดการเฟอร์นิเจอร์ที่เลือก">
-                    <button id="roomRotateLeftBtn" type="button">↶ หมุน</button>
+                    <button id="roomRotateLeftBtn" type="button">↶ ซ้าย</button>
+                    <button id="roomRotateRightBtn" type="button">↷ ขวา</button>
                     <button id="roomShrinkBtn" type="button">− ย่อ</button>
                     <button id="roomGrowBtn" type="button">＋ ขยาย</button>
+                    <button id="roomBackwardBtn" type="button">↓ ไว้หลัง</button>
+                    <button id="roomForwardBtn" type="button">↑ ไว้หน้า</button>
                     <button id="roomDuplicateBtn" type="button">⧉ ทำซ้ำ</button>
                     <button id="roomDeleteBtn" class="danger-soft" type="button">✕ ลบ</button>
                 </div>
@@ -349,46 +402,6 @@
                 </div>
                 <p class="play-live-message" id="roomBuilderMessage" aria-live="polite">เลือกเฟอร์นิเจอร์แล้วลองลากวางดูได้เลย</p>
             </section>
-        </div>
-    </div>
-
-    <div id="gelMixerTab" class="container tab-content play-experience" style="display: none;">
-        <div class="play-page-heading">
-            <button class="category-back" type="button" onclick="openTab('playToolsTab', document.getElementById('toolsNavBtn'))">← ของเล่น</button>
-            <div><span class="page-kicker">COLOR LAB</span><h2>🎨 เครื่องผสมสีเจล</h2><p>เลือกสีแล้วแตะหยดลงไป ลากนิ้ววนเพื่อให้เจลค่อย ๆ ผสมกัน</p></div>
-        </div>
-        <div class="gel-mixer-layout">
-            <section class="gel-lab">
-                <div class="gel-canvas-wrap">
-                    <canvas id="gelMixerCanvas" width="900" height="560" aria-label="ถาดผสมสีเจล"></canvas>
-                    <div class="gel-glass-shine" aria-hidden="true"></div>
-                    <span class="gel-canvas-hint">แตะเพื่อหยด · ลากเพื่อคนสี</span>
-                </div>
-                <div class="gel-controls">
-                    <div class="gel-color-picker" id="gelColorPicker" aria-label="เลือกสีเจล">
-                        <button class="active" type="button" data-gel-color="#ff6f9f" style="--gel-color:#ff6f9f" aria-label="สีชมพู"></button>
-                        <button type="button" data-gel-color="#8b6df2" style="--gel-color:#8b6df2" aria-label="สีม่วง"></button>
-                        <button type="button" data-gel-color="#4f91ed" style="--gel-color:#4f91ed" aria-label="สีฟ้า"></button>
-                        <button type="button" data-gel-color="#40c99b" style="--gel-color:#40c99b" aria-label="สีเขียว"></button>
-                        <button type="button" data-gel-color="#ffd166" style="--gel-color:#ffd166" aria-label="สีเหลือง"></button>
-                        <button type="button" data-gel-color="#ff8c42" style="--gel-color:#ff8c42" aria-label="สีส้ม"></button>
-                        <button type="button" data-gel-color="#f24f4f" style="--gel-color:#f24f4f" aria-label="สีแดง"></button>
-                        <button type="button" data-gel-color="#f7f2ee" style="--gel-color:#f7f2ee" aria-label="สีขาว"></button>
-                    </div>
-                    <label class="gel-drop-size">ขนาดหยด<input id="gelDropSize" type="range" min="26" max="86" value="56"></label>
-                    <button class="gel-clear-btn" id="gelClearBtn" type="button">ล้างถาด</button>
-                </div>
-            </section>
-            <aside class="gel-result-panel">
-                <div class="play-section-title"><strong>สีที่ผสมได้</strong><small>คำนวณจากสีที่หยดลงไป</small></div>
-                <div class="mixed-color-card">
-                    <div id="gelMixedSwatch" class="mixed-color-swatch"></div>
-                    <div><span id="gelMixedHex">ยังไม่ได้หยดสี</span><small id="gelMixDescription">เลือกสองสีขึ้นไปแล้วลองคนดู</small></div>
-                </div>
-                <button class="btn" id="saveGelColorBtn" type="button" disabled>♡ เก็บสีนี้ไว้</button>
-                <div class="saved-gel-heading"><strong>พาเลตที่เก็บไว้</strong><button id="clearGelPaletteBtn" type="button">ล้าง</button></div>
-                <div class="saved-gel-palette" id="savedGelPalette"><p>ยังไม่มีสีที่บันทึกไว้</p></div>
-            </aside>
         </div>
     </div>
 
