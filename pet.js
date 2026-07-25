@@ -10,6 +10,8 @@
     const closetDialog = byId('petClosetDialog');
     const avatar = byId('dashboardPetAvatar');
     const petImage = byId('dashboardPetImage');
+    const interactionLayer = byId('petInteractionLayer');
+    const speechBubble = byId('petSpeechBubble');
     const speciesNames = { pig: 'หมู', dog: 'หมา', cat: 'แมว', rabbit: 'กระต่าย', capybara: 'คาปิบาร่า' };
     const defaultNames = { pig: 'โมจิ', dog: 'บ๊อบบี้', cat: 'มีตังค์', rabbit: 'ปุยเมฆ', capybara: 'กะปิ' };
     const closetItems = [
@@ -22,6 +24,7 @@
     let pet = null;
     let selectedSpecies = 'pig';
     let audioContext = null;
+    let petActionBusy = false;
 
     function setMessage(id, text = '', type = '') {
         const element = byId(id);
@@ -55,10 +58,56 @@
     }
 
     function animatePet(className) {
-        avatar.classList.remove('pet-bounce', 'pet-fed');
+        avatar.classList.remove('pet-bounce', 'pet-fed', 'pet-petted', 'pet-eating');
         void avatar.offsetWidth;
         avatar.classList.add(className);
-        setTimeout(() => avatar.classList.remove(className), 900);
+        setTimeout(() => avatar.classList.remove(className), 1400);
+    }
+
+    function showSpeech(text) {
+        speechBubble.textContent = text;
+        speechBubble.hidden = false;
+        clearTimeout(showSpeech.timer);
+        showSpeech.timer = setTimeout(() => { speechBubble.hidden = true; }, 1800);
+    }
+
+    function showPetEffect(type, speech) {
+        interactionLayer.replaceChildren();
+        showSpeech(speech);
+        if (type === 'pet') {
+            const hand = document.createElement('span');
+            hand.className = 'pet-effect-hand';
+            hand.textContent = '🫳';
+            interactionLayer.append(hand);
+            ['28%', '42%', '58%', '70%', '80%'].forEach((left, index) => {
+                const heart = document.createElement('span');
+                heart.className = 'pet-effect-heart';
+                heart.textContent = index % 2 ? '♥' : '💕';
+                heart.style.setProperty('--heart-x', left);
+                heart.style.setProperty('--heart-size', `${17 + index * 2}px`);
+                heart.style.setProperty('--heart-delay', `${index * .08}s`);
+                heart.style.setProperty('--heart-drift', `${index % 2 ? -18 : 16}px`);
+                interactionLayer.append(heart);
+            });
+            animatePet('pet-petted');
+        } else {
+            const foods = { pig: '🍎', dog: '🦴', cat: '🐟', rabbit: '🥕', capybara: '🍊' };
+            const food = document.createElement('span');
+            food.className = 'pet-effect-food';
+            food.textContent = foods[pet?.species] || '🥕';
+            interactionLayer.append(food);
+            ['24%', '48%', '72%'].forEach((left, index) => {
+                const spark = document.createElement('span');
+                spark.className = 'pet-effect-spark';
+                spark.textContent = '✦';
+                spark.style.setProperty('--spark-x', left);
+                spark.style.setProperty('--spark-y', `${45 + index * 17}px`);
+                spark.style.setProperty('--spark-size', `${15 + index * 4}px`);
+                interactionLayer.append(spark);
+            });
+            animatePet('pet-eating');
+        }
+        setTimeout(() => interactionLayer.replaceChildren(), 1500);
     }
 
     function petMoodText() {
@@ -70,7 +119,8 @@
 
     function renderPet() {
         const hasPet = Boolean(pet);
-        avatar.className = `pet-avatar ${hasPet ? pet.species : 'pet-empty'}`;
+        const activeReactions = ['pet-bounce', 'pet-fed', 'pet-petted', 'pet-eating'].filter(className => avatar.classList.contains(className));
+        avatar.className = `pet-avatar ${hasPet ? pet.species : 'pet-empty'} ${activeReactions.join(' ')}`.trim();
         petImage.src = `assets/pets/${hasPet ? pet.species : 'pig'}.webp`;
         avatar.dataset.accessory = pet?.equipped_accessory || '';
         avatar.setAttribute('aria-label', hasPet ? `${speciesNames[pet.species]}ชื่อ ${pet.name}` : 'ยังไม่ได้เลือกสัตว์เลี้ยง');
@@ -163,31 +213,42 @@
         playPetSound(580);
     });
 
-    byId('petPetBtn').addEventListener('click', async () => {
-        if (!pet) return;
+    async function petThePet() {
+        if (!pet || petActionBusy) return;
         const lastPetted = pet.petted_at ? new Date(pet.petted_at).getTime() : 0;
         if (Date.now() - lastPetted < 10000) {
             byId('studyPetMessage').textContent = `${pet.name} เคลิ้มแล้ว รอสักนิดค่อยลูบอีกทีนะ`;
-            animatePet('pet-bounce');
+            showPetEffect('pet', 'เคลิ้มแล้ว~ 💕');
             return;
         }
+        showPetEffect('pet', 'ชอบจัง ลูบอีกได้ไหม?');
+        playPetSound(620);
+        petActionBusy = true;
         if (await updatePet({ happiness: Math.min(100, pet.happiness + 3), petted_at: new Date().toISOString() })) {
-            animatePet('pet-bounce');
-            playPetSound(620);
+            byId('studyPetMessage').textContent = `${pet.name} มีความสุขขึ้นจากการลูบหัว`;
         }
-    });
+        petActionBusy = false;
+    }
 
-    byId('feedPetBtn').addEventListener('click', async () => {
-        if (!pet) return;
+    async function feedThePet() {
+        if (!pet || petActionBusy) return;
         if (pet.petals < 2) {
             byId('studyPetMessage').textContent = 'กลีบดอกไม้ยังไม่พอ ทำการบ้านสำเร็จแล้วจะได้รับเพิ่มนะ';
+            showSpeech('หิวจัง แต่กลีบยังไม่พอ 🥺');
             return;
         }
+        showPetEffect('feed', 'อร่อยมาก! ง่ำ ๆ');
+        playPetSound(460);
+        petActionBusy = true;
         if (await updatePet({ petals: pet.petals - 2, happiness: Math.min(100, pet.happiness + 10), fed_at: new Date().toISOString() })) {
-            animatePet('pet-fed');
-            playPetSound(460);
+            byId('studyPetMessage').textContent = `${pet.name} อิ่มแล้วและมีความสุขขึ้น`;
         }
-    });
+        petActionBusy = false;
+    }
+
+    byId('petPetBtn').addEventListener('click', petThePet);
+    byId('feedPetBtn').addEventListener('click', feedThePet);
+    avatar.addEventListener('click', petThePet);
 
     byId('petClosetGrid').addEventListener('click', async event => {
         const button = event.target.closest('[data-closet-item]');

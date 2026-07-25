@@ -61,6 +61,8 @@
     height: 185px;
     place-items: center;
     transform-origin: 50% 90%;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .pet-avatar > img {
@@ -70,11 +72,103 @@
     filter: drop-shadow(0 14px 12px rgba(89,53,72,.17));
 }
 .pet-avatar.pet-empty { opacity:.25; filter:grayscale(1); }
+.pet-avatar.pet-empty { cursor: default; }
 
 .pet-avatar.pet-bounce { animation:petBounce .65s cubic-bezier(.2,.85,.3,1); }
 .pet-avatar.pet-fed { animation:petFed .85s ease; }
+.pet-avatar.pet-petted { animation:petPetted 1.05s cubic-bezier(.2,.9,.25,1); }
+.pet-avatar.pet-eating { animation:petEating 1.25s ease; }
 @keyframes petBounce { 0%,100%{transform:translateY(0) scale(1)}35%{transform:translateY(-18px) scale(1.04,.96)}65%{transform:translateY(3px) scale(.96,1.04)} }
 @keyframes petFed { 0%,100%{transform:rotate(0)}25%{transform:rotate(-7deg) scale(1.05)}50%{transform:rotate(7deg) scale(1.08)}75%{transform:rotate(-4deg)} }
+@keyframes petPetted { 0%,100%{transform:translateY(0) scale(1)}22%{transform:translateY(7px) scale(1.08,.91) rotate(-3deg)}48%{transform:translateY(-6px) scale(.96,1.07) rotate(3deg)}72%{transform:translateY(2px) scale(1.03,.97)} }
+@keyframes petEating { 0%,100%{transform:scale(1)}20%{transform:translateY(4px) scale(1.04,.96)}35%,55%,75%{transform:scale(1.06,.94) rotate(-2deg)}45%,65%,85%{transform:scale(1.06,.94) rotate(2deg)} }
+
+.pet-interaction-layer {
+    position: absolute;
+    z-index: 8;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.pet-effect-hand {
+    position: absolute;
+    top: 26px;
+    left: 52%;
+    font-size: 46px;
+    filter: drop-shadow(0 4px 4px rgba(81,48,64,.25));
+    animation:petHandStroke .9s ease-in-out;
+}
+
+@keyframes petHandStroke {
+    0%{opacity:0;transform:translate(35px,-28px) rotate(-18deg)}
+    20%{opacity:1}
+    45%{transform:translate(-18px,20px) rotate(8deg)}
+    72%{transform:translate(15px,30px) rotate(-5deg)}
+    100%{opacity:0;transform:translate(-24px,40px) rotate(9deg)}
+}
+
+.pet-effect-heart {
+    position: absolute;
+    left: var(--heart-x);
+    bottom: 55px;
+    color: #ff5fa0;
+    font-size: var(--heart-size);
+    animation:petHeartFloat 1.25s ease-out forwards;
+    animation-delay: var(--heart-delay);
+}
+
+@keyframes petHeartFloat {
+    0%{opacity:0;transform:translateY(10px) scale(.3) rotate(-8deg)}
+    20%{opacity:1}
+    100%{opacity:0;transform:translateY(-145px) translateX(var(--heart-drift)) scale(1.15) rotate(18deg)}
+}
+
+.pet-effect-food {
+    position: absolute;
+    z-index: 10;
+    left: 18px;
+    bottom: 55px;
+    font-size: 47px;
+    filter:drop-shadow(0 4px 4px rgba(78,46,60,.2));
+    animation:petFoodFly 1.05s cubic-bezier(.2,.8,.3,1) forwards;
+}
+
+@keyframes petFoodFly {
+    0%{opacity:0;transform:translate(-30px,25px) rotate(-25deg) scale(.5)}
+    18%{opacity:1}
+    70%{opacity:1;transform:translate(92px,-62px) rotate(15deg) scale(1)}
+    100%{opacity:0;transform:translate(112px,-55px) rotate(20deg) scale(.2)}
+}
+
+.pet-effect-spark {
+    position:absolute;
+    left:var(--spark-x);
+    top:var(--spark-y);
+    color:#ffe26f;
+    font-size:var(--spark-size);
+    animation:petSpark .9s ease-out forwards;
+}
+
+@keyframes petSpark { 0%{opacity:0;transform:scale(.2) rotate(0)}40%{opacity:1;transform:scale(1.2) rotate(30deg)}100%{opacity:0;transform:scale(.6) rotate(80deg)} }
+
+.pet-speech-bubble {
+    position:absolute;
+    z-index:12;
+    top:18px;
+    left:15px;
+    max-width:145px;
+    padding:8px 11px;
+    border:2px solid rgba(255,255,255,.85);
+    border-radius:14px 14px 14px 4px;
+    background:rgba(255,255,255,.9);
+    color:#8e4f70;
+    box-shadow:0 8px 18px rgba(94,56,76,.14);
+    font:600 9px 'Prompt',sans-serif;
+    animation:petSpeechIn .28s ease-out;
+}
+
+@keyframes petSpeechIn { from{opacity:0;transform:translateY(7px) scale(.9)}to{opacity:1;transform:none} }
 
 .pet-accessory { position:absolute; z-index:5; top:7px; left:50%; transform:translateX(-50%); font-size:37px; filter:drop-shadow(0 3px 3px rgba(73,45,59,.2)); }
 .pet-avatar[data-accessory="ribbon"] .pet-accessory::before { content:'🎀'; }
