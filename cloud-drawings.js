@@ -4,6 +4,9 @@ window.pdfMagicSupabase = supabaseClient;
 
 const signedOutPanel = document.getElementById('signedOutPanel');
 const signedInPanel = document.getElementById('signedInPanel');
+const googleLoginBtn = document.getElementById('googleLoginBtn');
+const googleLoginLabel = document.getElementById('googleLoginLabel');
+const emailLoginFallback = document.getElementById('emailLoginFallback');
 const authEmail = document.getElementById('authEmail');
 const sendLoginLinkBtn = document.getElementById('sendLoginLinkBtn');
 const emailLoginStep = document.getElementById('emailLoginStep');
@@ -112,7 +115,7 @@ function isEmailRateLimitError(error) {
 function friendlyAuthError(error, action = 'send') {
     const detail = `${error?.code || ''} ${error?.message || ''}`;
     if (isEmailRateLimitError(error)) {
-        return 'ขอรหัสทางอีเมลถี่เกินไป ใช้รหัสล่าสุดที่ได้รับก่อน หรือรอให้เวลานับถอยหลังหมดแล้วลองใหม่ หากยังขึ้นข้อความเดิมอาจต้องรอระบบประมาณ 1 ชั่วโมง';
+        return 'โควตาส่งอีเมลของ Supabase เต็มชั่วคราว ไม่ได้เกิดจากการกดครั้งนี้ซ้ำ หากมีรหัสล่าสุดให้ใช้รหัสนั้นก่อน หรือรอแล้วลองใหม่อีกครั้ง โดยบางกรณีอาจต้องรอประมาณ 1 ชั่วโมง';
     }
     if (/invalid.*email|email.*invalid/i.test(detail)) return 'รูปแบบอีเมลไม่ถูกต้อง กรุณาตรวจอีเมลอีกครั้ง';
     if (/expired|invalid.*token|token.*invalid|otp/i.test(detail) && action === 'verify') {
@@ -129,9 +132,33 @@ function showOtpStep(email) {
     sessionStorage.setItem('pdf-magic-login-email', email);
     authEmail.value = email;
     otpEmailLabel.textContent = email;
+    emailLoginFallback.open = true;
     emailLoginStep.hidden = true;
     otpLoginStep.hidden = false;
 }
+
+googleLoginBtn.addEventListener('click', async () => {
+    saveCanvasDraft();
+    localStorage.setItem('pdf-magic-drawing-title', drawingTitle.value.trim());
+    googleLoginBtn.disabled = true;
+    googleLoginLabel.textContent = 'กำลังเปิด Google...';
+    setCloudMessage('กำลังพาไปเลือกบัญชี Google');
+
+    const redirectTo = `${window.location.origin}${window.location.pathname}`;
+    const { error } = await supabaseClient.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo }
+    });
+
+    if (!error) return;
+    googleLoginBtn.disabled = false;
+    googleLoginLabel.textContent = 'เข้าสู่ระบบด้วย Google';
+    const detail = `${error.code || ''} ${error.message || ''}`;
+    const message = /provider.*not.*enabled|unsupported.*provider/i.test(detail)
+        ? 'ยังไม่ได้เปิด Google Login ใน Supabase กรุณาตั้งค่า Google Provider ก่อนใช้งาน'
+        : 'เปิดหน้าเข้าสู่ระบบ Google ไม่สำเร็จ กรุณาลองใหม่อีกครั้ง';
+    setCloudMessage(message, 'error');
+});
 
 async function requestLoginCode(email, button) {
     setButtonBusy(button, true, 'กำลังส่ง...');
@@ -142,7 +169,7 @@ async function requestLoginCode(email, button) {
     if (error) {
         if (isEmailRateLimitError(error)) {
             showOtpStep(email);
-            startAuthCooldown(300);
+            startAuthCooldown(60);
         }
         setCloudMessage(friendlyAuthError(error, 'send'), 'error');
         return false;
@@ -173,6 +200,7 @@ function updateAuthUI(user) {
         if (waitingForOtp) {
             authEmail.value = pendingLoginEmail;
             otpEmailLabel.textContent = pendingLoginEmail;
+            emailLoginFallback.open = true;
         }
         updateAuthCooldownUI();
     }
@@ -626,6 +654,7 @@ async function showSharedDrawingFromUrl() {
 if (pendingLoginEmail) {
     authEmail.value = pendingLoginEmail;
     otpEmailLabel.textContent = pendingLoginEmail;
+    emailLoginFallback.open = true;
     emailLoginStep.hidden = true;
     otpLoginStep.hidden = false;
 }
