@@ -602,12 +602,14 @@ const brushSize = document.getElementById('brushSize');
 const clearBtn = document.getElementById('clearCanvasBtn');
 const brushToolBtn = document.getElementById('brushToolBtn');
 const fillToolBtn = document.getElementById('fillToolBtn');
+const eyedropperToolBtn = document.getElementById('eyedropperToolBtn');
 const eraserToolBtn = document.getElementById('eraserToolBtn');
 const undoCanvasBtn = document.getElementById('undoCanvasBtn');
 const redoCanvasBtn = document.getElementById('redoCanvasBtn');
 const downloadCanvasBtn = document.getElementById('downloadCanvasBtn');
 const brushSizeValue = document.getElementById('brushSizeValue');
-const colorSwatches = document.querySelectorAll('.color-swatch');
+const colorSwatchesContainer = document.getElementById('colorSwatches');
+let colorSwatches = [...colorSwatchesContainer.querySelectorAll('.color-swatch')];
 const sizePresetButtons = document.querySelectorAll('.size-btn');
 const extraToolButtons = document.querySelectorAll('[data-drawing-tool]');
 const canvasRatio = document.getElementById('canvasRatio');
@@ -630,6 +632,7 @@ let draftRestored = false;
 const undoHistory = [];
 const redoHistory = [];
 const MAX_HISTORY = 15;
+const CUSTOM_SKETCH_COLORS_KEY = 'jane-sketch-custom-colors';
 
 function saveCanvasDraft() {
     if (!canvas.width || !canvas.height) return;
@@ -697,41 +700,80 @@ function selectDrawingTool(tool) {
     currentTool = tool;
     const usingBrush = tool === 'brush';
     const usingFill = tool === 'fill';
+    const usingEyedropper = tool === 'eyedropper';
     const usingEraser = tool === 'eraser';
     brushToolBtn.classList.toggle('active', usingBrush);
     fillToolBtn.classList.toggle('active', usingFill);
+    eyedropperToolBtn.classList.toggle('active', usingEyedropper);
     eraserToolBtn.classList.toggle('active', usingEraser);
     brushToolBtn.setAttribute('aria-pressed', String(usingBrush));
     fillToolBtn.setAttribute('aria-pressed', String(usingFill));
+    eyedropperToolBtn.setAttribute('aria-pressed', String(usingEyedropper));
     eraserToolBtn.setAttribute('aria-pressed', String(usingEraser));
     extraToolButtons.forEach(button => {
         const selected = button.dataset.drawingTool === tool;
         button.classList.toggle('active', selected);
         button.setAttribute('aria-pressed', String(selected));
     });
-    brushSize.disabled = usingFill;
-    sizePresetButtons.forEach(button => button.disabled = usingFill);
+    brushSize.disabled = usingFill || usingEyedropper;
+    sizePresetButtons.forEach(button => button.disabled = usingFill || usingEyedropper);
     canvas.classList.toggle('fill-mode', usingFill);
+    canvas.classList.toggle('eyedropper-mode', usingEyedropper);
     canvas.classList.toggle('eraser-mode', usingEraser);
     if (!usingEraser) brushCursor.classList.remove('visible');
 }
 
 brushToolBtn.addEventListener('click', () => selectDrawingTool('brush'));
 fillToolBtn.addEventListener('click', () => selectDrawingTool('fill'));
+eyedropperToolBtn.addEventListener('click', () => selectDrawingTool('eyedropper'));
 eraserToolBtn.addEventListener('click', () => selectDrawingTool('eraser'));
 extraToolButtons.forEach(button => button.addEventListener('click', () => selectDrawingTool(button.dataset.drawingTool)));
 
 function selectColor(color) {
-    colorPicker.value = color;
+    const normalizedColor = color.toLowerCase();
+    colorPicker.value = normalizedColor;
     colorSwatches.forEach(swatch => {
-        const selected = swatch.dataset.color === color;
+        const selected = swatch.dataset.color.toLowerCase() === normalizedColor;
         swatch.classList.toggle('active', selected);
         swatch.setAttribute('aria-pressed', String(selected));
     });
 }
 
-colorSwatches.forEach(swatch => swatch.addEventListener('click', () => selectColor(swatch.dataset.color)));
+function bindColorSwatch(swatch) {
+    swatch.addEventListener('click', () => selectColor(swatch.dataset.color));
+}
+
+function addCustomColor(color, saveColor = true) {
+    const normalizedColor = color.toLowerCase();
+    let swatch = colorSwatches.find(item => item.dataset.color.toLowerCase() === normalizedColor);
+    if (!swatch) {
+        swatch = document.createElement('button');
+        swatch.className = 'color-swatch custom-swatch';
+        swatch.type = 'button';
+        swatch.dataset.color = normalizedColor;
+        swatch.style.setProperty('--swatch', normalizedColor);
+        swatch.setAttribute('aria-label', `สีที่เพิ่ม ${normalizedColor}`);
+        bindColorSwatch(swatch);
+    }
+    colorSwatchesContainer.insertBefore(swatch, colorSwatchesContainer.firstElementChild);
+    colorSwatches = [...colorSwatchesContainer.querySelectorAll('.color-swatch')];
+    if (saveColor) {
+        const savedColors = colorSwatches
+            .filter(item => item.classList.contains('custom-swatch'))
+            .map(item => item.dataset.color)
+            .slice(0, 8);
+        localStorage.setItem(CUSTOM_SKETCH_COLORS_KEY, JSON.stringify(savedColors));
+    }
+    selectColor(normalizedColor);
+}
+
+colorSwatches.forEach(bindColorSwatch);
+try {
+    const savedCustomColors = JSON.parse(localStorage.getItem(CUSTOM_SKETCH_COLORS_KEY) || '[]');
+    [...savedCustomColors].reverse().forEach(color => addCustomColor(color, false));
+} catch (_) {}
 colorPicker.addEventListener('input', () => selectColor(colorPicker.value));
+colorPicker.addEventListener('change', () => addCustomColor(colorPicker.value));
 
 function selectBrushSize(size) {
     brushSize.value = size;
@@ -809,6 +851,26 @@ function startDrawing(e) {
     activePointerId = e.pointerId;
     if (e.pointerId !== undefined) canvas.setPointerCapture(e.pointerId);
     const pos = getPos(e);
+
+    if (currentTool === 'eyedropper') {
+        const pixel = ctx.getImageData(
+            Math.min(canvas.width - 1, Math.max(0, Math.floor(pos.x))),
+            Math.min(canvas.height - 1, Math.max(0, Math.floor(pos.y))),
+            1,
+            1
+        ).data;
+        const alpha = pixel[3] / 255;
+        const background = canvasBackground.value === 'transparent' ? 0 : 255;
+        const red = Math.round(pixel[0] * alpha + background * (1 - alpha));
+        const green = Math.round(pixel[1] * alpha + background * (1 - alpha));
+        const blue = Math.round(pixel[2] * alpha + background * (1 - alpha));
+        const pickedColor = `#${[red, green, blue].map(value => value.toString(16).padStart(2, '0')).join('')}`;
+        addCustomColor(pickedColor);
+        selectDrawingTool('brush');
+        if (canvas.hasPointerCapture?.(e.pointerId)) canvas.releasePointerCapture(e.pointerId);
+        activePointerId = null;
+        return;
+    }
 
     if (currentTool === 'text') {
         const text = window.prompt('พิมพ์ข้อความที่ต้องการใส่');
