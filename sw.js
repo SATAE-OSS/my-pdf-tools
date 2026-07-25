@@ -1,4 +1,4 @@
-const CACHE_NAME = 'jane-tools-v42';
+const CACHE_NAME = 'jane-tools-v43';
 const urlsToCache = [
   './',
   './index.html',
@@ -19,6 +19,11 @@ const urlsToCache = [
   './manifest.json',
   './icon-192.png',
   './icon-512.png',
+  './assets/pets/pig.webp',
+  './assets/pets/dog.webp',
+  './assets/pets/cat.webp',
+  './assets/pets/rabbit.webp',
+  './assets/pets/capybara.webp',
   './vendor/Sortable.min.js',
   './vendor/jspdf.umd.min.js',
   './vendor/pdf.min.js',

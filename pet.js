@@ -9,6 +9,7 @@
     const petForm = byId('petForm');
     const closetDialog = byId('petClosetDialog');
     const avatar = byId('dashboardPetAvatar');
+    const petImage = byId('dashboardPetImage');
     const speciesNames = { pig: 'หมู', dog: 'หมา', cat: 'แมว', rabbit: 'กระต่าย', capybara: 'คาปิบาร่า' };
     const defaultNames = { pig: 'โมจิ', dog: 'บ๊อบบี้', cat: 'มีตังค์', rabbit: 'ปุยเมฆ', capybara: 'กะปิ' };
     const closetItems = [
@@ -70,6 +71,7 @@
     function renderPet() {
         const hasPet = Boolean(pet);
         avatar.className = `pet-avatar ${hasPet ? pet.species : 'pet-empty'}`;
+        petImage.src = `assets/pets/${hasPet ? pet.species : 'pig'}.webp`;
         avatar.dataset.accessory = pet?.equipped_accessory || '';
         avatar.setAttribute('aria-label', hasPet ? `${speciesNames[pet.species]}ชื่อ ${pet.name}` : 'ยังไม่ได้เลือกสัตว์เลี้ยง');
         byId('studyPetName').textContent = hasPet ? `${pet.name} · ${speciesNames[pet.species]}คู่เรียน` : 'รับสัตว์เลี้ยงคู่เรียนกันไหม?';

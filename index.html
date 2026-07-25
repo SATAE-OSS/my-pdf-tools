@@ -87,7 +87,7 @@
     </section>
 
     <div id="appShell" class="app-shell" hidden>
-    <span class="app-version" title="Jane Tools version 3.3.0">v3.3.0</span>
+    <span class="app-version" title="Jane Tools version 3.3.1">v3.3.1</span>
     <!-- ปุ่มโหมดกลางคืน (เพิ่มใหม่) -->
     <button id="darkModeBtn" class="dark-mode-btn" type="button" aria-label="เปิดโหมดกลางคืน" aria-pressed="false">🌙</button>
     <div class="app-connectivity" aria-live="polite">
@@ -133,8 +133,7 @@
             <div class="pet-home-scene">
                 <div class="pet-sparkles" aria-hidden="true">✦　·　✧</div>
                 <div id="dashboardPetAvatar" class="pet-avatar pet-empty" aria-label="ยังไม่ได้เลือกสัตว์เลี้ยง">
-                    <span class="pet-ear pet-ear-left"></span><span class="pet-ear pet-ear-right"></span>
-                    <span class="pet-head"><i class="pet-eye pet-eye-left"></i><i class="pet-eye pet-eye-right"></i><b class="pet-muzzle"></b><em class="pet-mouth"></em></span>
+                    <img id="dashboardPetImage" src="assets/pets/pig.webp" alt="">
                     <span class="pet-accessory" aria-hidden="true"></span>
                 </div>
                 <span class="pet-shadow" aria-hidden="true"></span>
@@ -1051,11 +1050,11 @@
         <form id="petForm" method="dialog">
             <div class="dialog-title-row"><div class="dialog-icon">🐾</div><div><h3 id="petDialogTitle">เลือกเพื่อนคู่เรียน</h3><p>เปลี่ยนตัวภายหลังได้ ของและกลีบดอกไม้ยังอยู่เหมือนเดิม</p></div></div>
             <div class="pet-choice-grid" role="radiogroup" aria-label="เลือกชนิดสัตว์เลี้ยง">
-                <button class="active" type="button" data-pet-species="pig"><span>🐷</span><strong>หมู</strong></button>
-                <button type="button" data-pet-species="dog"><span>🐶</span><strong>หมา</strong></button>
-                <button type="button" data-pet-species="cat"><span>🐱</span><strong>แมว</strong></button>
-                <button type="button" data-pet-species="rabbit"><span>🐰</span><strong>กระต่าย</strong></button>
-                <button type="button" data-pet-species="capybara"><span>🟤</span><strong>คาปิบาร่า</strong></button>
+                <button class="active" type="button" data-pet-species="pig"><img src="assets/pets/pig.webp" alt=""><strong>หมู</strong></button>
+                <button type="button" data-pet-species="dog"><img src="assets/pets/dog.webp" alt=""><strong>หมา</strong></button>
+                <button type="button" data-pet-species="cat"><img src="assets/pets/cat.webp" alt=""><strong>แมว</strong></button>
+                <button type="button" data-pet-species="rabbit"><img src="assets/pets/rabbit.webp" alt=""><strong>กระต่าย</strong></button>
+                <button type="button" data-pet-species="capybara"><img src="assets/pets/capybara.webp" alt=""><strong>คาปิบาร่า</strong></button>
             </div>
             <div class="planner-form-grid"><label class="span-two">ชื่อสัตว์เลี้ยง<input id="petNameInput" type="text" maxlength="30" required placeholder="ตั้งชื่อให้น้อง"></label></div>
             <p id="petFormMessage" class="planner-message" role="status"></p>
