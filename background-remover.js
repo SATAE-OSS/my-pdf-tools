@@ -25,6 +25,11 @@
     const undoButton = document.getElementById('removeBgUndoBtn');
     const redoButton = document.getElementById('removeBgRedoBtn');
     const status = document.getElementById('removeBgStatus');
+    const aiProgress = document.getElementById('removeBgAiProgress');
+    const aiProgressTitle = document.getElementById('removeBgAiProgressTitle');
+    const aiProgressDetail = document.getElementById('removeBgAiProgressDetail');
+    const aiProgressBar = document.getElementById('removeBgAiProgressBar');
+    const aiProgressPercent = document.getElementById('removeBgAiProgressPercent');
     if (!input || !resultCanvas) return;
 
     const originalContext = originalCanvas.getContext('2d', { willReadFrequently: true });
@@ -42,10 +47,33 @@
     let redoHistory = [];
     let aiModulePromise = null;
     let aiBusy = false;
+    let aiProgressHideTimer = 0;
 
     function setStatus(message, type = '') {
         status.textContent = message;
         status.className = `remove-bg-status ${type}`.trim();
+    }
+
+    function showAiProgress(title, detail, percent = null, state = 'loading') {
+        clearTimeout(aiProgressHideTimer);
+        aiProgress.hidden = false;
+        aiProgress.classList.toggle('indeterminate', percent === null && state === 'loading');
+        aiProgress.classList.toggle('done', state === 'done');
+        aiProgress.classList.toggle('error', state === 'error');
+        aiProgressTitle.textContent = title;
+        aiProgressDetail.textContent = detail;
+        const safePercent = percent === null ? 8 : Math.max(0, Math.min(100, Math.round(percent)));
+        aiProgressBar.style.width = `${safePercent}%`;
+        aiProgressPercent.textContent = percent === null ? '…' : `${safePercent}%`;
+    }
+
+    function finishAiProgress() {
+        showAiProgress('ลบพื้นหลังสำเร็จแล้ว', 'ใช้แปรงลบเพิ่มหรือคืนส่วนที่หายได้เลย', 100, 'done');
+        aiProgressHideTimer = window.setTimeout(() => { aiProgress.hidden = true; }, 3500);
+    }
+
+    function waitForInterfacePaint() {
+        return new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
     }
 
     function cloneImageData(imageData) {
@@ -221,7 +249,9 @@
         const originalButtonHtml = aiButton.innerHTML;
         aiButton.innerHTML = '<span>⏳</span><strong>กำลังเตรียม AI…</strong><small>อย่าปิดหน้านี้</small>';
         setStatus('ครั้งแรกกำลังดาวน์โหลด AI ประมาณ 40 MB หลังจากนี้เบราว์เซอร์จะจำไว้');
+        showAiProgress('กำลังเปิดระบบ AI…', 'เตรียมตัวประมวลผลบนอุปกรณ์ของคุณ', null);
         try {
+            await waitForInterfacePaint();
             aiModulePromise ||= import(AI_MODULE_URL);
             const module = await aiModulePromise;
             const removeBackground = module.default;
@@ -232,6 +262,7 @@
                 const percent = Math.min(99, Math.round(current / total * 100));
                 aiButton.innerHTML = `<span>⏳</span><strong>AI กำลังทำงาน ${percent}%</strong><small>กำลังโหลดและวิเคราะห์ภาพ</small>`;
                 setStatus(`AI กำลังเตรียมโมเดลและวิเคราะห์ภาพ ${percent}%`);
+                showAiProgress('กำลังโหลดโมเดล AI…', 'ดาวน์โหลดครั้งแรกเท่านั้น รอบต่อไปจะเร็วขึ้น', percent);
             };
             const config = {
                 model: 'isnet_quint8',
@@ -240,23 +271,28 @@
                 output: { format: 'image/png', quality: 1, type: 'foreground' }
             };
             let outputBlob;
+            showAiProgress('กำลังโหลดโมเดล AI…', 'ครั้งแรกประมาณ 40 MB จากนั้นเบราว์เซอร์จะเก็บไว้', null);
             try {
                 outputBlob = await removeBackground(imageBlob, config);
             } catch (error) {
                 if (config.device !== 'gpu') throw error;
                 setStatus('อุปกรณ์นี้ใช้ AI ผ่าน GPU ไม่ได้ กำลังลองโหมดรองรับมือถือ…');
+                showAiProgress('กำลังสลับเป็นโหมดมือถือ…', 'GPU ใช้ไม่ได้ ระบบกำลังประมวลผลด้วย CPU แทน', null);
                 outputBlob = await removeBackground(imageBlob, { ...config, device: 'cpu' });
             }
+            showAiProgress('กำลังสร้างภาพโปร่งใส…', 'AI วิเคราะห์เสร็จแล้ว เหลือจัดเตรียมผลลัพธ์', 96);
             rememberForUndo();
             await drawBlobToResult(outputBlob);
             manualSeed = null;
             setMode('ai');
             setTool('erase');
             setStatus('AI ลบพื้นหลังแล้ว ลองใช้ “ลบเพิ่ม” หรือ “คืนส่วนที่หาย” เก็บรายละเอียดต่อได้', 'success');
+            finishAiProgress();
         } catch (error) {
             console.error('Background removal AI failed', error);
             aiModulePromise = null;
             setStatus('AI เปิดไม่สำเร็จ ตรวจอินเทอร์เน็ตแล้วลองใหม่ หรือใช้ “ลบแบบเร็ว” แทนได้', 'error');
+            showAiProgress('เปิด AI ไม่สำเร็จ', 'ตรวจอินเทอร์เน็ตแล้วกดใหม่ หรือใช้โหมดลบแบบเร็วแทน', 0, 'error');
         } finally {
             aiBusy = false;
             aiButton.disabled = false;
@@ -388,6 +424,7 @@
     brushInput.addEventListener('input', () => { brushValue.textContent = brushInput.value; });
     zoomInput.addEventListener('input', updateZoom);
     fastModeButton.addEventListener('click', () => {
+        if (!aiBusy) aiProgress.hidden = true;
         setAutomaticSamples();
         removeFastBackground();
     });

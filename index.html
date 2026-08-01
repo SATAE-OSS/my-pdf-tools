@@ -88,7 +88,7 @@
     </section>
 
     <div id="appShell" class="app-shell" hidden>
-    <span class="app-version" title="Jane Tools version 3.8.0">v3.8.0</span>
+    <span class="app-version" title="Jane Tools version 3.8.1">v3.8.1</span>
     <!-- ปุ่มโหมดกลางคืน (เพิ่มใหม่) -->
     <button id="darkModeBtn" class="dark-mode-btn" type="button" aria-label="เปิดโหมดกลางคืน" aria-pressed="false">🌙</button>
     <div class="app-connectivity" aria-live="polite">
@@ -349,6 +349,11 @@
                 <div class="remove-bg-mode-switch" role="group" aria-label="วิธีลบพื้นหลัง">
                     <button class="active" id="removeBgFastModeBtn" type="button"><span>⚡</span><strong>ลบแบบเร็ว</strong><small>เหมาะกับพื้นหลังสีเรียบ</small></button>
                     <button id="removeBgAiBtn" type="button"><span>✨</span><strong>ลบด้วย AI</strong><small>คน สัตว์ สิ่งของ · ครั้งแรกโหลดประมาณ 40 MB</small></button>
+                </div>
+                <div class="remove-bg-ai-progress" id="removeBgAiProgress" hidden role="status" aria-live="polite">
+                    <span class="remove-bg-ai-spinner" aria-hidden="true"></span>
+                    <div><strong id="removeBgAiProgressTitle">กำลังเตรียม AI…</strong><small id="removeBgAiProgressDetail">ครั้งแรกอาจใช้เวลาสักครู่ กรุณาอย่าปิดหน้านี้</small><div class="remove-bg-ai-track"><i id="removeBgAiProgressBar"></i></div></div>
+                    <b id="removeBgAiProgressPercent">0%</b>
                 </div>
                 <div class="remove-bg-toolbar" id="removeBgFastControls">
                     <label class="remove-bg-control"><header><span>ลบมากขึ้น</span><output id="removeBgToleranceValue">42</output></header><input id="removeBgTolerance" type="range" min="8" max="110" value="42"></label>
