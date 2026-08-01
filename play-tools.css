@@ -230,19 +230,21 @@
 .room-plan-heading > div:first-child { display:grid; gap:2px; }
 .room-plan-heading strong { color:#684957; font-size:12px; }
 .room-plan-heading small { color:#9c8290; font-size:8px; }
-.room-plan-actions { display:flex; gap:7px; }
-.room-plan-actions button,.room-dimension-editor button {
+.room-plan-heading > button,.room-dimension-editor button,.room-add-direction button {
     min-height:35px; padding:7px 11px; border:1px solid #e7cbd9; border-radius:10px;
     background:#fff; color:#a05177; font:600 8px 'Prompt',sans-serif; cursor:pointer;
 }
-.room-plan-actions .danger-soft { color:#c95068; }
-.room-plan-actions button:disabled { opacity:.4; cursor:default; }
+.room-plan-heading > .danger-soft { color:#c95068; }
+.room-plan-heading > button:disabled { opacity:.4; cursor:default; }
 .room-tabs { display:flex; gap:7px; overflow-x:auto; padding:2px 1px 5px; scrollbar-width:thin; }
 .room-tabs button {
     flex:0 0 auto; min-height:37px; padding:7px 13px; border:1px solid #e6cdd9; border-radius:12px;
     background:#fff; color:#795968; font:600 9px 'Prompt',sans-serif; cursor:pointer;
 }
 .room-tabs button.active { border-color:#d86f9f; background:linear-gradient(135deg,#d18bee,#f186b9); color:#fff; box-shadow:0 5px 12px rgba(206,103,155,.2); }
+.room-add-direction { display:flex; align-items:center; gap:7px; overflow-x:auto; padding-bottom:2px; }
+.room-add-direction span { flex:0 0 auto; color:#866978; font-size:8px; font-weight:700; }
+.room-add-direction button { flex:0 0 auto; min-height:33px; background:#fff7fb; }
 .room-dimension-editor { display:grid; grid-template-columns:1.25fr 1fr 1fr auto; gap:8px; align-items:end; }
 .room-dimension-editor label { position:relative; display:grid; gap:4px; color:#8a6c7b; font-size:8px; font-weight:600; }
 .room-dimension-editor input { min-width:0; height:38px; padding:7px 29px 7px 10px; border:1px solid #e6d0db; border-radius:10px; background:#fff; color:#654956; font:600 10px 'Prompt',sans-serif; }
@@ -373,7 +375,7 @@ body.dark-mode .room-canvas-wrap {
 body.dark-mode .room-plan-manager { border-color:#4d3a55; background:rgba(31,24,39,.92); }
 body.dark-mode .room-plan-heading strong { color:#ffe3ef; }
 body.dark-mode .room-plan-heading small { color:#bba5b2; }
-body.dark-mode .room-tabs button,body.dark-mode .room-plan-actions button,body.dark-mode .room-dimension-editor button,body.dark-mode .room-dimension-editor input { border-color:#584362; background:#281e30; color:#f0b0cf; }
+body.dark-mode .room-tabs button,body.dark-mode .room-plan-heading > button,body.dark-mode .room-add-direction button,body.dark-mode .room-dimension-editor button,body.dark-mode .room-dimension-editor input { border-color:#584362; background:#281e30; color:#f0b0cf; }
 
 body.dark-mode .room-color-row {
     color: #baa5b1;
@@ -441,7 +443,7 @@ body.dark-mode .room-color-row {
     }
 
     .room-plan-heading { align-items:flex-start; }
-    .room-plan-actions { flex-direction:column; }
+    .room-plan-heading > button { flex:0 0 auto; }
     .room-dimension-editor { grid-template-columns:1fr 1fr; }
     .room-dimension-editor label:first-child { grid-column:1 / -1; }
     .room-dimension-editor button { align-self:end; }

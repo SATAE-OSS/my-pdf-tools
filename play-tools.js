@@ -8,7 +8,8 @@
     const clamp = (value, minimum, maximum) => Math.min(maximum, Math.max(minimum, value));
     const uid = () => `${Date.now()}-${Math.random().toString(16).slice(2)}`;
     const escapeHtml = value => String(value).replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character]));
-    const storageKey = 'jane-mini-room-v3';
+    const storageKey = 'jane-mini-room-v4';
+    const previousStorageKey = 'jane-mini-room-v3';
     const legacyStorageKey = 'jane-mini-room-v2';
     const definitions = {
         sofa: { width: 220, height: 94, color: '#de8fb5', label: 'โซฟา', icon: '🛋️' },
@@ -88,25 +89,58 @@
             makeItem('plant', 185, 170)
         ]
     };
-    const defaultRoom = (name = 'ห้องนั่งเล่น', items = presets.living()) => ({
+    const localizeItems = (items, widthMeters = 6, lengthMeters = 4) => items.map(item => ({
+        ...item,
+        mx: clamp(((item.x ?? 450) - 38) / 824 * widthMeters, 0, widthMeters),
+        my: clamp(((item.y ?? 310) - 38) / 544 * lengthMeters, 0, lengthMeters)
+    }));
+    const defaultRoom = (name = 'ห้องนั่งเล่น', items = presets.living(), position = {}) => ({
         id: uid(),
         name,
         widthMeters: 6,
         lengthMeters: 4,
+        xMeters: position.xMeters ?? 0,
+        yMeters: position.yMeters ?? 0,
         floor: '#eadbc7',
         wall: '#fff8f2',
-        items
+        items: localizeItems(items)
     });
+    const normalizeProject = saved => {
+        if (!Array.isArray(saved?.rooms) || !saved.rooms.length) return null;
+        let nextX = 0;
+        const rooms = saved.rooms.map((entry, index) => {
+            const widthMeters = clamp(Number(entry.widthMeters) || 6, 2, 20);
+            const lengthMeters = clamp(Number(entry.lengthMeters) || 4, 2, 20);
+            const xMeters = Number.isFinite(Number(entry.xMeters)) ? Number(entry.xMeters) : nextX;
+            const yMeters = Number.isFinite(Number(entry.yMeters)) ? Number(entry.yMeters) : 0;
+            nextX = Math.max(nextX, xMeters + widthMeters);
+            return {
+                ...entry,
+                id: entry.id || uid(),
+                name: entry.name || `ห้อง ${index + 1}`,
+                widthMeters,
+                lengthMeters,
+                xMeters,
+                yMeters,
+                floor: entry.floor || '#eadbc7',
+                wall: entry.wall || '#fff8f2',
+                items: (entry.items || []).map(item => item.mx != null && item.my != null ? item : localizeItems([item], widthMeters, lengthMeters)[0])
+            };
+        });
+        return { activeRoomId: rooms.some(entry => entry.id === saved.activeRoomId) ? saved.activeRoomId : rooms[0].id, rooms };
+    };
     const loadProject = () => {
         try {
-            const saved = JSON.parse(localStorage.getItem(storageKey));
-            if (Array.isArray(saved?.rooms) && saved.rooms.length) return saved;
+            const saved = normalizeProject(JSON.parse(localStorage.getItem(storageKey)));
+            if (saved) return saved;
+            const previous = normalizeProject(JSON.parse(localStorage.getItem(previousStorageKey)));
+            if (previous) return previous;
             const legacy = JSON.parse(localStorage.getItem(legacyStorageKey));
             if (legacy?.items && Array.isArray(legacy.items)) {
-                return {
+                return normalizeProject({
                     activeRoomId: 'legacy-room',
-                    rooms: [{ ...defaultRoom('ห้องนั่งเล่น', legacy.items), ...legacy, id: 'legacy-room', widthMeters: 6, lengthMeters: 4 }]
-                };
+                    rooms: [{ ...legacy, id: 'legacy-room', name: 'ห้องนั่งเล่น', widthMeters: 6, lengthMeters: 4 }]
+                });
             }
         } catch (_) {}
         const firstRoom = defaultRoom();
@@ -147,38 +181,37 @@
             y: (event.clientY - rect.top) * canvas.height / rect.height
         };
     };
-    const floorBounds = () => ({ x: 38, y: 38, width: canvas.width - 76, height: canvas.height - 76 });
-    const furniturePixelScale = () => {
-        const bounds = floorBounds();
-        const pixelsPerMeter = Math.min(bounds.width / room.widthMeters, bounds.height / room.lengthMeters);
-        return pixelsPerMeter / (824 / 6);
-    };
-    function resizeCanvasForRoom(scaleItems = false) {
-        const oldBounds = floorBounds();
-        const widthMeters = clamp(Number(room.widthMeters) || 6, 2, 20);
-        const lengthMeters = clamp(Number(room.lengthMeters) || 4, 2, 20);
-        const ratio = widthMeters / lengthMeters;
-        const longSide = 824;
-        const minimumSide = 230;
-        let innerWidth;
-        let innerHeight;
-        if (ratio >= 1) {
-            innerWidth = longSide;
-            innerHeight = Math.max(minimumSide, Math.round(longSide / ratio));
-        } else {
-            innerHeight = longSide;
-            innerWidth = Math.max(minimumSide, Math.round(longSide * ratio));
-        }
-        canvas.width = innerWidth + 76;
-        canvas.height = innerHeight + 76;
-        if (scaleItems && oldBounds.width > 0 && oldBounds.height > 0) {
-            const nextBounds = floorBounds();
-            room.items.forEach(item => {
-                item.x = nextBounds.x + (item.x - oldBounds.x) * nextBounds.width / oldBounds.width;
-                item.y = nextBounds.y + (item.y - oldBounds.y) * nextBounds.height / oldBounds.height;
-            });
-        }
+    let currentView = null;
+    function computeView() {
+        const minimumX = Math.min(...project.rooms.map(entry => entry.xMeters));
+        const minimumY = Math.min(...project.rooms.map(entry => entry.yMeters));
+        const maximumX = Math.max(...project.rooms.map(entry => entry.xMeters + entry.widthMeters));
+        const maximumY = Math.max(...project.rooms.map(entry => entry.yMeters + entry.lengthMeters));
+        const planWidth = Math.max(1, maximumX - minimumX);
+        const planHeight = Math.max(1, maximumY - minimumY);
+        const padding = 82;
+        const pixelsPerMeter = Math.min((canvas.width - padding * 2) / planWidth, (canvas.height - padding * 2) / planHeight, 138);
+        const drawnWidth = planWidth * pixelsPerMeter;
+        const drawnHeight = planHeight * pixelsPerMeter;
+        return {
+            minimumX,
+            minimumY,
+            pixelsPerMeter,
+            offsetX: (canvas.width - drawnWidth) / 2,
+            offsetY: (canvas.height - drawnHeight) / 2
+        };
     }
+    const roomBounds = (entry, view = currentView) => ({
+        x: view.offsetX + (entry.xMeters - view.minimumX) * view.pixelsPerMeter,
+        y: view.offsetY + (entry.yMeters - view.minimumY) * view.pixelsPerMeter,
+        width: entry.widthMeters * view.pixelsPerMeter,
+        height: entry.lengthMeters * view.pixelsPerMeter
+    });
+    const itemCanvasPoint = (entry, item, view = currentView) => {
+        const bounds = roomBounds(entry, view);
+        return { x: bounds.x + item.mx * view.pixelsPerMeter, y: bounds.y + item.my * view.pixelsPerMeter };
+    };
+    const furniturePixelScale = () => currentView.pixelsPerMeter / (824 / 6);
 
     function syncRoomEditor() {
         document.getElementById('roomNameInput').value = room.name || 'ห้อง';
@@ -192,21 +225,17 @@
     }
 
     function mapPresetToCurrentRoom(items) {
-        const bounds = floorBounds();
-        return items.map(item => ({
-            ...item,
-            x: bounds.x + (item.x - 38) * bounds.width / 824,
-            y: bounds.y + (item.y - 38) * bounds.height / 544
-        }));
+        return localizeItems(items, room.widthMeters, room.lengthMeters);
     }
 
-    function drawItem(item, isSelected) {
+    function drawItem(item, isSelected, ownerRoom) {
         const definition = definitions[item.type];
         if (!definition) return;
         const { width, height } = definition;
         const color = item.color || definition.color;
         context.save();
-        context.translate(item.x, item.y);
+        const point = itemCanvasPoint(ownerRoom, item);
+        context.translate(point.x, point.y);
         context.rotate(item.rotation * Math.PI / 180);
         const displayScale = item.scale * furniturePixelScale();
         context.scale(item.flipX ? -displayScale : displayScale, displayScale);
@@ -341,9 +370,10 @@
             { action: 'delete', icon: '×', label: 'ลบ', danger: true }
         ];
         const toolbarWidth = gap * (controls.length - 1);
-        const centerX = clamp(item.x, toolbarWidth / 2 + radius + 8, canvas.width - toolbarWidth / 2 - radius - 8);
-        let centerY = item.y - halfHeight - radius * 1.65;
-        if (centerY - radius < 8) centerY = item.y + halfHeight + radius * 1.65;
+        const itemPoint = itemCanvasPoint(room, item);
+        const centerX = clamp(itemPoint.x, toolbarWidth / 2 + radius + 8, canvas.width - toolbarWidth / 2 - radius - 8);
+        let centerY = itemPoint.y - halfHeight - radius * 1.65;
+        if (centerY - radius < 8) centerY = itemPoint.y + halfHeight + radius * 1.65;
         centerY = clamp(centerY, radius + 8, canvas.height - radius - 8);
 
         context.save();
@@ -400,74 +430,95 @@
             button.classList.toggle('active', !disabled && selected().color === button.dataset.furnitureColor);
         });
         if (itemCount) itemCount.textContent = `${room.items.length} ชิ้น`;
-        if (dimensionBadge) dimensionBadge.textContent = `${room.widthMeters} × ${room.lengthMeters} ม.`;
+        if (dimensionBadge) dimensionBadge.textContent = `${room.name} ${room.widthMeters} × ${room.lengthMeters} ม.`;
     }
 
     function draw(showSelection = true) {
+        currentView = computeView();
         context.clearRect(0, 0, canvas.width, canvas.height);
-        context.fillStyle = room.wall;
+        context.fillStyle = '#f8f1f5';
         context.fillRect(0, 0, canvas.width, canvas.height);
-        context.save();
-        context.shadowColor = 'rgba(62,42,52,.18)';
-        context.shadowBlur = 18;
-        context.fillStyle = room.floor;
-        roundedRect(context, 38, 38, canvas.width - 76, canvas.height - 76, 10);
-        context.fill();
-        context.restore();
-        const bounds = floorBounds();
-        context.save();
-        roundedRect(context, bounds.x, bounds.y, bounds.width, bounds.height, 10);
-        context.clip();
-        context.strokeStyle = 'rgba(108,79,59,.1)';
-        context.lineWidth = 2;
-        const meterStep = furniturePixelScale() * (824 / 6);
-        for (let x = bounds.x + meterStep; x < bounds.x + bounds.width; x += meterStep) {
-            context.beginPath(); context.moveTo(x, bounds.y); context.lineTo(x, bounds.y + bounds.height); context.stroke();
-        }
-        for (let y = bounds.y + meterStep; y < bounds.y + bounds.height; y += meterStep) {
-            context.beginPath(); context.moveTo(bounds.x, y); context.lineTo(bounds.x + bounds.width, y); context.stroke();
-        }
-        context.restore();
-        context.strokeStyle = 'rgba(100,70,82,.45)';
-        context.lineWidth = 8;
-        roundedRect(context, 35, 35, canvas.width - 70, canvas.height - 70, 12);
-        context.stroke();
-        room.items.forEach(item => drawItem(item, showSelection && item.id === selectedId));
+        project.rooms.forEach(entry => {
+            const bounds = roomBounds(entry);
+            const active = entry.id === room.id;
+            context.save();
+            context.shadowColor = active ? 'rgba(210,80,148,.28)' : 'rgba(62,42,52,.14)';
+            context.shadowBlur = active ? 20 : 12;
+            context.fillStyle = entry.floor;
+            context.fillRect(bounds.x, bounds.y, bounds.width, bounds.height);
+            context.shadowColor = 'transparent';
+            context.beginPath();
+            context.rect(bounds.x, bounds.y, bounds.width, bounds.height);
+            context.clip();
+            context.strokeStyle = 'rgba(108,79,59,.11)';
+            context.lineWidth = 1.5;
+            for (let meter = 1; meter < entry.widthMeters; meter += 1) {
+                const x = bounds.x + meter * currentView.pixelsPerMeter;
+                context.beginPath(); context.moveTo(x, bounds.y); context.lineTo(x, bounds.y + bounds.height); context.stroke();
+            }
+            for (let meter = 1; meter < entry.lengthMeters; meter += 1) {
+                const y = bounds.y + meter * currentView.pixelsPerMeter;
+                context.beginPath(); context.moveTo(bounds.x, y); context.lineTo(bounds.x + bounds.width, y); context.stroke();
+            }
+            context.restore();
+            context.strokeStyle = '#6f5362';
+            context.lineWidth = Math.max(5, currentView.pixelsPerMeter * .08);
+            context.strokeRect(bounds.x, bounds.y, bounds.width, bounds.height);
+            context.strokeStyle = active ? '#d65395' : entry.wall;
+            context.lineWidth = Math.max(3, currentView.pixelsPerMeter * .045);
+            context.strokeRect(bounds.x + 4, bounds.y + 4, bounds.width - 8, bounds.height - 8);
+            context.fillStyle = active ? '#b74078' : '#735867';
+            context.font = `700 ${clamp(currentView.pixelsPerMeter * .13, 11, 17)}px 'Prompt', sans-serif`;
+            context.textAlign = 'left';
+            context.textBaseline = 'top';
+            context.fillText(`${entry.name} · ${entry.widthMeters}×${entry.lengthMeters} ม.`, bounds.x + 12, bounds.y + 10);
+            entry.items.forEach(item => drawItem(item, showSelection && active && item.id === selectedId, entry));
+        });
         if (showSelection) drawSelectionControls(selected());
         else selectionControls = [];
         updateControls();
     }
 
     function hitTest(point) {
-        for (let index = room.items.length - 1; index >= 0; index--) {
-            const item = room.items[index];
-            const definition = definitions[item.type];
-            if (!definition) continue;
-            const radians = -item.rotation * Math.PI / 180;
-            const dx = point.x - item.x;
-            const dy = point.y - item.y;
-            const displayScale = item.scale * furniturePixelScale();
-            const localX = (dx * Math.cos(radians) - dy * Math.sin(radians)) / displayScale;
-            const localY = (dx * Math.sin(radians) + dy * Math.cos(radians)) / displayScale;
-            if (Math.abs(localX) <= definition.width / 2 + 12 && Math.abs(localY) <= definition.height / 2 + 12) return item;
+        for (let roomIndex = project.rooms.length - 1; roomIndex >= 0; roomIndex -= 1) {
+            const ownerRoom = project.rooms[roomIndex];
+            for (let index = ownerRoom.items.length - 1; index >= 0; index -= 1) {
+                const item = ownerRoom.items[index];
+                const definition = definitions[item.type];
+                if (!definition) continue;
+                const itemPoint = itemCanvasPoint(ownerRoom, item);
+                const radians = -item.rotation * Math.PI / 180;
+                const dx = point.x - itemPoint.x;
+                const dy = point.y - itemPoint.y;
+                const displayScale = item.scale * furniturePixelScale();
+                const localX = (dx * Math.cos(radians) - dy * Math.sin(radians)) / displayScale;
+                const localY = (dx * Math.sin(radians) + dy * Math.cos(radians)) / displayScale;
+                if (Math.abs(localX) <= definition.width / 2 + 12 && Math.abs(localY) <= definition.height / 2 + 12) return { room: ownerRoom, item };
+            }
         }
         return null;
+    }
+    function roomAt(point) {
+        return [...project.rooms].reverse().find(entry => {
+            const bounds = roomBounds(entry);
+            return point.x >= bounds.x && point.x <= bounds.x + bounds.width && point.y >= bounds.y && point.y <= bounds.y + bounds.height;
+        }) || null;
     }
     const distance = (a, b) => Math.hypot(b.x - a.x, b.y - a.y);
     const angle = (a, b) => Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI;
     const center = (a, b) => ({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 });
     const constrain = item => {
-        const bounds = floorBounds();
-        item.x = clamp(item.x, bounds.x + 4, bounds.x + bounds.width - 4);
-        item.y = clamp(item.y, bounds.y + 4, bounds.y + bounds.height - 4);
+        item.mx = clamp(item.mx, 0, room.widthMeters);
+        item.my = clamp(item.my, 0, room.lengthMeters);
         item.scale = clamp(item.scale, .4, 2);
     };
     function beginGesture() {
         const item = selected();
         const points = [...pointers.values()];
         if (!item || !points.length) { gesture = null; return; }
+        const itemPoint = itemCanvasPoint(room, item);
         if (points.length === 1) {
-            gesture = { mode: 'drag', offsetX: item.x - points[0].x, offsetY: item.y - points[0].y };
+            gesture = { mode: 'drag', offsetX: itemPoint.x - points[0].x, offsetY: itemPoint.y - points[0].y };
         } else {
             const midpoint = center(points[0], points[1]);
             gesture = {
@@ -476,8 +527,8 @@
                 angle: angle(points[0], points[1]),
                 startScale: item.scale,
                 startRotation: item.rotation,
-                offsetX: item.x - midpoint.x,
-                offsetY: item.y - midpoint.y
+                offsetX: itemPoint.x - midpoint.x,
+                offsetY: itemPoint.y - midpoint.y
             };
         }
     }
@@ -492,7 +543,17 @@
         }
         pointers.set(event.pointerId, point);
         canvas.setPointerCapture(event.pointerId);
-        if (pointers.size === 1) selectedId = hitTest(point)?.id || null;
+        if (pointers.size === 1) {
+            const hit = hitTest(point);
+            const touchedRoom = hit?.room || roomAt(point);
+            if (touchedRoom && touchedRoom.id !== room.id) {
+                project.activeRoomId = touchedRoom.id;
+                room = touchedRoom;
+                syncRoomEditor();
+                syncRoomThemeButtons();
+            }
+            selectedId = hit?.item?.id || null;
+        }
         beginGesture();
         draw();
     });
@@ -503,14 +564,15 @@
         const item = selected();
         const points = [...pointers.values()];
         if (!item || !gesture) return;
+        const bounds = roomBounds(room);
         if (points.length === 1 && gesture.mode === 'drag') {
-            item.x = points[0].x + gesture.offsetX;
-            item.y = points[0].y + gesture.offsetY;
+            item.mx = (points[0].x + gesture.offsetX - bounds.x) / currentView.pixelsPerMeter;
+            item.my = (points[0].y + gesture.offsetY - bounds.y) / currentView.pixelsPerMeter;
         } else if (points.length >= 2) {
             if (gesture.mode !== 'pinch') beginGesture();
             const midpoint = center(points[0], points[1]);
-            item.x = midpoint.x + gesture.offsetX;
-            item.y = midpoint.y + gesture.offsetY;
+            item.mx = (midpoint.x + gesture.offsetX - bounds.x) / currentView.pixelsPerMeter;
+            item.my = (midpoint.y + gesture.offsetY - bounds.y) / currentView.pixelsPerMeter;
             item.scale = gesture.startScale * distance(points[0], points[1]) / gesture.distance;
             item.rotation = gesture.startRotation + angle(points[0], points[1]) - gesture.angle;
         }
@@ -536,9 +598,8 @@
         if (!nextRoom) return;
         project.activeRoomId = nextRoom.id;
         room = nextRoom;
-        selectedId = room.items.at(-1)?.id || null;
+        selectedId = null;
         pointers.clear();
-        resizeCanvasForRoom(false);
         syncRoomEditor();
         syncRoomThemeButtons();
         save();
@@ -550,13 +611,28 @@
         const button = event.target.closest('[data-room-id]');
         if (button) activateRoom(button.dataset.roomId);
     });
-    document.getElementById('roomAddBtn').addEventListener('click', () => {
+    const roomsOverlap = (first, second) => first.xMeters < second.xMeters + second.widthMeters
+        && first.xMeters + first.widthMeters > second.xMeters
+        && first.yMeters < second.yMeters + second.lengthMeters
+        && first.yMeters + first.lengthMeters > second.yMeters;
+    document.querySelectorAll('[data-room-add-side]').forEach(button => button.addEventListener('click', () => {
+        const side = button.dataset.roomAddSide;
         const nextNumber = project.rooms.length + 1;
         const nextRoom = defaultRoom(`ห้อง ${nextNumber}`, []);
+        if (side === 'left') nextRoom.xMeters = room.xMeters - nextRoom.widthMeters;
+        if (side === 'right') nextRoom.xMeters = room.xMeters + room.widthMeters;
+        if (side === 'top') nextRoom.yMeters = room.yMeters - nextRoom.lengthMeters;
+        if (side === 'bottom') nextRoom.yMeters = room.yMeters + room.lengthMeters;
+        let attempts = 0;
+        while (project.rooms.some(entry => roomsOverlap(entry, nextRoom)) && attempts < 20) {
+            attempts += 1;
+            if (side === 'left' || side === 'right') nextRoom.yMeters += nextRoom.lengthMeters;
+            else nextRoom.xMeters += nextRoom.widthMeters;
+        }
         project.rooms.push(nextRoom);
         activateRoom(nextRoom.id);
-        setMessage(`เพิ่ม${nextRoom.name}แล้ว ตั้งชื่อและขนาดได้ด้านบน`);
-    });
+        setMessage(`เพิ่ม${nextRoom.name}ติดด้าน${{ left: 'ซ้าย', right: 'ขวา', top: 'บน', bottom: 'ล่าง' }[side]}แล้ว`);
+    }));
     document.getElementById('roomRemoveBtn').addEventListener('click', async () => {
         if (project.rooms.length <= 1) return;
         if (typeof confirmAction === 'function') {
@@ -573,11 +649,9 @@
         const name = document.getElementById('roomNameInput').value.trim() || 'ห้อง';
         const widthMeters = clamp(Number(document.getElementById('roomWidthInput').value) || 6, 2, 20);
         const lengthMeters = clamp(Number(document.getElementById('roomLengthInput').value) || 4, 2, 20);
-        const dimensionsChanged = widthMeters !== room.widthMeters || lengthMeters !== room.lengthMeters;
         room.name = name;
         room.widthMeters = Math.round(widthMeters * 10) / 10;
         room.lengthMeters = Math.round(lengthMeters * 10) / 10;
-        resizeCanvasForRoom(dimensionsChanged);
         room.items.forEach(constrain);
         syncRoomEditor();
         save();
@@ -587,8 +661,10 @@
 
     document.querySelectorAll('[data-furniture-type]').forEach(button => button.addEventListener('click', () => {
         const offset = room.items.length % 5;
-        const bounds = floorBounds();
-        const item = makeItem(button.dataset.furnitureType, bounds.x + bounds.width / 2 + offset * 18, bounds.y + bounds.height / 2 + offset * 14);
+        const item = makeItem(button.dataset.furnitureType, 0, 0, {
+            mx: clamp(room.widthMeters / 2 + offset * .14, 0, room.widthMeters),
+            my: clamp(room.lengthMeters / 2 + offset * .12, 0, room.lengthMeters)
+        });
         room.items.push(item);
         selectedId = item.id;
         save();
@@ -639,8 +715,8 @@
         draw(false);
         window.janeDownload.saveDataUrl(
             canvas.toDataURL('image/png'),
-            `${(room.name || 'mini-room').replace(/[\\/:*?"<>|]/g, '_')}-${new Date().toISOString().slice(0, 10)}.png`,
-            { title: `${room.name} จาก Jane Tools` }
+            `floor-plan-${new Date().toISOString().slice(0, 10)}.png`,
+            { title: 'แปลนรวมห้องจาก Jane Tools' }
         );
         draw();
         setMessage(window.janeDownload.isAppleTouchDevice
@@ -648,7 +724,6 @@
             : 'บันทึกภาพห้องแล้ว');
     });
 
-    resizeCanvasForRoom(false);
     syncRoomEditor();
     syncRoomThemeButtons();
     window.addEventListener('jane:mini-room-open', draw);
