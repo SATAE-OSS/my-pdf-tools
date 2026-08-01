@@ -1,4 +1,4 @@
-const CACHE_NAME = 'jane-tools-v45';
+const CACHE_NAME = 'jane-tools-v46';
 const urlsToCache = [
   './',
   './index.html',
@@ -16,6 +16,7 @@ const urlsToCache = [
   './planner.css',
   './pwa-ui.js',
   './supabase-config.js',
+  './download-utils.js',
   './manifest.json',
   './icon-192.png',
   './icon-512.png',

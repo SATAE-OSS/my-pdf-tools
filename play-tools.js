@@ -465,12 +465,15 @@
     });
     document.getElementById('roomDownloadBtn')?.addEventListener('click', () => {
         draw(false);
-        const link = document.createElement('a');
-        link.download = `mini-room-${new Date().toISOString().slice(0, 10)}.png`;
-        link.href = canvas.toDataURL('image/png');
-        link.click();
+        window.janeDownload.saveDataUrl(
+            canvas.toDataURL('image/png'),
+            `mini-room-${new Date().toISOString().slice(0, 10)}.png`,
+            { title: 'ห้องจิ๋วจาก Jane Tools' }
+        );
         draw();
-        setMessage('บันทึกภาพห้องแล้ว');
+        setMessage(window.janeDownload.isAppleTouchDevice
+            ? 'เลือก “บันทึกรูปภาพ” หรือ “บันทึกไปยังไฟล์” ได้เลย'
+            : 'บันทึกภาพห้องแล้ว');
     });
 
     document.querySelectorAll('[data-room-floor]').forEach(button => button.classList.toggle('active', button.dataset.roomFloor === room.floor));

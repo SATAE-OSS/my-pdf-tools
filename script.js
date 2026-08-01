@@ -197,7 +197,7 @@ downloadBtn.addEventListener('click', function() {
     if(!pdf) { alert('กรุณาอัปโหลดรูปภาพก่อนครับ!'); return; }
     const fileNameInput = document.getElementById('fileName').value;
     const fileName = fileNameInput.trim() !== '' ? fileNameInput : 'document';
-    pdf.save(fileName + '.pdf');
+    window.janeDownload.saveBlob(pdf.output('blob'), fileName + '.pdf', { title: fileName });
 });
 
 // ==========================================
@@ -246,12 +246,14 @@ pdfInput.addEventListener('change', function(e) {
             img.src = imgUrl;
             img.alt = `${sourceName} หน้า ${i}`;
 
-            const dlBtn = document.createElement('a');
-            dlBtn.href = imgUrl;
-            dlBtn.download = `${sourceName}-หน้า-${i}.jpg`;
+            const dlBtn = document.createElement('button');
+            dlBtn.type = 'button';
             dlBtn.innerHTML = '⬇️ บันทึก';
             dlBtn.className = 'dl-img-btn';
             dlBtn.setAttribute('aria-label', `บันทึกภาพหน้า ${i}`);
+            dlBtn.addEventListener('click', () => {
+                window.janeDownload.saveDataUrl(imgUrl, `${sourceName}-หน้า-${i}.jpg`, { title: `${sourceName} หน้า ${i}` });
+            });
 
             div.appendChild(badge);
             div.appendChild(img);
@@ -1128,10 +1130,11 @@ downloadCanvasBtn.addEventListener('click', () => {
     }
     exportContext.drawImage(canvas, 0, 0);
 
-    const link = document.createElement('a');
-    link.download = `sketch-${new Date().toISOString().slice(0, 10)}.png`;
-    link.href = exportCanvas.toDataURL('image/png');
-    link.click();
+    window.janeDownload.saveDataUrl(
+        exportCanvas.toDataURL('image/png'),
+        `sketch-${new Date().toISOString().slice(0, 10)}.png`,
+        { title: 'ภาพวาดจาก Jane Tools' }
+    );
 });
 
 canvasRatio.addEventListener('change', () => {

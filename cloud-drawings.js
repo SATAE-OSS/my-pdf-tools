@@ -576,6 +576,7 @@ async function getAllCloudDrawings() {
 }
 
 downloadAllDrawingsBtn.addEventListener('click', async () => {
+    const fallbackWindow = window.janeDownload.reserveWindow();
     setButtonBusy(downloadAllDrawingsBtn, true, 'กำลังรวมไฟล์...');
     try {
         const drawings = await getAllCloudDrawings();
@@ -589,13 +590,12 @@ downloadAllDrawingsBtn.addEventListener('click', async () => {
             zip.file(`${String(index + 1).padStart(2, '0')}-${safeTitle}.png`, blob);
         }
         const zipBlob = await zip.generateAsync({ type: 'blob' });
-        const url = URL.createObjectURL(zipBlob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = 'pdf-magic-drawings.zip';
-        link.click();
-        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        await window.janeDownload.saveBlob(zipBlob, 'jane-tools-drawings.zip', {
+            title: 'ภาพวาดทั้งหมด',
+            fallbackWindow
+        });
     } catch (error) {
+        if (fallbackWindow && !fallbackWindow.closed) fallbackWindow.close();
         setCloudMessage(`ดาวน์โหลดไม่สำเร็จ: ${friendlyCloudError(error)}`, 'error');
     } finally {
         setButtonBusy(downloadAllDrawingsBtn, false);
@@ -648,6 +648,21 @@ async function showSharedDrawingFromUrl() {
     sharedViewImage.src = publicData.publicUrl;
     downloadSharedViewBtn.href = publicData.publicUrl;
     downloadSharedViewBtn.download = `${data.title}.png`;
+    downloadSharedViewBtn.onclick = async event => {
+        event.preventDefault();
+        const fallbackWindow = window.janeDownload.reserveWindow();
+        try {
+            const response = await fetch(publicData.publicUrl);
+            if (!response.ok) throw new Error('โหลดภาพไม่สำเร็จ');
+            await window.janeDownload.saveBlob(await response.blob(), `${data.title}.png`, {
+                title: data.title,
+                fallbackWindow
+            });
+        } catch (error) {
+            if (fallbackWindow && !fallbackWindow.closed) fallbackWindow.location.href = publicData.publicUrl;
+            else window.open(publicData.publicUrl, '_blank');
+        }
+    };
     sharedViewDialog.showModal();
 }
 
