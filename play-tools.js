@@ -7,7 +7,9 @@
 
     const clamp = (value, minimum, maximum) => Math.min(maximum, Math.max(minimum, value));
     const uid = () => `${Date.now()}-${Math.random().toString(16).slice(2)}`;
-    const storageKey = 'jane-mini-room-v2';
+    const escapeHtml = value => String(value).replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character]));
+    const storageKey = 'jane-mini-room-v3';
+    const legacyStorageKey = 'jane-mini-room-v2';
     const definitions = {
         sofa: { width: 220, height: 94, color: '#de8fb5', label: 'โซฟา', icon: '🛋️' },
         loveseat: { width: 160, height: 88, color: '#d8a0bd', label: 'โซฟาเล็ก', icon: '🛋️' },
@@ -86,28 +88,44 @@
             makeItem('plant', 185, 170)
         ]
     };
-    const defaultRoom = () => ({
+    const defaultRoom = (name = 'ห้องนั่งเล่น', items = presets.living()) => ({
+        id: uid(),
+        name,
+        widthMeters: 6,
+        lengthMeters: 4,
         floor: '#eadbc7',
         wall: '#fff8f2',
-        items: presets.living()
+        items
     });
-    const loadRoom = () => {
+    const loadProject = () => {
         try {
             const saved = JSON.parse(localStorage.getItem(storageKey));
-            if (saved?.items && Array.isArray(saved.items)) return saved;
+            if (Array.isArray(saved?.rooms) && saved.rooms.length) return saved;
+            const legacy = JSON.parse(localStorage.getItem(legacyStorageKey));
+            if (legacy?.items && Array.isArray(legacy.items)) {
+                return {
+                    activeRoomId: 'legacy-room',
+                    rooms: [{ ...defaultRoom('ห้องนั่งเล่น', legacy.items), ...legacy, id: 'legacy-room', widthMeters: 6, lengthMeters: 4 }]
+                };
+            }
         } catch (_) {}
-        return defaultRoom();
+        const firstRoom = defaultRoom();
+        return { activeRoomId: firstRoom.id, rooms: [firstRoom] };
     };
 
-    let room = loadRoom();
+    let project = loadProject();
+    let room = project.rooms.find(entry => entry.id === project.activeRoomId) || project.rooms[0];
+    project.activeRoomId = room.id;
     let selectedId = room.items.at(-1)?.id || null;
     const pointers = new Map();
     let gesture = null;
+    let selectionControls = [];
     const itemCount = document.getElementById('roomItemCount');
+    const dimensionBadge = document.getElementById('roomDimensionBadge');
     const message = document.getElementById('roomBuilderMessage');
     const selected = () => room.items.find(item => item.id === selectedId);
     const save = () => {
-        try { localStorage.setItem(storageKey, JSON.stringify(room)); } catch (_) {}
+        try { localStorage.setItem(storageKey, JSON.stringify(project)); } catch (_) {}
     };
     const setMessage = text => { if (message) message.textContent = text; };
     const shade = (hex, amount) => {
@@ -129,6 +147,58 @@
             y: (event.clientY - rect.top) * canvas.height / rect.height
         };
     };
+    const floorBounds = () => ({ x: 38, y: 38, width: canvas.width - 76, height: canvas.height - 76 });
+    const furniturePixelScale = () => {
+        const bounds = floorBounds();
+        const pixelsPerMeter = Math.min(bounds.width / room.widthMeters, bounds.height / room.lengthMeters);
+        return pixelsPerMeter / (824 / 6);
+    };
+    function resizeCanvasForRoom(scaleItems = false) {
+        const oldBounds = floorBounds();
+        const widthMeters = clamp(Number(room.widthMeters) || 6, 2, 20);
+        const lengthMeters = clamp(Number(room.lengthMeters) || 4, 2, 20);
+        const ratio = widthMeters / lengthMeters;
+        const longSide = 824;
+        const minimumSide = 230;
+        let innerWidth;
+        let innerHeight;
+        if (ratio >= 1) {
+            innerWidth = longSide;
+            innerHeight = Math.max(minimumSide, Math.round(longSide / ratio));
+        } else {
+            innerHeight = longSide;
+            innerWidth = Math.max(minimumSide, Math.round(longSide * ratio));
+        }
+        canvas.width = innerWidth + 76;
+        canvas.height = innerHeight + 76;
+        if (scaleItems && oldBounds.width > 0 && oldBounds.height > 0) {
+            const nextBounds = floorBounds();
+            room.items.forEach(item => {
+                item.x = nextBounds.x + (item.x - oldBounds.x) * nextBounds.width / oldBounds.width;
+                item.y = nextBounds.y + (item.y - oldBounds.y) * nextBounds.height / oldBounds.height;
+            });
+        }
+    }
+
+    function syncRoomEditor() {
+        document.getElementById('roomNameInput').value = room.name || 'ห้อง';
+        document.getElementById('roomWidthInput').value = room.widthMeters;
+        document.getElementById('roomLengthInput').value = room.lengthMeters;
+        document.getElementById('roomRemoveBtn').disabled = project.rooms.length <= 1;
+        document.getElementById('roomTabs').innerHTML = project.rooms.map((entry, index) => `
+            <button type="button" role="tab" aria-selected="${entry.id === room.id}" class="${entry.id === room.id ? 'active' : ''}" data-room-id="${entry.id}">
+                ${escapeHtml(entry.name || `ห้อง ${index + 1}`)} · ${entry.widthMeters}×${entry.lengthMeters} ม.
+            </button>`).join('');
+    }
+
+    function mapPresetToCurrentRoom(items) {
+        const bounds = floorBounds();
+        return items.map(item => ({
+            ...item,
+            x: bounds.x + (item.x - 38) * bounds.width / 824,
+            y: bounds.y + (item.y - 38) * bounds.height / 544
+        }));
+    }
 
     function drawItem(item, isSelected) {
         const definition = definitions[item.type];
@@ -138,7 +208,8 @@
         context.save();
         context.translate(item.x, item.y);
         context.rotate(item.rotation * Math.PI / 180);
-        context.scale(item.scale, item.scale);
+        const displayScale = item.scale * furniturePixelScale();
+        context.scale(item.flipX ? -displayScale : displayScale, displayScale);
         context.shadowColor = 'rgba(66, 43, 57, .2)';
         context.shadowBlur = 13;
         context.shadowOffsetY = 6;
@@ -240,8 +311,8 @@
         if (isSelected) {
             context.shadowColor = 'transparent';
             context.strokeStyle = '#d25094';
-            context.lineWidth = 4 / item.scale;
-            context.setLineDash([10 / item.scale, 7 / item.scale]);
+            context.lineWidth = 4 / displayScale;
+            context.setLineDash([10 / displayScale, 7 / displayScale]);
             roundedRect(context, -width / 2 - 10, -height / 2 - 10, width + 20, height + 20, 14);
             context.stroke();
             context.setLineDash([]);
@@ -249,20 +320,87 @@
         context.restore();
     }
 
+    function drawSelectionControls(item) {
+        selectionControls = [];
+        if (!item) return;
+        const definition = definitions[item.type];
+        if (!definition) return;
+        const displayScale = item.scale * furniturePixelScale();
+        const radians = item.rotation * Math.PI / 180;
+        const halfWidth = (Math.abs(Math.cos(radians)) * definition.width + Math.abs(Math.sin(radians)) * definition.height) * displayScale / 2;
+        const halfHeight = (Math.abs(Math.sin(radians)) * definition.width + Math.abs(Math.cos(radians)) * definition.height) * displayScale / 2;
+        const displayWidth = canvas.getBoundingClientRect().width || canvas.width;
+        const touchScale = canvas.width / displayWidth;
+        const radius = clamp(18 * touchScale, 20, 46);
+        const gap = radius * 2 + 7 * touchScale;
+        const controls = [
+            { action: 'flip', icon: '↔', label: 'พลิก' },
+            { action: 'rotate', icon: '↻', label: 'หมุน' },
+            { action: 'shrink', icon: '−', label: 'ย่อ' },
+            { action: 'grow', icon: '+', label: 'ขยาย' },
+            { action: 'delete', icon: '×', label: 'ลบ', danger: true }
+        ];
+        const toolbarWidth = gap * (controls.length - 1);
+        const centerX = clamp(item.x, toolbarWidth / 2 + radius + 8, canvas.width - toolbarWidth / 2 - radius - 8);
+        let centerY = item.y - halfHeight - radius * 1.65;
+        if (centerY - radius < 8) centerY = item.y + halfHeight + radius * 1.65;
+        centerY = clamp(centerY, radius + 8, canvas.height - radius - 8);
+
+        context.save();
+        context.textAlign = 'center';
+        context.textBaseline = 'middle';
+        controls.forEach((control, index) => {
+            const x = centerX - toolbarWidth / 2 + index * gap;
+            selectionControls.push({ ...control, x, y: centerY, radius: radius * 1.18 });
+            context.beginPath();
+            context.arc(x, centerY, radius, 0, Math.PI * 2);
+            context.fillStyle = control.danger ? '#df6078' : '#fff8fc';
+            context.shadowColor = 'rgba(71,42,59,.24)';
+            context.shadowBlur = 10 * touchScale;
+            context.shadowOffsetY = 3 * touchScale;
+            context.fill();
+            context.shadowColor = 'transparent';
+            context.lineWidth = Math.max(2, 2 * touchScale);
+            context.strokeStyle = control.danger ? '#fff' : '#d35d96';
+            context.stroke();
+            context.fillStyle = control.danger ? '#fff' : '#a84d78';
+            context.font = `700 ${Math.round(radius * 1.2)}px sans-serif`;
+            context.fillText(control.icon, x, centerY + radius * .03);
+        });
+        context.restore();
+    }
+
+    function controlAt(point) {
+        return selectionControls.find(control => Math.hypot(point.x - control.x, point.y - control.y) <= control.radius) || null;
+    }
+
+    function runSelectionControl(action) {
+        const item = selected();
+        if (!item) return;
+        const messages = { flip: 'พลิกชิ้นที่เลือกแล้ว', rotate: 'หมุนชิ้นที่เลือก 15°', shrink: 'ย่อชิ้นที่เลือกแล้ว', grow: 'ขยายชิ้นที่เลือกแล้ว', delete: 'ลบชิ้นที่เลือกแล้ว' };
+        if (action === 'flip') item.flipX = !item.flipX;
+        if (action === 'rotate') item.rotation += 15;
+        if (action === 'shrink') item.scale -= .1;
+        if (action === 'grow') item.scale += .1;
+        if (action === 'delete') {
+            room.items = room.items.filter(entry => entry.id !== selectedId);
+            selectedId = null;
+        } else {
+            constrain(item);
+        }
+        save();
+        draw();
+        setMessage(messages[action]);
+    }
+
     function updateControls() {
         const disabled = !selected();
-        [
-            'roomRotateLeftBtn', 'roomRotateRightBtn', 'roomShrinkBtn', 'roomGrowBtn',
-            'roomBackwardBtn', 'roomForwardBtn', 'roomDuplicateBtn', 'roomDeleteBtn'
-        ].forEach(id => {
-            const button = document.getElementById(id);
-            if (button) button.disabled = disabled;
-        });
         document.querySelectorAll('[data-furniture-color]').forEach(button => {
             button.disabled = disabled;
             button.classList.toggle('active', !disabled && selected().color === button.dataset.furnitureColor);
         });
         if (itemCount) itemCount.textContent = `${room.items.length} ชิ้น`;
+        if (dimensionBadge) dimensionBadge.textContent = `${room.widthMeters} × ${room.lengthMeters} ม.`;
     }
 
     function draw(showSelection = true) {
@@ -276,16 +414,18 @@
         roundedRect(context, 38, 38, canvas.width - 76, canvas.height - 76, 10);
         context.fill();
         context.restore();
+        const bounds = floorBounds();
         context.save();
-        roundedRect(context, 38, 38, canvas.width - 76, canvas.height - 76, 10);
+        roundedRect(context, bounds.x, bounds.y, bounds.width, bounds.height, 10);
         context.clip();
         context.strokeStyle = 'rgba(108,79,59,.1)';
         context.lineWidth = 2;
-        for (let x = 48; x < canvas.width; x += 62) {
-            context.beginPath(); context.moveTo(x, 38); context.lineTo(x, canvas.height - 38); context.stroke();
+        const meterStep = furniturePixelScale() * (824 / 6);
+        for (let x = bounds.x + meterStep; x < bounds.x + bounds.width; x += meterStep) {
+            context.beginPath(); context.moveTo(x, bounds.y); context.lineTo(x, bounds.y + bounds.height); context.stroke();
         }
-        for (let y = 69; y < canvas.height; y += 62) {
-            context.beginPath(); context.moveTo(38, y); context.lineTo(canvas.width - 38, y); context.stroke();
+        for (let y = bounds.y + meterStep; y < bounds.y + bounds.height; y += meterStep) {
+            context.beginPath(); context.moveTo(bounds.x, y); context.lineTo(bounds.x + bounds.width, y); context.stroke();
         }
         context.restore();
         context.strokeStyle = 'rgba(100,70,82,.45)';
@@ -293,6 +433,8 @@
         roundedRect(context, 35, 35, canvas.width - 70, canvas.height - 70, 12);
         context.stroke();
         room.items.forEach(item => drawItem(item, showSelection && item.id === selectedId));
+        if (showSelection) drawSelectionControls(selected());
+        else selectionControls = [];
         updateControls();
     }
 
@@ -304,8 +446,9 @@
             const radians = -item.rotation * Math.PI / 180;
             const dx = point.x - item.x;
             const dy = point.y - item.y;
-            const localX = (dx * Math.cos(radians) - dy * Math.sin(radians)) / item.scale;
-            const localY = (dx * Math.sin(radians) + dy * Math.cos(radians)) / item.scale;
+            const displayScale = item.scale * furniturePixelScale();
+            const localX = (dx * Math.cos(radians) - dy * Math.sin(radians)) / displayScale;
+            const localY = (dx * Math.sin(radians) + dy * Math.cos(radians)) / displayScale;
             if (Math.abs(localX) <= definition.width / 2 + 12 && Math.abs(localY) <= definition.height / 2 + 12) return item;
         }
         return null;
@@ -314,8 +457,9 @@
     const angle = (a, b) => Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI;
     const center = (a, b) => ({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 });
     const constrain = item => {
-        item.x = clamp(item.x, 42, canvas.width - 42);
-        item.y = clamp(item.y, 42, canvas.height - 42);
+        const bounds = floorBounds();
+        item.x = clamp(item.x, bounds.x + 4, bounds.x + bounds.width - 4);
+        item.y = clamp(item.y, bounds.y + 4, bounds.y + bounds.height - 4);
         item.scale = clamp(item.scale, .4, 2);
     };
     function beginGesture() {
@@ -341,6 +485,11 @@
     canvas.addEventListener('pointerdown', event => {
         event.preventDefault();
         const point = canvasPoint(event);
+        const pressedControl = pointers.size === 0 ? controlAt(point) : null;
+        if (pressedControl) {
+            runSelectionControl(pressedControl.action);
+            return;
+        }
         pointers.set(event.pointerId, point);
         canvas.setPointerCapture(event.pointerId);
         if (pointers.size === 1) selectedId = hitTest(point)?.id || null;
@@ -377,9 +526,69 @@
     canvas.addEventListener('pointerup', finishPointer);
     canvas.addEventListener('pointercancel', finishPointer);
 
+    function syncRoomThemeButtons() {
+        document.querySelectorAll('[data-room-floor]').forEach(button => button.classList.toggle('active', button.dataset.roomFloor === room.floor));
+        document.querySelectorAll('[data-room-wall]').forEach(button => button.classList.toggle('active', button.dataset.roomWall === room.wall));
+    }
+
+    function activateRoom(roomId) {
+        const nextRoom = project.rooms.find(entry => entry.id === roomId);
+        if (!nextRoom) return;
+        project.activeRoomId = nextRoom.id;
+        room = nextRoom;
+        selectedId = room.items.at(-1)?.id || null;
+        pointers.clear();
+        resizeCanvasForRoom(false);
+        syncRoomEditor();
+        syncRoomThemeButtons();
+        save();
+        draw();
+        setMessage(`กำลังจัด ${room.name}`);
+    }
+
+    document.getElementById('roomTabs').addEventListener('click', event => {
+        const button = event.target.closest('[data-room-id]');
+        if (button) activateRoom(button.dataset.roomId);
+    });
+    document.getElementById('roomAddBtn').addEventListener('click', () => {
+        const nextNumber = project.rooms.length + 1;
+        const nextRoom = defaultRoom(`ห้อง ${nextNumber}`, []);
+        project.rooms.push(nextRoom);
+        activateRoom(nextRoom.id);
+        setMessage(`เพิ่ม${nextRoom.name}แล้ว ตั้งชื่อและขนาดได้ด้านบน`);
+    });
+    document.getElementById('roomRemoveBtn').addEventListener('click', async () => {
+        if (project.rooms.length <= 1) return;
+        if (typeof confirmAction === 'function') {
+            const confirmed = await confirmAction(`${room.name} และของทั้งหมดในห้องนี้จะถูกลบ`, 'ลบห้องนี้');
+            if (!confirmed) return;
+        }
+        const currentIndex = project.rooms.findIndex(entry => entry.id === room.id);
+        project.rooms.splice(currentIndex, 1);
+        const nextRoom = project.rooms[Math.max(0, currentIndex - 1)] || project.rooms[0];
+        activateRoom(nextRoom.id);
+        setMessage('ลบห้องแล้ว');
+    });
+    document.getElementById('roomApplySizeBtn').addEventListener('click', () => {
+        const name = document.getElementById('roomNameInput').value.trim() || 'ห้อง';
+        const widthMeters = clamp(Number(document.getElementById('roomWidthInput').value) || 6, 2, 20);
+        const lengthMeters = clamp(Number(document.getElementById('roomLengthInput').value) || 4, 2, 20);
+        const dimensionsChanged = widthMeters !== room.widthMeters || lengthMeters !== room.lengthMeters;
+        room.name = name;
+        room.widthMeters = Math.round(widthMeters * 10) / 10;
+        room.lengthMeters = Math.round(lengthMeters * 10) / 10;
+        resizeCanvasForRoom(dimensionsChanged);
+        room.items.forEach(constrain);
+        syncRoomEditor();
+        save();
+        draw();
+        setMessage(`ตั้ง ${room.name} เป็น ${room.widthMeters} × ${room.lengthMeters} เมตรแล้ว`);
+    });
+
     document.querySelectorAll('[data-furniture-type]').forEach(button => button.addEventListener('click', () => {
         const offset = room.items.length % 5;
-        const item = makeItem(button.dataset.furnitureType, 390 + offset * 30, 260 + offset * 18);
+        const bounds = floorBounds();
+        const item = makeItem(button.dataset.furnitureType, bounds.x + bounds.width / 2 + offset * 18, bounds.y + bounds.height / 2 + offset * 14);
         room.items.push(item);
         selectedId = item.id;
         save();
@@ -391,7 +600,7 @@
             const confirmed = await confirmAction('ของที่จัดอยู่จะถูกแทนด้วยชุดห้องใหม่', 'ใช้ชุดห้องนี้');
             if (!confirmed) return;
         }
-        room.items = presets[button.dataset.roomPreset]();
+        room.items = mapPresetToCurrentRoom(presets[button.dataset.roomPreset]());
         selectedId = room.items.at(-1)?.id || null;
         save();
         draw();
@@ -414,61 +623,24 @@
         save(); draw();
         setMessage('เปลี่ยนสีชิ้นที่เลือกแล้ว');
     }));
-    const edit = (change, text) => {
-        const item = selected();
-        if (!item) return;
-        change(item);
-        constrain(item);
-        save(); draw();
-        if (text) setMessage(text);
-    };
-    document.getElementById('roomRotateLeftBtn')?.addEventListener('click', () => edit(item => item.rotation -= 15, 'หมุนซ้าย 15°'));
-    document.getElementById('roomRotateRightBtn')?.addEventListener('click', () => edit(item => item.rotation += 15, 'หมุนขวา 15°'));
-    document.getElementById('roomShrinkBtn')?.addEventListener('click', () => edit(item => item.scale -= .1, 'ย่อชิ้นที่เลือกแล้ว'));
-    document.getElementById('roomGrowBtn')?.addEventListener('click', () => edit(item => item.scale += .1, 'ขยายชิ้นที่เลือกแล้ว'));
-    document.getElementById('roomBackwardBtn')?.addEventListener('click', () => {
-        const index = room.items.findIndex(item => item.id === selectedId);
-        if (index <= 0) return;
-        const [item] = room.items.splice(index, 1);
-        room.items.splice(index - 1, 0, item);
-        save(); draw(); setMessage('ส่งชิ้นที่เลือกไปด้านหลังแล้ว');
-    });
-    document.getElementById('roomForwardBtn')?.addEventListener('click', () => {
-        const index = room.items.findIndex(item => item.id === selectedId);
-        if (index < 0 || index === room.items.length - 1) return;
-        const [item] = room.items.splice(index, 1);
-        room.items.splice(index + 1, 0, item);
-        save(); draw(); setMessage('นำชิ้นที่เลือกมาด้านหน้าแล้ว');
-    });
-    document.getElementById('roomDuplicateBtn')?.addEventListener('click', () => {
-        const item = selected();
-        if (!item) return;
-        const duplicate = { ...item, id: uid(), x: item.x + 34, y: item.y + 34 };
-        room.items.push(duplicate);
-        selectedId = duplicate.id;
-        save(); draw(); setMessage('ทำสำเนาแล้ว');
-    });
-    document.getElementById('roomDeleteBtn')?.addEventListener('click', () => {
-        if (!selected()) return;
-        room.items = room.items.filter(item => item.id !== selectedId);
-        selectedId = room.items.at(-1)?.id || null;
-        save(); draw(); setMessage('ลบชิ้นที่เลือกแล้ว');
-    });
     document.getElementById('roomResetBtn')?.addEventListener('click', async () => {
         if (typeof confirmAction === 'function') {
             const confirmed = await confirmAction('ห้องปัจจุบันจะถูกจัดใหม่ทั้งหมด', 'จัดใหม่');
             if (!confirmed) return;
         }
-        room = defaultRoom();
+        room.floor = '#eadbc7';
+        room.wall = '#fff8f2';
+        room.items = mapPresetToCurrentRoom(presets.living());
         selectedId = room.items.at(-1)?.id || null;
+        syncRoomThemeButtons();
         save(); draw(); setMessage('จัดห้องตัวอย่างใหม่แล้ว');
     });
     document.getElementById('roomDownloadBtn')?.addEventListener('click', () => {
         draw(false);
         window.janeDownload.saveDataUrl(
             canvas.toDataURL('image/png'),
-            `mini-room-${new Date().toISOString().slice(0, 10)}.png`,
-            { title: 'ห้องจิ๋วจาก Jane Tools' }
+            `${(room.name || 'mini-room').replace(/[\\/:*?"<>|]/g, '_')}-${new Date().toISOString().slice(0, 10)}.png`,
+            { title: `${room.name} จาก Jane Tools` }
         );
         draw();
         setMessage(window.janeDownload.isAppleTouchDevice
@@ -476,7 +648,10 @@
             : 'บันทึกภาพห้องแล้ว');
     });
 
-    document.querySelectorAll('[data-room-floor]').forEach(button => button.classList.toggle('active', button.dataset.roomFloor === room.floor));
-    document.querySelectorAll('[data-room-wall]').forEach(button => button.classList.toggle('active', button.dataset.roomWall === room.wall));
+    resizeCanvasForRoom(false);
+    syncRoomEditor();
+    syncRoomThemeButtons();
+    window.addEventListener('jane:mini-room-open', draw);
+    window.addEventListener('resize', () => requestAnimationFrame(draw));
     draw();
 })();

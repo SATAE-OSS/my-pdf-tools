@@ -88,7 +88,7 @@
     </section>
 
     <div id="appShell" class="app-shell" hidden>
-    <span class="app-version" title="Jane Tools version 3.5.0">v3.5.0</span>
+    <span class="app-version" title="Jane Tools version 3.6.0">v3.6.0</span>
     <!-- ปุ่มโหมดกลางคืน (เพิ่มใหม่) -->
     <button id="darkModeBtn" class="dark-mode-btn" type="button" aria-label="เปิดโหมดกลางคืน" aria-pressed="false">🌙</button>
     <div class="app-connectivity" aria-live="polite">
@@ -394,7 +394,7 @@
     <div id="miniRoomTab" class="container tab-content play-experience" style="display: none;">
         <div class="play-page-heading">
             <button class="category-back" type="button" onclick="openTab('playToolsTab', document.getElementById('toolsNavBtn'))">← ของเล่น</button>
-            <div><span class="page-kicker">MINI INTERIOR</span><h2>🛋️ ห้องจิ๋วจัดเฟอร์</h2><p>เริ่มจากชุดห้องหรือเลือกของเอง ลากหนึ่งนิ้วเพื่อย้าย ใช้สองนิ้วหมุนและย่อขยาย</p></div>
+            <div><span class="page-kicker">MINI INTERIOR</span><h2>🛋️ ห้องจิ๋วจัดเฟอร์</h2><p>กำหนดขนาดและเพิ่มหลายห้องได้ แตะของแล้วจัดการจากปุ่มบนกรอบ หรือลากและใช้สองนิ้วได้เหมือนเดิม</p></div>
         </div>
         <div class="mini-room-layout">
             <aside class="room-toolbox">
@@ -479,19 +479,22 @@
                 </section>
             </aside>
             <section class="room-workspace">
+                <div class="room-plan-manager">
+                    <div class="room-plan-heading">
+                        <div><strong>ห้องในแปลน</strong><small>เพิ่มห้องแล้วแตะแท็บเพื่อสลับจัด</small></div>
+                        <div class="room-plan-actions"><button id="roomAddBtn" type="button">＋ เพิ่มห้อง</button><button id="roomRemoveBtn" class="danger-soft" type="button">ลบห้องนี้</button></div>
+                    </div>
+                    <div id="roomTabs" class="room-tabs" role="tablist" aria-label="ห้องในแปลน"></div>
+                    <div class="room-dimension-editor">
+                        <label>ชื่อห้อง<input id="roomNameInput" type="text" maxlength="24" value="ห้องนั่งเล่น"></label>
+                        <label>กว้าง<input id="roomWidthInput" type="number" inputmode="decimal" min="2" max="20" step="0.1" value="6"><span>ม.</span></label>
+                        <label>ยาว<input id="roomLengthInput" type="number" inputmode="decimal" min="2" max="20" step="0.1" value="4"><span>ม.</span></label>
+                        <button id="roomApplySizeBtn" type="button">✓ ใช้ขนาดนี้</button>
+                    </div>
+                </div>
                 <div class="room-canvas-wrap">
                     <canvas id="miniRoomCanvas" width="900" height="620" aria-label="พื้นที่จัดห้องจิ๋ว"></canvas>
-                    <span class="room-canvas-badge">แปลนมุมบน · <b id="roomItemCount">0 ชิ้น</b></span>
-                </div>
-                <div class="selected-furniture-controls" aria-label="จัดการเฟอร์นิเจอร์ที่เลือก">
-                    <button id="roomRotateLeftBtn" type="button">↶ ซ้าย</button>
-                    <button id="roomRotateRightBtn" type="button">↷ ขวา</button>
-                    <button id="roomShrinkBtn" type="button">− ย่อ</button>
-                    <button id="roomGrowBtn" type="button">＋ ขยาย</button>
-                    <button id="roomBackwardBtn" type="button">↓ ไว้หลัง</button>
-                    <button id="roomForwardBtn" type="button">↑ ไว้หน้า</button>
-                    <button id="roomDuplicateBtn" type="button">⧉ ทำซ้ำ</button>
-                    <button id="roomDeleteBtn" class="danger-soft" type="button">✕ ลบ</button>
+                    <span class="room-canvas-badge"><b id="roomDimensionBadge">6 × 4 ม.</b> · <b id="roomItemCount">0 ชิ้น</b></span>
                 </div>
                 <div class="play-action-row">
                     <button class="btn btn-outline" id="roomResetBtn" type="button">↺ จัดห้องใหม่</button>

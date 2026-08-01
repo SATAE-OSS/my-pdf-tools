@@ -22,6 +22,9 @@ function openTab(tabId, btnElement) {
             restoreCanvasDraft();
         });
     }
+    if (tabId === 'miniRoomTab') {
+        requestAnimationFrame(() => window.dispatchEvent(new Event('jane:mini-room-open')));
+    }
 }
 
 // ==========================================
