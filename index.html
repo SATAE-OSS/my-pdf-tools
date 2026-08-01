@@ -26,6 +26,7 @@
     <link rel="stylesheet" href="play-tools.css">
     <link rel="stylesheet" href="field-tools.css">
     <link rel="stylesheet" href="pet.css">
+    <link rel="stylesheet" href="background-remover.css">
     
     <!-- ไลบรารีสำหรับ Drag & Drop, สร้าง PDF, อ่าน PDF และทำไฟล์ ZIP -->
     <script src="vendor/Sortable.min.js"></script>
@@ -87,7 +88,7 @@
     </section>
 
     <div id="appShell" class="app-shell" hidden>
-    <span class="app-version" title="Jane Tools version 3.4.1">v3.4.1</span>
+    <span class="app-version" title="Jane Tools version 3.5.0">v3.5.0</span>
     <!-- ปุ่มโหมดกลางคืน (เพิ่มใหม่) -->
     <button id="darkModeBtn" class="dark-mode-btn" type="button" aria-label="เปิดโหมดกลางคืน" aria-pressed="false">🌙</button>
     <div class="app-connectivity" aria-live="polite">
@@ -223,7 +224,7 @@
             <button class="featured-tool-card" type="button" onclick="openScaleTool('interiorCalculator')"><span>📐</span><strong>คำนวณงานภายใน</strong><small>ฝ้า สลิง วัสดุ แสง ระยะ และเฟอร์นิเจอร์</small><em>8 เครื่องมือพร้อมใช้ →</em></button>
             <button class="practical-tool-card" type="button" onclick="openTab('siteSurveyTab', document.getElementById('toolsNavBtn'))"><span>📍</span><strong>สำรวจพื้นที่</strong><small>เก็บขนาด ประตู หน้าต่าง แสง เสียง และปัญหาหน้างาน</small><em>เปิดแบบสำรวจ →</em></button>
             <button class="practical-tool-card" type="button" onclick="openTab('materialLibraryTab', document.getElementById('toolsNavBtn'))"><span>🧱</span><strong>คลังวัสดุ</strong><small>เก็บรูป รุ่น ราคา ร้านค้า และขนาด แยกตามบัญชี</small><em>เปิดคลังวัสดุ →</em></button>
-            <button type="button" onclick="openTab('documentToolsTab', document.getElementById('toolsNavBtn'))"><span>📄</span><strong>งานเอกสาร</strong><small>รวมและแยกไฟล์ PDF</small><em>2 เครื่องมือ →</em></button>
+            <button type="button" onclick="openTab('documentToolsTab', document.getElementById('toolsNavBtn'))"><span>📄</span><strong>งานเอกสารและภาพ</strong><small>จัดการ PDF และลบพื้นหลังรูปภาพ</small><em>3 เครื่องมือ →</em></button>
             <button type="button" onclick="openTab('sketchTab', document.getElementById('toolsNavBtn'))"><span>🎨</span><strong>วาดและสเก็ตช์</strong><small>วาดภาพและบันทึกบนคลาวด์</small><em>เปิดกระดาน →</em></button>
             <button type="button" onclick="openTab('playToolsTab', document.getElementById('toolsNavBtn'))"><span>🧸</span><strong>พักสมอง</strong><small>เล่นสบาย ๆ และลองจัดห้องในฝัน</small><em>3 ของเล่น →</em></button>
         </div>
@@ -262,10 +263,11 @@
     </div>
 
     <div id="documentToolsTab" class="container tab-content tools-hub category-page" style="display: none;">
-        <div class="category-page-header"><button class="category-back" type="button" onclick="openTab('toolsTab', document.getElementById('toolsNavBtn'))">← กลับ</button><div><span class="page-kicker">DOCUMENTS</span><h2>📄 งานเอกสาร</h2><p>เลือกสิ่งที่ต้องการทำกับไฟล์ PDF</p></div></div>
+        <div class="category-page-header"><button class="category-back" type="button" onclick="openTab('toolsTab', document.getElementById('toolsNavBtn'))">← กลับ</button><div><span class="page-kicker">DOCUMENTS & IMAGES</span><h2>📄 งานเอกสารและภาพ</h2><p>รวม แยกไฟล์ PDF หรือลบพื้นหลังรูปภาพ</p></div></div>
         <div class="tool-hub-grid category-choice-grid">
             <button type="button" onclick="openTab('mergeTab', document.getElementById('toolsNavBtn'))"><span>✨</span><strong>รวมรูปเป็น PDF</strong><small>เรียงรูปหลายรูปแล้วสร้างเป็นไฟล์ PDF เดียว</small><em>เริ่มรวมไฟล์ →</em></button>
             <button type="button" onclick="openTab('extractTab', document.getElementById('toolsNavBtn'))"><span>🔄</span><strong>แยกรูปจาก PDF</strong><small>เปิดดูแต่ละหน้าและเลือกดาวน์โหลดเฉพาะหน้าที่ต้องการ</small><em>เริ่มแยกรูป →</em></button>
+            <button type="button" onclick="openTab('removeBgTab', document.getElementById('toolsNavBtn'))"><span>🪄</span><strong>ลบพื้นหลังภาพ</strong><small>ตัดพื้นหลังเรียบออก ปรับขอบ และบันทึกเป็น PNG โปร่งใส</small><em>เริ่มลบพื้นหลัง →</em></button>
         </div>
     </div>
 
@@ -330,6 +332,36 @@
         <input type="file" id="pdfInput" accept="application/pdf">
         <p id="extractStatus" class="extract-status" role="status">เลือกไฟล์ PDF แล้วภาพแต่ละหน้าจะแสดงด้านล่าง</p>
         <div id="pdfGallery" class="gallery-grid"></div>
+    </div>
+
+    <div id="removeBgTab" class="container tab-content remove-bg-page" style="display:none;">
+        <div class="category-page-header">
+            <button class="category-back" type="button" onclick="openTab('documentToolsTab', document.getElementById('toolsNavBtn'))">← งานเอกสารและภาพ</button>
+            <div><span class="page-kicker">BACKGROUND REMOVER</span><h2>🪄 ลบพื้นหลังภาพ</h2><p>เลือกรูปแล้วระบบจะตัดพื้นหลังที่เชื่อมต่อกับขอบภาพออกให้อัตโนมัติ</p></div>
+        </div>
+        <section class="remove-bg-shell">
+            <label class="remove-bg-drop" id="removeBgDrop">
+                <input id="removeBgInput" type="file" accept="image/jpeg,image/png,image/webp">
+                <div><span>🖼️</span><strong>เลือกรูปที่ต้องการลบพื้นหลัง</strong><small>แตะเพื่อเลือกรูป หรือลากไฟล์มาวาง · JPG, PNG, WEBP</small></div>
+            </label>
+            <p class="remove-bg-private">🔒 ประมวลผลในอุปกรณ์ของคุณ รูปจะไม่ถูกอัปโหลดขึ้นเซิร์ฟเวอร์</p>
+            <div class="remove-bg-workspace" id="removeBgWorkspace" hidden>
+                <div class="remove-bg-toolbar">
+                    <label class="remove-bg-control"><header><span>ลบมากขึ้น</span><output id="removeBgToleranceValue">42</output></header><input id="removeBgTolerance" type="range" min="8" max="110" value="42"></label>
+                    <label class="remove-bg-control"><header><span>ความนุ่มของขอบ</span><output id="removeBgFeatherValue">20</output></header><input id="removeBgFeather" type="range" min="0" max="60" value="20"></label>
+                    <div class="remove-bg-actions">
+                        <button class="btn btn-outline" id="removeBgAutoBtn" type="button">✨ ลบอัตโนมัติ</button>
+                        <button class="btn btn-outline" id="removeBgResetBtn" type="button">↶ คืนภาพเดิม</button>
+                        <button class="btn" id="removeBgDownloadBtn" type="button">⬇ บันทึก PNG</button>
+                    </div>
+                </div>
+                <div class="remove-bg-preview-grid">
+                    <article class="remove-bg-preview-card"><header><strong>ภาพต้นฉบับ</strong><span>ก่อนลบ</span></header><div class="remove-bg-canvas-wrap"><canvas id="removeBgOriginalCanvas"></canvas></div></article>
+                    <article class="remove-bg-preview-card"><header><strong>พื้นหลังโปร่งใส</strong><span>แตะพื้นหลังเพื่อเลือกสีใหม่</span></header><div class="remove-bg-canvas-wrap checkerboard"><canvas id="removeBgResultCanvas" aria-label="ภาพหลังลบพื้นหลัง แตะเพื่อเลือกสีพื้นหลัง"></canvas></div></article>
+                </div>
+                <p class="remove-bg-status" id="removeBgStatus" role="status" aria-live="polite"></p>
+            </div>
+        </section>
     </div>
 
     <!-- หน้าที่ 3: บีบบับเบิ้ล (เพิ่มใหม่) -->
@@ -1119,6 +1151,7 @@
     <script src="planner.js"></script>
     <script src="field-tools.js"></script>
     <script src="pet.js"></script>
+    <script src="background-remover.js"></script>
     <script src="pwa-ui.js"></script>
     
 </body>
