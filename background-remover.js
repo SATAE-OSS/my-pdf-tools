@@ -1,7 +1,7 @@
 (() => {
     'use strict';
 
-    const AI_MODULE_URL = 'https://esm.sh/@imgly/background-removal@1.7.0?bundle&deps=onnxruntime-web@1.21.0-dev.20250206-d981b153d3';
+    const AI_MODULE_URL = './vendor/background-removal-ai.mjs';
     const input = document.getElementById('removeBgInput');
     const drop = document.getElementById('removeBgDrop');
     const workspace = document.getElementById('removeBgWorkspace');
@@ -254,7 +254,7 @@
             await waitForInterfacePaint();
             aiModulePromise ||= import(AI_MODULE_URL);
             const module = await aiModulePromise;
-            const removeBackground = module.default;
+            const removeBackground = module.default || module.removeBackground;
             if (typeof removeBackground !== 'function') throw new Error('โหลดตัวประมวลผล AI ไม่สำเร็จ');
             const imageBlob = await canvasToBlob(originalCanvas);
             const progress = (key, current, total) => {
@@ -291,8 +291,9 @@
         } catch (error) {
             console.error('Background removal AI failed', error);
             aiModulePromise = null;
-            setStatus('AI เปิดไม่สำเร็จ ตรวจอินเทอร์เน็ตแล้วลองใหม่ หรือใช้ “ลบแบบเร็ว” แทนได้', 'error');
-            showAiProgress('เปิด AI ไม่สำเร็จ', 'ตรวจอินเทอร์เน็ตแล้วกดใหม่ หรือใช้โหมดลบแบบเร็วแทน', 0, 'error');
+            const reason = error instanceof Error && error.message ? ` (${error.message})` : '';
+            setStatus(`AI เปิดไม่สำเร็จ${reason} ลองใหม่หรือใช้ “ลบแบบเร็ว” แทนได้`, 'error');
+            showAiProgress('เปิด AI ไม่สำเร็จ', `รายละเอียด: ${error?.message || 'ไม่ทราบสาเหตุ'} · ลองใหม่หรือใช้โหมดเร็ว`, 0, 'error');
         } finally {
             aiBusy = false;
             aiButton.disabled = false;

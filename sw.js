@@ -1,4 +1,4 @@
-const CACHE_NAME = 'jane-tools-v52';
+const CACHE_NAME = 'jane-tools-v53';
 const urlsToCache = [
   './',
   './index.html',
@@ -32,7 +32,8 @@ const urlsToCache = [
   './vendor/pdf.min.js',
   './vendor/pdf.worker.min.js',
   './vendor/jszip.min.js',
-  './vendor/supabase.js'
+  './vendor/supabase.js',
+  './vendor/background-removal-ai.mjs'
 ];
 
 // บันทึกไฟล์ลง Cache เมื่อติดตั้งแอป
