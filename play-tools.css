@@ -269,6 +269,10 @@
     -webkit-tap-highlight-color: transparent;
 }
 
+.room-canvas-wrap canvas.moving-room {
+    cursor: grabbing;
+}
+
 .room-canvas-badge {
     position: absolute;
     left: 12px;

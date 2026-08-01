@@ -154,6 +154,8 @@
     const pointers = new Map();
     let gesture = null;
     let selectionControls = [];
+    let roomMoveControls = [];
+    let frozenView = null;
     const itemCount = document.getElementById('roomItemCount');
     const dimensionBadge = document.getElementById('roomDimensionBadge');
     const message = document.getElementById('roomBuilderMessage');
@@ -400,8 +402,40 @@
         context.restore();
     }
 
+    function drawRoomMoveControl(entry, bounds) {
+        if (entry.id !== room.id) return;
+        const displayWidth = canvas.getBoundingClientRect().width || canvas.width;
+        const touchScale = canvas.width / displayWidth;
+        const radius = clamp(17 * touchScale, 20, 42);
+        const x = clamp(bounds.x + bounds.width - radius - 9, radius + 7, canvas.width - radius - 7);
+        const y = clamp(bounds.y + radius + 9, radius + 7, canvas.height - radius - 7);
+        roomMoveControls.push({ roomId: entry.id, x, y, radius: radius * 1.3 });
+        context.save();
+        context.beginPath();
+        context.arc(x, y, radius, 0, Math.PI * 2);
+        context.fillStyle = '#fff8fc';
+        context.shadowColor = 'rgba(71,42,59,.25)';
+        context.shadowBlur = 10 * touchScale;
+        context.shadowOffsetY = 3 * touchScale;
+        context.fill();
+        context.shadowColor = 'transparent';
+        context.lineWidth = Math.max(2, 2 * touchScale);
+        context.strokeStyle = '#d65395';
+        context.stroke();
+        context.fillStyle = '#a84d78';
+        context.textAlign = 'center';
+        context.textBaseline = 'middle';
+        context.font = `700 ${Math.round(radius * 1.15)}px sans-serif`;
+        context.fillText('✥', x, y + radius * .04);
+        context.restore();
+    }
+
     function controlAt(point) {
         return selectionControls.find(control => Math.hypot(point.x - control.x, point.y - control.y) <= control.radius) || null;
+    }
+
+    function roomMoveControlAt(point) {
+        return roomMoveControls.find(control => Math.hypot(point.x - control.x, point.y - control.y) <= control.radius) || null;
     }
 
     function runSelectionControl(action) {
@@ -434,7 +468,8 @@
     }
 
     function draw(showSelection = true) {
-        currentView = computeView();
+        currentView = frozenView || computeView();
+        roomMoveControls = [];
         context.clearRect(0, 0, canvas.width, canvas.height);
         context.fillStyle = '#f8f1f5';
         context.fillRect(0, 0, canvas.width, canvas.height);
@@ -473,6 +508,7 @@
             context.textBaseline = 'top';
             context.fillText(`${entry.name} · ${entry.widthMeters}×${entry.lengthMeters} ม.`, bounds.x + 12, bounds.y + 10);
             entry.items.forEach(item => drawItem(item, showSelection && active && item.id === selectedId, entry));
+            if (showSelection) drawRoomMoveControl(entry, bounds);
         });
         if (showSelection) drawSelectionControls(selected());
         else selectionControls = [];
@@ -535,10 +571,34 @@
 
     canvas.addEventListener('pointerdown', event => {
         event.preventDefault();
+        if (gesture?.mode === 'room-drag') return;
         const point = canvasPoint(event);
         const pressedControl = pointers.size === 0 ? controlAt(point) : null;
         if (pressedControl) {
             runSelectionControl(pressedControl.action);
+            return;
+        }
+        const pressedRoomMoveControl = pointers.size === 0 ? roomMoveControlAt(point) : null;
+        if (pressedRoomMoveControl) {
+            const targetRoom = project.rooms.find(entry => entry.id === pressedRoomMoveControl.roomId);
+            if (!targetRoom) return;
+            project.activeRoomId = targetRoom.id;
+            room = targetRoom;
+            selectedId = null;
+            pointers.set(event.pointerId, point);
+            canvas.setPointerCapture(event.pointerId);
+            frozenView = { ...currentView };
+            gesture = {
+                mode: 'room-drag',
+                pointerId: event.pointerId,
+                startPoint: point,
+                startX: room.xMeters,
+                startY: room.yMeters
+            };
+            canvas.classList.add('moving-room');
+            syncRoomEditor();
+            syncRoomThemeButtons();
+            draw();
             return;
         }
         pointers.set(event.pointerId, point);
@@ -561,6 +621,14 @@
         if (!pointers.has(event.pointerId)) return;
         event.preventDefault();
         pointers.set(event.pointerId, canvasPoint(event));
+        if (gesture?.mode === 'room-drag') {
+            const point = pointers.get(gesture.pointerId);
+            if (!point || !frozenView) return;
+            room.xMeters = Math.round((gesture.startX + (point.x - gesture.startPoint.x) / frozenView.pixelsPerMeter) * 100) / 100;
+            room.yMeters = Math.round((gesture.startY + (point.y - gesture.startPoint.y) / frozenView.pixelsPerMeter) * 100) / 100;
+            draw();
+            return;
+        }
         const item = selected();
         const points = [...pointers.values()];
         if (!item || !gesture) return;
@@ -580,6 +648,18 @@
         draw();
     });
     const finishPointer = event => {
+        if (!pointers.has(event.pointerId)) return;
+        if (gesture?.mode === 'room-drag') {
+            pointers.delete(event.pointerId);
+            frozenView = null;
+            gesture = null;
+            canvas.classList.remove('moving-room');
+            save();
+            syncRoomEditor();
+            draw();
+            setMessage(`ย้าย${room.name}แล้ว`);
+            return;
+        }
         pointers.delete(event.pointerId);
         save();
         beginGesture();
