@@ -15,6 +15,19 @@
 .remove-bg-drop small { display:block; margin-top:7px; color:#9b7b8b; }
 .remove-bg-private { margin:13px 0 0; color:#907583; font-size:11px; text-align:center; }
 .remove-bg-workspace { margin-top:22px; }
+.remove-bg-mode-switch {
+    display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px; padding:6px;
+    border:1px solid #ead6e2; border-radius:20px; background:#f8f0f5;
+}
+.remove-bg-mode-switch button {
+    display:grid; grid-template-columns:auto 1fr; gap:2px 10px; align-items:center; min-height:66px; margin:0; padding:11px 15px;
+    border:1px solid transparent; border-radius:15px; background:transparent; color:#795c6b; text-align:left; box-shadow:none;
+}
+.remove-bg-mode-switch button > span { grid-row:1 / 3; font-size:23px; }
+.remove-bg-mode-switch button strong { font-size:13px; }
+.remove-bg-mode-switch button small { color:#9a7e8d; font-size:9px; font-weight:500; }
+.remove-bg-mode-switch button.active { border-color:#efb2ce; background:#fff; color:#b64f7d; box-shadow:0 7px 18px rgba(177,80,124,.09); }
+.remove-bg-mode-switch button:disabled { cursor:wait; opacity:.7; }
 .remove-bg-toolbar {
     display:grid; grid-template-columns:minmax(170px,1fr) minmax(170px,1fr) auto; gap:12px;
     align-items:end; padding:17px; border-radius:20px; background:#fff4f8;
@@ -25,6 +38,18 @@
 .remove-bg-control input[type="range"] { width:100%; accent-color:#df6fa0; }
 .remove-bg-actions { display:flex; gap:8px; flex-wrap:wrap; }
 .remove-bg-actions button { width:auto; min-height:42px; margin:0; padding:9px 13px; }
+.remove-bg-editbar {
+    display:grid; grid-template-columns:auto minmax(150px,1fr) auto; gap:14px; align-items:center;
+    margin-top:12px; padding:13px 15px; border:1px solid #ead9e3; border-radius:18px; background:#fff;
+}
+.remove-bg-tool-buttons,.remove-bg-history-actions { display:flex; gap:7px; flex-wrap:wrap; }
+.remove-bg-tool-buttons button,.remove-bg-history-actions button,.remove-bg-preview-footer button {
+    width:auto; min-height:38px; margin:0; padding:8px 11px; border:1px solid #e2c8d6; border-radius:12px;
+    background:#fff9fc; color:#765565; box-shadow:none; font-size:10px;
+}
+.remove-bg-tool-buttons button.active,.remove-bg-preview-footer button.active { border-color:#dc659b; background:#ffe8f2; color:#ad4574; }
+.remove-bg-history-actions button:disabled { opacity:.38; }
+.remove-bg-brush-control { min-width:150px; }
 .remove-bg-preview-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:18px; }
 .remove-bg-preview-card { overflow:hidden; border:1px solid #ead7e2; border-radius:21px; background:#fff; }
 .remove-bg-preview-card header { display:flex; justify-content:space-between; gap:8px; padding:12px 15px; color:#745565; font-size:11px; }
@@ -37,23 +62,49 @@
     background-image:linear-gradient(45deg,#e7dfe5 25%,transparent 25%),linear-gradient(-45deg,#e7dfe5 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#e7dfe5 75%),linear-gradient(-45deg,transparent 75%,#e7dfe5 75%);
     background-position:0 0,0 10px,10px -10px,-10px 0; background-size:20px 20px;
 }
+.remove-bg-canvas-wrap.preview-white { background:#fff; background-image:none; }
+.remove-bg-canvas-wrap.preview-dark { background:#24202a; background-image:none; }
 .remove-bg-canvas-wrap canvas { display:block; max-width:100%; max-height:520px; width:auto; height:auto; border-radius:8px; }
 #removeBgResultCanvas { cursor:crosshair; touch-action:manipulation; }
+#removeBgResultCanvas.brush-active { cursor:crosshair; touch-action:none; }
+.remove-bg-preview-footer {
+    display:flex; justify-content:space-between; gap:12px; align-items:center; padding:10px 13px;
+    border-top:1px solid #eadbe3; background:#fffafd;
+}
+.remove-bg-preview-footer label { display:flex; gap:8px; align-items:center; color:#806372; font-size:10px; font-weight:700; }
+.remove-bg-preview-footer input { width:min(150px,26vw); accent-color:#dc659b; }
+.remove-bg-preview-footer output { min-width:36px; color:#cf5b90; }
+.remove-bg-preview-footer > div { display:flex; gap:6px; }
+.remove-bg-preview-footer button { min-width:35px; padding:6px 9px; }
 .remove-bg-status { min-height:22px; margin:15px 2px 0; color:#8b6e7d; font-size:11px; text-align:center; }
 .remove-bg-status.success { color:#328462; }
 .remove-bg-status.error { color:#c34862; }
+.remove-bg-ai-note { margin:5px 0 0; color:#a08492; font-size:9px; text-align:center; }
+.remove-bg-ai-note a { color:#c45b8a; }
 body.dark-mode .remove-bg-shell { border-color:#4d3b57; background:rgba(31,24,39,.92); }
 body.dark-mode .remove-bg-drop { border-color:#685071; background:linear-gradient(145deg,#281e30,#211a29); color:#cdb8c5; }
 body.dark-mode .remove-bg-drop strong { color:#ffe1ee; }
 body.dark-mode .remove-bg-drop small,.dark-mode .remove-bg-private { color:#aa93a0; }
 body.dark-mode .remove-bg-toolbar { background:#281f30; }
+body.dark-mode .remove-bg-mode-switch { border-color:#4d3b57; background:#211a29; }
+body.dark-mode .remove-bg-mode-switch button { color:#cbb4c1; }
+body.dark-mode .remove-bg-mode-switch button.active { border-color:#80516c; background:#33253b; color:#ffc1dd; }
+body.dark-mode .remove-bg-editbar { border-color:#4b3a55; background:#251c2c; }
+body.dark-mode .remove-bg-tool-buttons button,body.dark-mode .remove-bg-history-actions button,body.dark-mode .remove-bg-preview-footer button { border-color:#59425f; background:#2d2234; color:#e6bfd2; }
+body.dark-mode .remove-bg-tool-buttons button.active,body.dark-mode .remove-bg-preview-footer button.active { border-color:#d36a9a; background:#4b2a42; }
 body.dark-mode .remove-bg-preview-card { border-color:#4b3a55; background:#211a28; }
 body.dark-mode .remove-bg-preview-card header { color:#f0cedd; }
 body.dark-mode .remove-bg-canvas-wrap { background:#17121c; }
+body.dark-mode .remove-bg-preview-footer { border-color:#4b3a55; background:#251c2c; }
 @media (max-width:760px) {
     .remove-bg-shell { padding:16px; }
     .remove-bg-toolbar { grid-template-columns:1fr; }
+    .remove-bg-editbar { grid-template-columns:1fr; }
     .remove-bg-preview-grid { grid-template-columns:1fr; }
     .remove-bg-canvas-wrap { min-height:230px; }
     .remove-bg-actions button { flex:1 1 130px; }
+    .remove-bg-mode-switch { grid-template-columns:1fr; }
+    .remove-bg-tool-buttons button { flex:1 1 95px; }
+    .remove-bg-preview-footer { align-items:flex-start; flex-direction:column; }
+    .remove-bg-preview-footer input { width:min(190px,48vw); }
 }

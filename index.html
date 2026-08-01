@@ -88,7 +88,7 @@
     </section>
 
     <div id="appShell" class="app-shell" hidden>
-    <span class="app-version" title="Jane Tools version 3.7.1">v3.7.1</span>
+    <span class="app-version" title="Jane Tools version 3.8.0">v3.8.0</span>
     <!-- ปุ่มโหมดกลางคืน (เพิ่มใหม่) -->
     <button id="darkModeBtn" class="dark-mode-btn" type="button" aria-label="เปิดโหมดกลางคืน" aria-pressed="false">🌙</button>
     <div class="app-connectivity" aria-live="polite">
@@ -337,7 +337,7 @@
     <div id="removeBgTab" class="container tab-content remove-bg-page" style="display:none;">
         <div class="category-page-header">
             <button class="category-back" type="button" onclick="openTab('documentToolsTab', document.getElementById('toolsNavBtn'))">← งานเอกสารและภาพ</button>
-            <div><span class="page-kicker">BACKGROUND REMOVER</span><h2>🪄 ลบพื้นหลังภาพ</h2><p>เลือกรูปแล้วระบบจะตัดพื้นหลังที่เชื่อมต่อกับขอบภาพออกให้อัตโนมัติ</p></div>
+            <div><span class="page-kicker">BACKGROUND REMOVER</span><h2>🪄 ลบพื้นหลังภาพ</h2><p>เลือกตัดพื้นหลังแบบรวดเร็วหรือใช้ AI แล้วแต่งขอบต่อด้วยแปรงได้</p></div>
         </div>
         <section class="remove-bg-shell">
             <label class="remove-bg-drop" id="removeBgDrop">
@@ -346,20 +346,34 @@
             </label>
             <p class="remove-bg-private">🔒 ประมวลผลในอุปกรณ์ของคุณ รูปจะไม่ถูกอัปโหลดขึ้นเซิร์ฟเวอร์</p>
             <div class="remove-bg-workspace" id="removeBgWorkspace" hidden>
-                <div class="remove-bg-toolbar">
+                <div class="remove-bg-mode-switch" role="group" aria-label="วิธีลบพื้นหลัง">
+                    <button class="active" id="removeBgFastModeBtn" type="button"><span>⚡</span><strong>ลบแบบเร็ว</strong><small>เหมาะกับพื้นหลังสีเรียบ</small></button>
+                    <button id="removeBgAiBtn" type="button"><span>✨</span><strong>ลบด้วย AI</strong><small>คน สัตว์ สิ่งของ · ครั้งแรกโหลดประมาณ 40 MB</small></button>
+                </div>
+                <div class="remove-bg-toolbar" id="removeBgFastControls">
                     <label class="remove-bg-control"><header><span>ลบมากขึ้น</span><output id="removeBgToleranceValue">42</output></header><input id="removeBgTolerance" type="range" min="8" max="110" value="42"></label>
                     <label class="remove-bg-control"><header><span>ความนุ่มของขอบ</span><output id="removeBgFeatherValue">20</output></header><input id="removeBgFeather" type="range" min="0" max="60" value="20"></label>
                     <div class="remove-bg-actions">
-                        <button class="btn btn-outline" id="removeBgAutoBtn" type="button">✨ ลบอัตโนมัติ</button>
+                        <button class="btn btn-outline" id="removeBgAutoBtn" type="button">⚡ ลบสีพื้นหลัง</button>
                         <button class="btn btn-outline" id="removeBgResetBtn" type="button">↶ คืนภาพเดิม</button>
                         <button class="btn" id="removeBgDownloadBtn" type="button">⬇ บันทึก PNG</button>
                     </div>
                 </div>
+                <div class="remove-bg-editbar">
+                    <div class="remove-bg-tool-buttons" role="group" aria-label="เครื่องมือแต่งขอบ">
+                        <button class="active" type="button" data-remove-bg-tool="pick">🎯 เลือกพื้นหลัง</button>
+                        <button type="button" data-remove-bg-tool="erase">🧽 ลบเพิ่ม</button>
+                        <button type="button" data-remove-bg-tool="restore">🖌️ คืนส่วนที่หาย</button>
+                    </div>
+                    <label class="remove-bg-control remove-bg-brush-control"><header><span>ขนาดแปรง</span><output id="removeBgBrushValue">36</output></header><input id="removeBgBrushSize" type="range" min="8" max="120" value="36"></label>
+                    <div class="remove-bg-history-actions"><button id="removeBgUndoBtn" type="button" disabled>↶ ย้อนกลับ</button><button id="removeBgRedoBtn" type="button" disabled>↷ ทำซ้ำ</button></div>
+                </div>
                 <div class="remove-bg-preview-grid">
                     <article class="remove-bg-preview-card"><header><strong>ภาพต้นฉบับ</strong><span>ก่อนลบ</span></header><div class="remove-bg-canvas-wrap"><canvas id="removeBgOriginalCanvas"></canvas></div></article>
-                    <article class="remove-bg-preview-card"><header><strong>พื้นหลังโปร่งใส</strong><span>แตะพื้นหลังเพื่อเลือกสีใหม่</span></header><div class="remove-bg-canvas-wrap checkerboard"><canvas id="removeBgResultCanvas" aria-label="ภาพหลังลบพื้นหลัง แตะเพื่อเลือกสีพื้นหลัง"></canvas></div></article>
+                    <article class="remove-bg-preview-card remove-bg-result-card"><header><strong>ผลลัพธ์</strong><span id="removeBgCanvasHint">แตะพื้นหลังเพื่อเลือกสีใหม่</span></header><div class="remove-bg-canvas-wrap checkerboard" id="removeBgResultWrap"><canvas id="removeBgResultCanvas" aria-label="ภาพหลังลบพื้นหลังและพื้นที่แต่งขอบ"></canvas></div><footer class="remove-bg-preview-footer"><label>🔎 ซูม <input id="removeBgZoom" type="range" min="50" max="200" value="100"><output id="removeBgZoomValue">100%</output></label><div role="group" aria-label="สีพื้นหลังตัวอย่าง"><button class="active" type="button" data-remove-bg-preview="checker" aria-label="พื้นหลังตาราง">▦</button><button type="button" data-remove-bg-preview="white" aria-label="พื้นหลังสีขาว">○</button><button type="button" data-remove-bg-preview="dark" aria-label="พื้นหลังสีเข้ม">●</button></div></footer></article>
                 </div>
                 <p class="remove-bg-status" id="removeBgStatus" role="status" aria-live="polite"></p>
+                <p class="remove-bg-ai-note">AI ทำงานในเบราว์เซอร์ด้วยโมเดล ISNet · ครั้งแรกต้องต่ออินเทอร์เน็ตเพื่อโหลดโมเดล · <a href="https://github.com/imgly/background-removal-js" target="_blank" rel="noopener">เทคโนโลยีโดย IMG.LY</a></p>
             </div>
         </section>
     </div>
