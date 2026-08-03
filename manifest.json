@@ -1,7 +1,7 @@
 {
   "name": "Jane Tools · Study & Create",
   "short_name": "Jane Tools",
-  "description": "ตารางเรียน การบ้าน งานเอกสาร และพื้นที่สร้างสรรค์ส่วนตัว",
+  "description": "ตารางเรียน การบ้าน สรุปสอบ แบบฝึกข้อเขียน งานเอกสาร และพื้นที่สร้างสรรค์ส่วนตัว",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#fff5f7",

@@ -27,6 +27,7 @@
     <link rel="stylesheet" href="field-tools.css">
     <link rel="stylesheet" href="pet.css">
     <link rel="stylesheet" href="background-remover.css">
+    <link rel="stylesheet" href="exam-study.css">
     
     <!-- ไลบรารีสำหรับ Drag & Drop, สร้าง PDF, อ่าน PDF และทำไฟล์ ZIP -->
     <script src="vendor/Sortable.min.js"></script>
@@ -88,7 +89,7 @@
     </section>
 
     <div id="appShell" class="app-shell" hidden>
-    <span class="app-version" title="Jane Tools version 3.8.2">v3.8.2</span>
+    <span class="app-version" title="Jane Tools version 3.9.0">v3.9.0</span>
     <!-- ปุ่มโหมดกลางคืน (เพิ่มใหม่) -->
     <button id="darkModeBtn" class="dark-mode-btn" type="button" aria-label="เปิดโหมดกลางคืน" aria-pressed="false">🌙</button>
     <div class="app-connectivity" aria-live="polite">
@@ -112,6 +113,7 @@
         <button class="tab-btn active" id="dashboardNavBtn" onclick="openTab('dashboardTab', this)">🏠 วันนี้</button>
         <button class="tab-btn" id="scheduleNavBtn" onclick="openSchedulePage('weekView')">📚 ตารางเรียน</button>
         <button class="tab-btn" id="homeworkNavBtn" onclick="openTab('homeworkTab', this)">✅ การบ้าน</button>
+        <button class="tab-btn" id="examNavBtn" onclick="openExamPage('examSummaryTab')">🧠 เตรียมสอบ</button>
         <button class="tab-btn" id="toolsNavBtn" onclick="openTab('toolsTab', this)">🧰 เครื่องมือ</button>
     </nav>
 
@@ -216,6 +218,59 @@
         </div>
         <div id="homeworkList" class="homework-list" aria-live="polite"></div>
         <p id="homeworkMessage" class="planner-message" role="status"></p>
+    </div>
+
+    <div id="examSummaryTab" class="container tab-content exam-page" style="display:none;">
+        <div class="exam-page-header">
+            <div><span class="page-kicker">EXAM NOTES</span><h2>📚 สรุปก่อนสอบ</h2><p>ย่อยจากเอกสาร 4 ชุดให้อ่านง่าย เน้นลำดับระบบ จุดเปรียบเทียบ และคำที่ควรจำ</p></div>
+            <div class="exam-source-count"><strong>4</strong><span>บทเรียน</span></div>
+        </div>
+        <div class="exam-mode-switch" role="tablist" aria-label="เลือกโหมดเตรียมสอบ">
+            <button class="active" type="button" onclick="openExamPage('examSummaryTab')" aria-selected="true">📚 สรุปก่อนสอบ</button>
+            <button type="button" onclick="openExamPage('writtenExamTab')" aria-selected="false">✍️ ฝึกข้อเขียน</button>
+        </div>
+        <section class="exam-intro-card">
+            <div><span>จำให้เป็นภาพรวมก่อน</span><h3>อ่าน “เส้นทางของระบบ” แล้วค่อยจำอุปกรณ์</h3><p>กดเลือกบทด้านล่าง ใช้ช่องค้นหาหาคำสำคัญ หรือเปิดโหมดท่องจำเพื่อซ่อนรายละเอียดแล้วลองตอบด้วยตัวเอง</p></div>
+            <button id="recallModeBtn" type="button" aria-pressed="false">🙈 โหมดท่องจำ</button>
+        </section>
+        <div class="exam-summary-toolbar">
+            <label class="exam-search"><span>⌕</span><input id="examSummarySearch" type="search" placeholder="ค้นหา เช่น MDF, CCTV, Firestop"></label>
+            <div id="examSubjectFilters" class="exam-subject-filters" role="group" aria-label="เลือกบทเรียน"></div>
+        </div>
+        <div id="examSummaryContent" class="exam-summary-content" aria-live="polite"></div>
+    </div>
+
+    <div id="writtenExamTab" class="container tab-content exam-page" style="display:none;">
+        <div class="exam-page-header">
+            <div><span class="page-kicker">WRITTEN PRACTICE</span><h2>✍️ ฝึกข้อเขียน</h2><p>ลองเรียบเรียงด้วยภาษาของตัวเอง ระบบจะตรวจประเด็นสำคัญและแนะนำส่วนที่ยังขาด</p></div>
+            <div class="exam-source-count"><strong id="questionBankCount">0</strong><span>ข้อในคลัง</span></div>
+        </div>
+        <div class="exam-mode-switch" role="tablist" aria-label="เลือกโหมดเตรียมสอบ">
+            <button type="button" onclick="openExamPage('examSummaryTab')" aria-selected="false">📚 สรุปก่อนสอบ</button>
+            <button class="active" type="button" onclick="openExamPage('writtenExamTab')" aria-selected="true">✍️ ฝึกข้อเขียน</button>
+        </div>
+        <section id="examSetupPanel" class="exam-setup-card">
+            <div class="exam-setup-copy"><span>สร้างชุดฝึกของฉัน</span><h3>อยากลองกี่ข้อจากบทไหน?</h3><p>สุ่มใหม่ได้ทุกครั้ง คำตอบไม่ต้องเหมือนเฉลยเป๊ะ ขอให้มีใจความสำคัญครบ</p></div>
+            <div class="exam-setup-controls">
+                <label>เลือกบท<select id="examSubjectSelect"></select></label>
+                <label>จำนวนข้อ<select id="examQuestionCount"><option value="5">5 ข้อ</option><option value="10" selected>10 ข้อ</option><option value="15">15 ข้อ</option><option value="20">20 ข้อ</option></select></label>
+                <button class="exam-primary-btn" id="startWrittenExamBtn" type="button">เริ่มชุดข้อสอบ ✨</button>
+            </div>
+        </section>
+        <section id="examSessionPanel" class="exam-session" hidden>
+            <div class="exam-progress-card">
+                <div><span id="examProgressText">ข้อ 1 / 10</span><strong id="examScoreText">ยังไม่ได้ตรวจ</strong></div>
+                <div class="exam-progress-track"><i id="examProgressBar"></i></div>
+                <button id="newExamBtn" type="button">จัดชุดใหม่</button>
+            </div>
+            <article id="writtenQuestionCard" class="written-question-card"></article>
+            <div class="exam-question-nav">
+                <button id="prevExamQuestionBtn" type="button">← ข้อก่อนหน้า</button>
+                <div id="examQuestionDots" class="exam-question-dots" aria-label="เลือกข้อ"></div>
+                <button id="nextExamQuestionBtn" type="button">ข้อต่อไป →</button>
+            </div>
+        </section>
+        <p class="exam-check-note">การตรวจเป็นการเช็กคำและแนวคิดสำคัญเบื้องต้น คะแนนจริงยังขึ้นอยู่กับการอธิบาย เหตุผล และเกณฑ์ของผู้สอน</p>
     </div>
 
     <div id="toolsTab" class="container tab-content tools-hub" style="display: none;">
@@ -1175,6 +1230,7 @@
     <script src="field-tools.js"></script>
     <script src="pet.js"></script>
     <script src="background-remover.js"></script>
+    <script src="exam-study.js"></script>
     <script src="pwa-ui.js"></script>
     
 </body>
