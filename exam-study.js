@@ -112,7 +112,18 @@
         }
     ];
 
-    const q = (subject, question, hint, answer, rubric) => ({subject,question,hint,answer,rubric});
+    const easyQuestionStarts = [
+        'MDF และ IDF','โทรศัพท์ฉุกเฉิน','จงอธิบายลำดับการส่งภาพ','เปรียบเทียบหน้าที่ของ CCTV',
+        'สามเหลี่ยมไฟ','ระบบป้องกันอัคคีภัยแบบ Passive','ระบบแจ้งเหตุเพลิงไหม้ประกอบด้วย',
+        'Wet Pipe และ Dry Pipe','จงจำแนกประเภทเพลิง'
+    ];
+    const hardQuestionStarts = [
+        'อธิบายหลักการทำงานของ VoIP','เพราะเหตุใดตำแหน่ง Data Outlet','อธิบายลำดับการทำงานของ Access Control',
+        'Magnetic Lock','ทางหนีไฟแนวราบ','Fire Command Center','เมื่อใดควรใช้ระบบดับเพลิงด้วย Clean Agent',
+        'ปัจจัยใดใช้เลือกระบบระงับอัคคีภัย'
+    ];
+    const difficultyFor = question => hardQuestionStarts.some(start=>question.startsWith(start)) ? 'hard' : easyQuestionStarts.some(start=>question.startsWith(start)) ? 'easy' : 'medium';
+    const q = (subject, question, hint, answer, rubric) => ({subject,question,hint,answer,rubric,difficulty:difficultyFor(question)});
     const questionBank = [
         q('communication','จงอธิบายเส้นทางของสัญญาณอินเทอร์เน็ตตั้งแต่ผู้ให้บริการจนถึงอุปกรณ์ของผู้ใช้ในอาคาร','เริ่มจาก ISP แล้วไล่ผ่านห้องหลัก ห้องประจำชั้น และจุดปลายทาง','สัญญาณจาก ISP เข้าสู่ MDF ผ่าน Router และ Firewall ไปยัง Core Switch จากนั้นส่งผ่าน Fiber Backbone ไป IDF ของแต่ละชั้น แล้วกระจายด้วยสาย LAN ไปยัง Access Point หรือ Data Outlet ก่อนถึงอุปกรณ์ผู้ใช้',[['ISP / อินเทอร์เน็ต',['isp','อินเทอร์เน็ต','ผู้ให้บริการ']],['MDF และอุปกรณ์แกนกลาง',['mdf','router','firewall','core switch']],['Backbone และ IDF',['backbone','fiber','ใยแก้ว','idf']],['ปลายทางผู้ใช้',['lan','access point','ap','data outlet','ผู้ใช้']]]),
         q('communication','MDF และ IDF ต่างกันอย่างไร และแต่ละห้องควรมีอุปกรณ์ใด','คิดเป็น “ส่วนกลางของทั้งอาคาร” กับ “จุดกระจายประจำชั้น”','MDF เป็นศูนย์กลางหลักของอาคาร รับสัญญาณจาก ISP และมักมี Router, Firewall, Core Switch และ Server ส่วน IDF เป็นจุดกระจายของแต่ละชั้น/โซน มี Network Switch, Patch Panel และ UPS แล้วส่งสาย LAN ไปยังผู้ใช้',[['MDF ศูนย์กลางอาคาร',['mdf','ศูนย์กลาง','หลัก']],['Router/Firewall/Core Switch',['router','firewall','core switch']],['IDF ประจำชั้นหรือโซน',['idf','ชั้น','โซน']],['Switch/Patch Panel/UPS',['switch','patch panel','ups']]]),
@@ -207,6 +218,7 @@
 
     const state = { questions:[], index:0, answers:[], results:[], hints:[], models:[] };
     const subjectSelect=document.getElementById('examSubjectSelect');
+    const difficultySelect=document.getElementById('examDifficultySelect');
     const countSelect=document.getElementById('examQuestionCount');
     const setupPanel=document.getElementById('examSetupPanel');
     const sessionPanel=document.getElementById('examSessionPanel');
@@ -229,16 +241,17 @@
         if(!state.questions.length || !card)return;
         const question=state.questions[state.index];
         const subject=subjectById(question.subject);
+        const difficultyLabels={easy:'🌱 ง่าย',medium:'🌼 กลาง',hard:'🔥 ยาก'};
         const answer=state.answers[state.index] || '';
         const result=state.results[state.index];
         card.innerHTML=`
-            <div class="question-meta"><span>${subject.icon} ${subject.short}</span><span>ข้อ ${state.index+1}</span><small>ตอบเป็นประโยคของตัวเองได้</small></div>
+            <div class="question-meta"><span>${subject.icon} ${subject.short}</span><span class="difficulty-badge ${question.difficulty}">${difficultyLabels[question.difficulty]}</span><span>ข้อ ${state.index+1}</span><small>ตอบเป็นประโยคของตัวเองได้</small></div>
             <h3>${question.question}</h3><p class="question-prompt-note">พยายามตอบให้ครบเหตุผล ลำดับ หรือจุดเปรียบเทียบตามที่โจทย์ถาม</p>
             <label class="answer-label">คำตอบของฉัน<textarea id="writtenAnswerInput" placeholder="ลองอธิบายจากความเข้าใจของตัวเอง…">${answer.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</textarea></label>
-            <div class="question-actions"><button class="check-answer-btn" type="button" data-question-action="check">✓ ตรวจคำตอบ</button><button type="button" data-question-action="hint">💡 ${state.hints[state.index]?'ซ่อนคำใบ้':'ขอคำใบ้'}</button><button type="button" data-question-action="model">📖 ${state.models[state.index]?'ซ่อนแนวคำตอบ':'ดูแนวคำตอบ'}</button></div>
+            <div class="question-actions"><button class="check-answer-btn" type="button" data-question-action="check">✓ ตรวจคำตอบ</button><button type="button" data-question-action="hint">💡 ${state.hints[state.index]?'ซ่อนคำใบ้':'ขอคำใบ้'}</button><button type="button" data-question-action="model">👀 ${state.models[state.index]?'ซ่อนเฉลย':'เฉลยข้อนี้'}</button></div>
             ${state.hints[state.index]?`<div class="question-help"><strong>💡 คำใบ้</strong>${question.hint}</div>`:''}
             ${result?renderFeedback(result):''}
-            ${state.models[state.index]?`<div class="model-answer"><strong>📖 แนวคำตอบ</strong>${question.answer}</div>`:''}`;
+            ${state.models[state.index]?`<div class="model-answer"><strong>📖 เฉลยและแนวเรียบเรียง</strong>${question.answer}</div>`:''}`;
         card.querySelector('textarea')?.addEventListener('input',event=>{state.answers[state.index]=event.target.value;});
         updateExamStatus();
     }
@@ -259,7 +272,7 @@
         if(dots)dots.innerHTML=state.questions.map((_,index)=>`<button type="button" data-question-index="${index}" class="${index===state.index?'active':''} ${state.results[index]?'checked':''}" aria-label="ไปข้อ ${index+1}">${index+1}</button>`).join('');
     }
     function startExam() {
-        const subject=subjectSelect.value; const pool=subject==='all'?questionBank:questionBank.filter(item=>item.subject===subject); const count=Math.min(Number(countSelect.value),pool.length);
+        const pool=getFilteredQuestionPool(); const count=Math.min(Number(countSelect.value),pool.length);
         state.questions=shuffle(pool).slice(0,count); state.index=0; state.answers=Array(count).fill(''); state.results=Array(count).fill(null); state.hints=Array(count).fill(false); state.models=Array(count).fill(false);
         setupPanel.hidden=true; sessionPanel.hidden=false; renderExamCard();
     }
@@ -283,13 +296,18 @@
     document.getElementById('examQuestionDots')?.addEventListener('click',event=>{const button=event.target.closest('[data-question-index]');if(button)moveQuestion(Number(button.dataset.questionIndex));});
 
     if(subjectSelect)subjectSelect.innerHTML=`<option value="all">สุ่มรวมทุกบท</option>${subjects.map(subject=>`<option value="${subject.id}">${subject.icon} ${subject.title}</option>`).join('')}`;
+    function getFilteredQuestionPool(){
+        const subject=subjectSelect?.value || 'all'; const difficulty=difficultySelect?.value || 'all';
+        return questionBank.filter(item=>(subject==='all'||item.subject===subject)&&(difficulty==='all'||item.difficulty===difficulty));
+    }
     function refreshQuestionCounts(){
         if(!subjectSelect || !countSelect)return;
-        const available=subjectSelect.value==='all'?questionBank.length:questionBank.filter(item=>item.subject===subjectSelect.value).length;
+        const available=getFilteredQuestionPool().length;
         const choices=[5,10,15,20].filter(value=>value<available); choices.push(available);
         countSelect.innerHTML=[...new Set(choices)].map(value=>`<option value="${value}" ${value===Math.min(10,available)?'selected':''}>${value} ข้อ${value===available&&available<10?' · ครบทั้งบท':''}</option>`).join('');
     }
     subjectSelect?.addEventListener('change',refreshQuestionCounts);
+    difficultySelect?.addEventListener('change',refreshQuestionCounts);
     refreshQuestionCounts();
     const bankCount=document.getElementById('questionBankCount');if(bankCount)bankCount.textContent=String(questionBank.length);
     renderSummaryFilters(); renderSummaries();

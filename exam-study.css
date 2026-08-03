@@ -45,7 +45,7 @@
 .summary-empty { padding:45px 20px; border:1px dashed #dfbdd0; border-radius:20px; color:#9c8490; font-size:11px; text-align:center; }
 
 .exam-setup-card { display:grid; grid-template-columns:minmax(0,1fr) minmax(310px,.75fr); gap:22px; align-items:center; padding:24px; border:1px solid #e8d0dd; border-radius:22px; background:linear-gradient(135deg,rgba(255,237,246,.85),rgba(241,232,255,.78)); }
-.exam-setup-controls { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; }
+.exam-setup-controls { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:9px; }
 .exam-setup-controls label { display:grid; gap:5px; color:#7d626f; font-size:9px; font-weight:600; }
 .exam-setup-controls select { min-width:0; min-height:44px; padding:8px 10px; border:1px solid #dec2d2; border-radius:12px; background:#fff; color:#604551; font:600 11px 'Prompt',sans-serif; }
 .exam-primary-btn { grid-column:1/-1; min-height:46px; border:0; border-radius:14px; background:linear-gradient(135deg,#d58bed,#f187b5); color:#3e2935; font:700 11px 'Prompt',sans-serif; cursor:pointer; box-shadow:0 7px 16px rgba(194,101,158,.2); }
@@ -59,6 +59,9 @@
 .written-question-card { padding:23px; border:1px solid #e5ccd9; border-radius:22px; background:rgba(255,255,255,.78); }
 .question-meta { display:flex; flex-wrap:wrap; align-items:center; gap:7px; margin-bottom:12px; }
 .question-meta span { padding:5px 8px; border-radius:8px; background:#f2e8f8; color:#7b5594; font-size:8px; font-weight:700; }
+.question-meta .difficulty-badge.easy { background:#e3f7ec; color:#34775c; }
+.question-meta .difficulty-badge.medium { background:#fff1c9; color:#8a6829; }
+.question-meta .difficulty-badge.hard { background:#ffe0e6; color:#b74760; }
 .question-meta small { margin-left:auto; color:#a38b97; font-size:8px; }
 .written-question-card h3 { margin:0 0 7px; color:#5e414e; font-size:17px; line-height:1.6; }
 .question-prompt-note { margin:0 0 14px; color:#9a818d; font-size:9px; }
@@ -99,6 +102,7 @@ body.dark-mode .summary-subject-header { background:linear-gradient(110deg,color
 body.dark-mode .summary-flow { border-color:#4c394f; } body.dark-mode .summary-flow span{background:#30243a;color:#e6cad7}.dark-mode .summary-topic{background:#271e2e}
 body.dark-mode .question-help{background:#31291e;color:#dbcda7;border-color:#6d5b38}.dark-mode .model-answer{background:#2d2540;color:#d9c9ea;border-color:#5a4b72}.dark-mode .question-feedback{background:#2a202f;border-color:#57405f}.dark-mode .question-feedback.good{background:#1d312a;border-color:#3c6554}.dark-mode .question-feedback.medium{background:#332d1d;border-color:#6d5b38}.dark-mode .question-feedback.needs-work{background:#351f29;border-color:#704052}
 body.dark-mode .exam-progress-track { background:#48384e; }.dark-mode .exam-progress-card>button{background:#302438;color:#efacd0;border-color:#5b4263}.dark-mode .exam-question-dots button{background:#2a2031;color:#cbb4c1;border-color:#584160}
+body.dark-mode .question-meta .difficulty-badge.easy{background:#1d3a31;color:#a5dfc6}body.dark-mode .question-meta .difficulty-badge.medium{background:#3b311e;color:#f0d28a}body.dark-mode .question-meta .difficulty-badge.hard{background:#43222d;color:#ffb4c3}
 
 @media (max-width:760px) {
     .exam-page { padding:17px; border-radius:23px; }

@@ -89,7 +89,7 @@
     </section>
 
     <div id="appShell" class="app-shell" hidden>
-    <span class="app-version" title="Jane Tools version 3.9.0">v3.9.0</span>
+    <span class="app-version" title="Jane Tools version 3.9.1">v3.9.1</span>
     <!-- ปุ่มโหมดกลางคืน (เพิ่มใหม่) -->
     <button id="darkModeBtn" class="dark-mode-btn" type="button" aria-label="เปิดโหมดกลางคืน" aria-pressed="false">🌙</button>
     <div class="app-connectivity" aria-live="polite">
@@ -252,8 +252,9 @@
         <section id="examSetupPanel" class="exam-setup-card">
             <div class="exam-setup-copy"><span>สร้างชุดฝึกของฉัน</span><h3>อยากลองกี่ข้อจากบทไหน?</h3><p>สุ่มใหม่ได้ทุกครั้ง คำตอบไม่ต้องเหมือนเฉลยเป๊ะ ขอให้มีใจความสำคัญครบ</p></div>
             <div class="exam-setup-controls">
-                <label>เลือกบท<select id="examSubjectSelect"></select></label>
-                <label>จำนวนข้อ<select id="examQuestionCount"><option value="5">5 ข้อ</option><option value="10" selected>10 ข้อ</option><option value="15">15 ข้อ</option><option value="20">20 ข้อ</option></select></label>
+                <label for="examSubjectSelect">เลือกบท<select id="examSubjectSelect"></select></label>
+                <label for="examDifficultySelect">ระดับความยาก<select id="examDifficultySelect"><option value="all">คละระดับ</option><option value="easy">🌱 ง่าย</option><option value="medium">🌼 กลาง</option><option value="hard">🔥 ยาก</option></select></label>
+                <label for="examQuestionCount">จำนวนข้อ<select id="examQuestionCount"><option value="5">5 ข้อ</option><option value="10" selected>10 ข้อ</option><option value="15">15 ข้อ</option><option value="20">20 ข้อ</option></select></label>
                 <button class="exam-primary-btn" id="startWrittenExamBtn" type="button">เริ่มชุดข้อสอบ ✨</button>
             </div>
         </section>
